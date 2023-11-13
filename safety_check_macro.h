@@ -2,5 +2,6 @@
 #include "assert.h"
 #include "stdio.h"
 
-#define overflowcheck(x) assert(x)
-#define unimplemented(x) {printf(x);assert(0);}
+#define ArrayOverflowCheck(x) assert(x)
+#define Unimplemented(x) {printf(x);assert(0);}
+#define NullPointerCheck(x) assert(x)

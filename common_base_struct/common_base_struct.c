@@ -9,7 +9,7 @@ static inline TupleIdT* GetTupleIDsFromMaxLink(MaxLink* maxLink) {
 
 // Cannot pass reference. Passing pointer instead.
 inline TupleIdT* GetKthTupleIDFromMaxLink(MaxLink* maxLink, int i) {
-    overflowcheck(i < maxLink->tupleIDCount);
+    ArrayOverflowCheck(i < maxLink->tupleIDCount);
     return GetTupleIDsFromMaxLink(maxLink) + i;
 }
 
@@ -19,7 +19,7 @@ static inline HashAddrT* GetHashAddrsFromMaxLink(MaxLink* maxLink) {
 }
 
 inline HashAddrT* GetKthHashAddrFromMaxLink(MaxLink* maxLink, int i) {
-    overflowcheck(i < maxLink->hashAddrCount);
+    ArrayOverflowCheck(i < maxLink->hashAddrCount);
     return GetHashAddrsFromMaxLink(maxLink) + i;
 }
 
@@ -28,5 +28,5 @@ int GetMaxLinkSize(int tupleIdCount, int hashAddrCount) {
 }
 
 int BuildMaxLink(int tupleIdCount, int hashAddrCount, TupleIdT* tupleIds, HashAddrT* hashAddrs) {
-    unimplemented("BuildMaxLink");
+    Unimplemented("BuildMaxLink");
 }
