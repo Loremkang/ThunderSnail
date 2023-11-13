@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdint.h>
-#include "safety_check_macro.h"
+#include "../safety_check_macro.h"
 
 // Pointers
 typedef struct {
@@ -32,7 +32,7 @@ typedef union {
 typedef struct {
     int tupleIDCount;
     int hashAddrCount;
-    uint8_t buffer[0]; // [[Tuple IDs], [Hash Addrs]]
+    uint8_t buffer[]; // [[Tuple IDs], [Hash Addrs]]
 } MaxLink;
 
 inline TupleIdT* GetKthTupleIDFromMaxLink(MaxLink* maxLink, int i);
