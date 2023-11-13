@@ -1,12 +1,14 @@
 #pragma once
+#ifndef COMMON_BASE_STRUCT_H
+#define COMMON_BASE_STRUCT_H
 
 #include <stdint.h>
 #include "../safety_check_macro.h"
 
 // Pointers
 typedef struct {
-    uint32_t id;
-    uint32_t addr;
+    uint32_t dpuId;
+    uint32_t dpuAddr;
 } RemotePtrT;
 
 typedef struct {
@@ -39,3 +41,5 @@ inline TupleIdT* GetKthTupleIDFromMaxLink(MaxLink* maxLink, int i);
 inline HashAddrT* GetKthHashAddrFromMaxLink(MaxLink* maxLink, int i);
 int GetMaxLinkSize(int tupleIdCount, int hashAddrCount);
 int BuildMaxLink(int tupleIdCount, int hashAddrCount, TupleIdT* tupleIds, HashAddrT* hashAddrs);
+
+#endif
