@@ -3,7 +3,7 @@
 
 const int MAXBATCHSIZE = 2000;
 
-void BuildNewLinkFromHashTableGetOrInsertResult(int length, DisjointSetNodeT* usNode, TupleIdT* tupleIDs, TupleIdOrMaxLinkAddr* counterpart) {
+void BuildNewLinkFromHashTableGetOrInsertResult(int length, DisjointSetNodeT* usNode, TupleIdT* tupleIDs, TupleIdOrMaxLinkAddrT* counterpart) {
     assert(length < MAXBATCHSIZE);
     for (int i = 0; i < length; i ++) {
         DisjointSetInit(&usNode[i]);
