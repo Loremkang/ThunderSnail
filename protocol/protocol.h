@@ -7,15 +7,15 @@
 #include "buffer_builder.h"
 
 // define task names, request and response
-#define BATCH_GET_OR_INSERT_REQ 0
-#define BATCH_GET_POINTER_REQ 1
-#define BATCH_UPDATE_POINTER_REQ 2
+#define GET_OR_INSERT_REQ 0
+#define GET_POINTER_REQ 1
+#define UPDATE_POINTER_REQ 2
 #define GET_MAX_LINK_SIZE_REQ 3
 #define FETCH_MAX_LINK_REQ 4
 #define MERGE_MAX_LINK_REQ 5
-#define BATCH_GET_OR_INSERT_RESP 6
-#define BATCH_GET_POINTER_RESP 7
-#define BATCH_UPDATE_POINTER_RESP 8
+#define GET_OR_INSERT_RESP 6
+#define GET_POINTER_RESP 7
+#define UPDATE_POINTER_RESP 8
 #define GET_MAX_LINK_SIZE_RESP 9
 #define FETCH_MAX_LINK_RESP 10
 #define MERGE_MAX_LINK_RESP 11
@@ -45,17 +45,7 @@ typedef struct {
   uint16_t *offsets;
 } CpuToDpuBufferDescriptor;
 
-typedef struct {
-  uint16_t count; // num of key and value
-  struct {
-    uint16_t sz; // key's length
-    uint16_t pos; // offset of the Request buffer, represent the key's start ptr
-    TupleIdT tid;
-  } kv;
-  uint8_t buffer[]; // The tail buffer to save the key's value
-} BatchGetOrInsertReq;
-
-void CreateCpuToDpuBuffer()
+void CreateCpuToDpuBufferForEachDPU()
 {
   uint8_t *buffer;
   size_t size;
@@ -66,18 +56,18 @@ void CreateCpuToDpuBuffer()
   uint16_t numFixedLenBlocks = 1;
   uint16_t numFixedLenTasks = 128;
   uint16_t numVarLenTasks = 256;
+  int batchSize = 320;
   FixedLenBlockDescriptor *fixedLenBlockDescs = malloc(numFixedLenBlocks * sizeof(FixedLenBlockDescriptor));
   for (int i = 0; i < numFixedLenBlocks; i++) {
     fixedLenBlockDescs[i].blockDescBase = {
-      .taskType = BATCH_GET_OR_INSERT_REQ,
-      .taskCount = numFixedLenTasks
+      .taskType = GET_OR_INSERT_REQ
+      // taskCount will be calc later
     };
   }
   VarLenBlockDescriptor *varLenBlockDescs = malloc((numBlocks - numFixedLenBlocks) * sizeof(VarLenBlockDescriptor));
   for (int i = 0; i < numVarLenBlocks; i++) {
     varLenBlockDescs[i].blockDescBase = {
-      .taskType = BATCH_GET_OR_INSERT_REQ,
-      .taskCount = numFixedLenTasks
+      .taskType = GET_OR_INSERT_REQ
     };
   }
   CpuToDpuBufferDescriptor bufferDesc = {
@@ -85,8 +75,12 @@ void CreateCpuToDpuBuffer()
     .blockCnt = numBlocks
   };
   BufferBuilderInit(B, &bufferDesc);
-  BatchGetOrInsertReq task = {};
-  BufferBuilderAppendTask(B, task);
+  BufferBuilderBeginBlock(B, varLenBlockDescs);
+  // input stream to get task
+  for (int i = 0; i < numVarLenTasks; i++) {
+    BufferBuilderAppendTask(B, task);
+  }
+  BufferBuilderEndBlock(B);
   buffer = BufferBuilderFinish(B, &size);
   return;
 }
