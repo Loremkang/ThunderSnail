@@ -20,11 +20,18 @@
 #define FETCH_MAX_LINK_RESP 10
 #define MERGE_MAX_LINK_RESP 11
 
+#define NUM_FIXED_LEN_BLOCK_INPUT 3
+#define NUM_VAR_LEN_BLOCK_INPUT 3 // contain key, maxlink as input parameters tasks
+#define NUM_FIXED_LEN_BLOCK_OUTPUT 3
+#define NUM_VAR_LEN_BLOCK_OUTPUT 1 // contain maxlink as output value tasks
+
+#define BUFFER_HEAD_LEN 32
+#define BATCH_SIZE 320
+
 typedef struct {
   uint8_t taskType;
   uint16_t taskCount;
   uint32_t totalSize;
-  void *tasks;
 } BlockDescriptorBase;
 
 typedef struct {
@@ -37,51 +44,56 @@ typedef struct {
 } VarLenBlockDescriptor;
 
 typedef struct {
-  uint16_t epochNumber;
-  uint16_t blockCnt;
+  uint8_t epochNumber;
+  uint8_t blockCnt;
   uint16_t totalSize;
-  FixedLenBlockDescriptor *fixedLenblockDescs;
-  VarLenBlockDescriptor *varLenblockDescs;
+  FixedLenBlockDescriptor fixedLenblockDescs[NUM_FIXED_LEN_BLOCK_INPUT];
+  VarLenBlockDescriptor varLenblockDescs[NUM_VAR_LEN_BLOCK_INPUT];
   uint16_t *offsets;
 } CpuToDpuBufferDescriptor;
 
-void CreateCpuToDpuBufferForEachDPU()
+typedef struct {
+  uint8_t taskType;
+} Task;
+
+typedef struct {
+  Task base;
+  uint8_t *ptr; // key
+  uint8_t len;
+  TupleIdT tid; // value
+  uint32_t hashTableId;
+} GetOrInsertReq;
+
+inline bool IsVarLenTask(uint8_t taskType)
 {
-  uint8_t *buffer;
-  size_t size;
-  BufferBuilder builder, *B;
-  B = &builder;
-  // we should known num of fixed len blocks
-  uint16_t numBlocks = 2;
-  uint16_t numFixedLenBlocks = 1;
-  uint16_t numFixedLenTasks = 128;
-  uint16_t numVarLenTasks = 256;
-  int batchSize = 320;
-  FixedLenBlockDescriptor *fixedLenBlockDescs = malloc(numFixedLenBlocks * sizeof(FixedLenBlockDescriptor));
-  for (int i = 0; i < numFixedLenBlocks; i++) {
-    fixedLenBlockDescs[i].blockDescBase = {
-      .taskType = GET_OR_INSERT_REQ
-      // taskCount will be calc later
-    };
+  // FIXME: complete other conditions
+  if ( taskType == GET_OR_INSERT_REQ ) {
+    return true;
+  } else {
+    return false;
   }
-  VarLenBlockDescriptor *varLenBlockDescs = malloc((numBlocks - numFixedLenBlocks) * sizeof(VarLenBlockDescriptor));
-  for (int i = 0; i < numVarLenBlocks; i++) {
-    varLenBlockDescs[i].blockDescBase = {
-      .taskType = GET_OR_INSERT_REQ
-    };
-  }
-  CpuToDpuBufferDescriptor bufferDesc = {
-    .epochNumber = 8,
-    .blockCnt = numBlocks
-  };
-  BufferBuilderInit(B, &bufferDesc);
-  BufferBuilderBeginBlock(B, varLenBlockDescs);
-  // input stream to get task
-  for (int i = 0; i < numVarLenTasks; i++) {
-    BufferBuilderAppendTask(B, task);
-  }
-  BufferBuilderEndBlock(B);
-  buffer = BufferBuilderFinish(B, &size);
-  return;
 }
+
+inline uint16_t GetTaskSize(void *task, bool isVarLen)
+{
+  // FIXME: complete other tasks
+  uint8_t taskType = ((Task*)task)->taskType;
+  uint16_t ret = sizeof(BlockDescBase);
+
+  switch(taskType) {
+  case GET_OR_INSERT_REQ:
+    GetOrInsertReq* task = (GetOrInsertReq*)task;
+    // |key + value + hash_id|
+    ret += task->len + sizeof(TupleIdT) + sizeof(uint32_t);
+    break;
+  default:
+    break;
+  }
+  if (isVarLen) {
+    ret += sizeof(uint32_t);
+  }
+  return ret;
+}
+
+void CreateCpuToDpuBufferForEachDPU();
 #endif
