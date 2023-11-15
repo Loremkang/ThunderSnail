@@ -22,17 +22,17 @@ void BufferBuilderBeginBlock(BufferBuilder *builder, Task* firstTask)
   *builder->curPtr = taskType;
 
   // block descriptor fill
-  if (isVarLenTask(taskType)) {
-    builder->bufferDesc->varLenBlockDescs[curBlock].blockDescBase = {
+  if (IsVarLenTask(taskType)) {
+    builder->bufferDesc->varLenBlockDescs[builder->curBlock].blockDescBase = (BlockDescriptorBase) {
       .taskType = taskType,
       .taskCount = 1,
-      .totalSize = GetTaskSize(firstTask, true);
+      .totalSize = GetTaskSize(firstTask, true)
     };
   } else {
-    builder->bufferDesc->fixedLenBlockDescs[curBlock].blockDescBase = {
+    builder->bufferDesc->fixedLenBlockDescs[builder->curBlock].blockDescBase = (BlockDescriptorBase) {
       .taskType = taskType,
       .taskCount = 1,
-      .totalSize = GetTaskSize(firstTask);
+      .totalSize = GetTaskSize(firstTask, false)
     };
   }
 }
@@ -41,8 +41,9 @@ void BufferBuilderEndBlock(BufferBuilder *builder)
 {
 }
 
-void BufferBuilderFinish(BufferBuilder *builder)
+uint8_t* BufferBuilderFinish(BufferBuilder *builder, size_t *size)
 {
+  return builder->buffer;
 }
 
 void BufferBuilderAppendTask(BufferBuilder *builder, Task *task)

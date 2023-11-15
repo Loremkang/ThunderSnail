@@ -47,8 +47,8 @@ typedef struct {
   uint8_t epochNumber;
   uint8_t blockCnt;
   uint16_t totalSize;
-  FixedLenBlockDescriptor fixedLenblockDescs[NUM_FIXED_LEN_BLOCK_INPUT];
-  VarLenBlockDescriptor varLenblockDescs[NUM_VAR_LEN_BLOCK_INPUT];
+  FixedLenBlockDescriptor fixedLenBlockDescs[NUM_FIXED_LEN_BLOCK_INPUT];
+  VarLenBlockDescriptor varLenBlockDescs[NUM_VAR_LEN_BLOCK_INPUT];
   uint16_t *offsets;
 } CpuToDpuBufferDescriptor;
 
@@ -78,14 +78,15 @@ inline uint16_t GetTaskSize(void *task, bool isVarLen)
 {
   // FIXME: complete other tasks
   uint8_t taskType = ((Task*)task)->taskType;
-  uint16_t ret = sizeof(BlockDescBase);
+  uint16_t ret = sizeof(BlockDescriptorBase);
 
   switch(taskType) {
-  case GET_OR_INSERT_REQ:
-    GetOrInsertReq* task = (GetOrInsertReq*)task;
+  case GET_OR_INSERT_REQ: {
+    GetOrInsertReq *req = (GetOrInsertReq*)task;
     // |key + value + hash_id|
-    ret += task->len + sizeof(TupleIdT) + sizeof(uint32_t);
+    ret += req->len + sizeof(TupleIdT) + sizeof(uint32_t);
     break;
+  }
   default:
     break;
   }
