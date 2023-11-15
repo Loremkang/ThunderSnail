@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include "../common_base_struct/common_base_struct.h"
-#include "buffer_builder.h"
+
 
 // define task names, request and response
 #define GET_OR_INSERT_REQ 0
@@ -64,37 +64,9 @@ typedef struct {
   uint32_t hashTableId;
 } GetOrInsertReq;
 
-inline bool IsVarLenTask(uint8_t taskType)
-{
-  // FIXME: complete other conditions
-  if ( taskType == GET_OR_INSERT_REQ ) {
-    return true;
-  } else {
-    return false;
-  }
-}
+bool IsVarLenTask(uint8_t taskType);
 
-inline uint16_t GetTaskSize(void *task, bool isVarLen)
-{
-  // FIXME: complete other tasks
-  uint8_t taskType = ((Task*)task)->taskType;
-  uint16_t ret = sizeof(BlockDescriptorBase);
-
-  switch(taskType) {
-  case GET_OR_INSERT_REQ: {
-    GetOrInsertReq *req = (GetOrInsertReq*)task;
-    // |key + value + hash_id|
-    ret += req->len + sizeof(TupleIdT) + sizeof(uint32_t);
-    break;
-  }
-  default:
-    break;
-  }
-  if (isVarLen) {
-    ret += sizeof(uint32_t);
-  }
-  return ret;
-}
+uint16_t GetTaskSize(void *task, bool isVarLen);
 
 void CreateCpuToDpuBufferForEachDPU();
 #endif
