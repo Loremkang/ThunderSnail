@@ -3,6 +3,7 @@
 #define COMMON_BASE_STRUCT_H
 
 #include <stdint.h>
+#include <stdbool.h>
 #include "../safety_check_macro.h"
 
 // Pointers
@@ -10,6 +11,9 @@ typedef struct {
     uint32_t dpuId;
     uint32_t dpuAddr;
 } RemotePtrT;
+
+uint64_t RemotePtrToI64(RemotePtrT rPtr);
+RemotePtrT RemotePtrFromI64(uint64_t i64);
 
 typedef struct {
     RemotePtrT rPtr;
@@ -26,10 +30,22 @@ typedef struct {
 } TupleIdT;
 
 // used as reply value of "HashTableGetOrInsert"
+typedef enum {
+    TupleId = 0,
+    MaxLinkAddr = 1
+} TupleIdOrMaxLinkAddrTypeT;
+
 typedef union {
     TupleIdT tupleId;
     MaxLinkAddrT maxLinkAddr;
-} TupleIdOrMaxLinkAddr;
+} TupleIdOrMaxLinkAddrValueT;
+
+typedef struct TupleIdOrMaxLinkAddrT{
+    TupleIdOrMaxLinkAddrTypeT type;
+    TupleIdOrMaxLinkAddrValueT value;
+} TupleIdOrMaxLinkAddrT;
+
+bool TupleIdOrMaxLinkAddrEqual(TupleIdOrMaxLinkAddrT a, TupleIdOrMaxLinkAddrT b);
 
 typedef struct {
     int tupleIDCount;
