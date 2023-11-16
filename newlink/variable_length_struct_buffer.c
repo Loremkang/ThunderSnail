@@ -13,6 +13,10 @@ void ExpendableBufferFree(ExpendableBufferT *buf) {
     buf->buffer = NULL;
 }
 
+void ExpendableBufferSoftReset(ExpendableBufferT *buf) {
+    buf->size = buf->capacity = 0;
+}
+
 static inline bool ExpendableBufferExpand(ExpendableBufferT *buf, OffsetT capacity) {
     if (buf->capacity >= capacity) {
         return false;
@@ -49,20 +53,25 @@ void VariableLengthStructBufferInit(VariableLengthStructBufferT *buf) {
     ExpendableBufferInit(buf->data);
 }
 
+void VariableLengthStructBufferSoftReset(VariableLengthStructBufferT *buf) {
+    buf->count = 0;
+    ExpendableBufferSoftReset(buf->data);
+    ExpendableBufferSoftReset(buf->offset);
+}
+
 OffsetT VariableLengthStructBufferAppendPlaceholder(VariableLengthStructBufferT *buf, OffsetT length) {
     ValidValueCheck(length > 0);
     OffsetT offset = ExpendableBufferAppendPlaceholder(buf->data, length);
     OffsetT count = ExpendableBufferAppend(buf->offset, (uint8_t*)&offset, sizeof(OffsetT)) / sizeof(OffsetT);
     ValidValueCheck(count == buf->count);
-    buf->count ++;
-    return offset;
+    return buf->count ++;
 }
 
 OffsetT VariableLengthStructBufferAppend(VariableLengthStructBufferT *buf, uint8_t* data, OffsetT length) {
     ValidValueCheck(length > 0);
     OffsetT bufferCount = buf->count;
     OffsetT offset = VariableLengthStructBufferAppendPlaceholder(buf, length);
-    memcpy(buf->data->buffer + offset, data, length);
+    memcpy(VariableLengthStructBufferGet(buf, offset), data, length);
     return bufferCount;
 }
 
@@ -101,18 +110,18 @@ bool VariableLengthStructBufferTest() {
     for (int i = 1; i < MAXN; i ++) {
         uint64_t* arr = malloc(i * sizeof(uint64_t));
         for (int j = 0; j < i; j ++) {
-            arr[j] = j + 1;
+            arr[j] = i * MAXN + (j + 1);
         }
         assert(VariableLengthStructBufferAppend(buf, (uint8_t*)arr, i * sizeof(uint64_t)) == i - 1);
     }
     for (int i = 1; i < MAXN; i ++) {
         uint64_t* arr = (uint64_t*)VariableLengthStructBufferGet(buf, i - 1);
         OffsetT length = VariableLengthStructBufferGetSize(buf, i - 1);
-        printf("i=%d\tlength=%d\n", i, length);
+        // printf("i=%d\tlength=%d\n", i, length);
         assert(length == i * sizeof(uint64_t));
         for (int j = 0; j < i; j ++) {
-            printf("arr[%d][%d]=%llu\n", i, j, arr[j]);
-            assert(arr[j] == j + 1);
+            // printf("arr[%d][%d]=%llu\n", i, j, arr[j]);
+            assert(arr[j] == (i * MAXN + (j + 1)));
         }
     }
     VariableLengthStructBufferFree(buf);
