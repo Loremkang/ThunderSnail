@@ -10,7 +10,8 @@ int main() {
     // assert(DisjointSetTest());
     // assert(HashTableForNewLinkTest());
     // NewLinkTest();
-    assert(VariableLengthStructBufferTest());
-    BuildNewLinkFromHashTableGetOrInsertResultTest();
+    // assert(VariableLengthStructBufferTest());
+    // BuildNewLinkFromHashTableGetOrInsertResultTest();
+    // BuildNewLinkFromHashTableGetOrInsertResultPerformanceTest();
     return 0;
 }

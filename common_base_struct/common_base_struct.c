@@ -60,6 +60,7 @@ bool TupleIdOrMaxLinkAddrEqual(TupleIdOrMaxLinkAddrT a, TupleIdOrMaxLinkAddrT b)
         return RemotePtrToI64(a.value.maxLinkAddr.rPtr) == RemotePtrToI64(b.value.maxLinkAddr.rPtr);
     } else {
         ValueOverflowCheck(0);
+        return false;
     }
 }
 
@@ -93,4 +94,5 @@ int GetMaxLinkSize(int tupleIdCount, int hashAddrCount) {
 
 int BuildMaxLink(int tupleIdCount, int hashAddrCount, TupleIdT* tupleIds, HashAddrT* hashAddrs) {
     Unimplemented("BuildMaxLink");
+    return 0;
 }

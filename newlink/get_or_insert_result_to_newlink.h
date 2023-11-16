@@ -7,12 +7,7 @@
 #include "variable_length_struct_buffer.h"
 
 
-void BuildNewLinkFromHashTableGetOrInsertResult(
-    int length, int* idxPos, bool* processed, DisjointSetNodeT* dsNode,
-    HashTableForNewLinkT* ht, TupleIdT* tupleIDs,
-    TupleIdOrMaxLinkAddrT* counterpart,
-    VariableLengthStructBufferT* newLinkResultBuffer);
-
 void BuildNewLinkFromHashTableGetOrInsertResultTest();
+void BuildNewLinkFromHashTableGetOrInsertResultPerformanceTest();
 
 #endif
