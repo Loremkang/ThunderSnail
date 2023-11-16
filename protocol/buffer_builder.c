@@ -5,6 +5,8 @@
 void BufferBuilderInit(BufferBuilder *builder, CpuToDpuBufferDescriptor *bufferDesc)
 {
   // alloc the whole buffer
+  bufferDesc->blockCnt = 0;
+  bufferDesc->totalSize = BUFFER_HEAD_LEN;
   builder->bufferDesc = bufferDesc;
   builder->buffer = malloc(BUFFER_LEN);
   *builder->buffer = bufferDesc->epochNumber;
@@ -31,7 +33,7 @@ void BufferBuilderBeginBlock(BufferBuilder *builder, Task* firstTask)
     varLenBlockDesc->blockDescBase = (BlockDescriptorBase) {
       .taskType = taskType,
       .taskCount = 0,
-      .totalSize = GetVarLenTaskSize(firstTask)
+      .totalSize = sizeof(BlockDescriptorBase)
     };
     // how many tasks?
     varLenBlockDesc->offsets = malloc(sizeof(Offset) * BATCH_SIZE);
@@ -39,9 +41,11 @@ void BufferBuilderBeginBlock(BufferBuilder *builder, Task* firstTask)
     builder->bufferDesc->fixedLenBlockDescs[builder->curBlock].blockDescBase = (BlockDescriptorBase) {
       .taskType = taskType,
       .taskCount = 0,
-      .totalSize = GetFixedLenTaskSize(firstTask)
+      .totalSize = sizeof(BlockDescriptorBase)
     };
   }
+  // update total size of buffer
+  builder->bufferDesc->totalSize += sizeof(BlockDescriptorBase);
   // fill buffer,  first task
   BufferBuilderAppendTask(builder, firstTask);
 }
@@ -63,7 +67,6 @@ void BufferBuilderAppendTask(BufferBuilder *builder, Task *task)
     // record the offset and task count++
     VarLenBlockDescriptor* varLenBlockDesc = &builder->bufferDesc->varLenBlockDescs[builder->curBlock];
     varLenBlockDesc->offsets[varLenBlockDesc->blockDescBase.taskCount++] = builder->curOffset;
-
     // key
     memcpy(builder->curPtr, req->ptr, req->len);
     builder->curPtr += req->len;
@@ -73,6 +76,11 @@ void BufferBuilderAppendTask(BufferBuilder *builder, Task *task)
     *((TupleIdT*)builder->curPtr) = req->tid;
     builder->curPtr += sizeof(TupleIdT);
     builder->curOffset += sizeof(TupleIdT);
+
+    // updata total size
+    uint16_t taskSize = GetVarLenTaskSize(task);
+    varLenBlockDesc->blockDescBase.totalSize += taskSize;
+    builder->bufferDesc->totalSize += taskSize;
     break;
   }
   default:

@@ -15,7 +15,7 @@ uint16_t GetFixedLenTaskSize(void *task)
 {
   // FIXME: complete other tasks
   uint8_t taskType = ((Task*)task)->taskType;
-  uint16_t ret = sizeof(BlockDescriptorBase);
+  uint16_t ret = 0;
 
   switch(taskType) {
   case GET_OR_INSERT_REQ: {
