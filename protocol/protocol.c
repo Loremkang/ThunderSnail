@@ -11,7 +11,7 @@ bool IsVarLenTask(uint8_t taskType)
   }
 }
 
-inline uint16_t GetTaskSize(void *task, bool isVarLen)
+uint16_t GetFixedLenTaskSize(void *task)
 {
   // FIXME: complete other tasks
   uint8_t taskType = ((Task*)task)->taskType;
@@ -27,12 +27,13 @@ inline uint16_t GetTaskSize(void *task, bool isVarLen)
   default:
     break;
   }
-  if (isVarLen) {
-    ret += sizeof(uint32_t);
-  }
   return ret;
 }
 
+uint16_t GetVarLenTaskSize(void *task)
+{
+  return GetFixedLenTaskSize(task) + sizeof(uint32_t);
+}
 
 void CreateCpuToDpuBufferForEachDPU()
 {

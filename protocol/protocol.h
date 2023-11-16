@@ -25,7 +25,8 @@
 #define NUM_FIXED_LEN_BLOCK_OUTPUT 3
 #define NUM_VAR_LEN_BLOCK_OUTPUT 1 // contain maxlink as output value tasks
 
-#define BUFFER_HEAD_LEN 32
+#define BUFFER_HEAD_LEN 4 // |epochNumber blockCnt totalSize|
+#define BLOCK_HEAD_LEN sizeof(BlockDescriptorBase)
 #define BATCH_SIZE 320
 
 typedef struct {
@@ -66,7 +67,9 @@ typedef struct {
 
 bool IsVarLenTask(uint8_t taskType);
 
-uint16_t GetTaskSize(void *task, bool isVarLen);
+uint16_t GetFixedLenTaskSize(void *task);
+
+uint16_t GetVarLenTaskSize(void *task);
 
 void CreateCpuToDpuBufferForEachDPU();
 #endif
