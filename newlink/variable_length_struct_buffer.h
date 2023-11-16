@@ -10,26 +10,26 @@
 #include "../safety_check_macro.h"
 
 typedef int OffsetT;
-typedef struct ExpendableBuffer {
+typedef struct ExpendableBufferT {
     OffsetT capacity;
     OffsetT size;
     uint8_t *buffer;
-} ExpendableBuffer;
+} ExpendableBufferT;
 
-void ExpendableBufferInit(ExpendableBuffer *buf);
-void ExpendableBufferFree(ExpendableBuffer *buf);
-int ExpendableBufferAppend(ExpendableBuffer *buf, uint8_t* data, OffsetT length);
+void ExpendableBufferInit(ExpendableBufferT *buf);
+void ExpendableBufferFree(ExpendableBufferT *buf);
+int ExpendableBufferAppend(ExpendableBufferT *buf, uint8_t* data, OffsetT length);
 
-typedef struct VariableLengthStructBuffer {
+typedef struct VariableLengthStructBufferT {
     OffsetT count;
-    ExpendableBuffer *offset, *data;
-} VariableLengthStructBuffer;
+    ExpendableBufferT *offset, *data;
+} VariableLengthStructBufferT;
 
-void VariableLengthStructBufferInit(VariableLengthStructBuffer *buf);
-int VariableLengthStructBufferAppend(VariableLengthStructBuffer *buf, uint8_t* data, OffsetT length);
-uint8_t* VariableLengthStructBufferGet(VariableLengthStructBuffer *buf, OffsetT idx);
-OffsetT VariableLengthStructBufferGetSize(VariableLengthStructBuffer *buf, OffsetT idx);
-void VariableLengthStructBufferFree(VariableLengthStructBuffer *buf);
+void VariableLengthStructBufferInit(VariableLengthStructBufferT *buf);
+int VariableLengthStructBufferAppend(VariableLengthStructBufferT *buf, uint8_t* data, OffsetT length);
+uint8_t* VariableLengthStructBufferGet(VariableLengthStructBufferT *buf, OffsetT idx);
+OffsetT VariableLengthStructBufferGetSize(VariableLengthStructBufferT *buf, OffsetT idx);
+void VariableLengthStructBufferFree(VariableLengthStructBufferT *buf);
 bool VariableLengthStructBufferTest();
 
 #endif
