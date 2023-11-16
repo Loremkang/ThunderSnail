@@ -16,11 +16,12 @@ typedef struct HashTableForNewLinkT {
 } HashTableForNewLinkT;
 
 void HashTableForNewLinkInit(HashTableForNewLinkT *hashTable);
-void HashTableForNewLinkExpand(HashTableForNewLinkT *hashTable, int capacity);
+void HashTableForNewLinkFree(HashTableForNewLinkT *hashTable);
+void HashTableForNewLinkExpandAndSoftReset(HashTableForNewLinkT *hashTable, int capacity);
 void HashTableForNewLinkShrink(HashTableForNewLinkT *hashTable, int capacity);
 // Id Starting from 1
 int HashTableForNewlinkGetId(HashTableForNewLinkT *hashTable, TupleIdOrMaxLinkAddrT key);
-void HashTableForNewLinkReset(HashTableForNewLinkT *hashTable);
+void HashTableForNewLinkSoftReset(HashTableForNewLinkT *hashTable);
 bool HashTableForNewLinkTest();
 
 #endif

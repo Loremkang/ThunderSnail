@@ -32,7 +32,15 @@ void HashTableForNewLinkInit(HashTableForNewLinkT *hashTable) {
     hashTable->entries = NULL;
 }
 
-void HashTableForNewLinkReset(HashTableForNewLinkT *hashTable) {
+void HashTableForNewLinkFree(HashTableForNewLinkT *hashTable) {
+    hashTable->capacity = 0;
+    hashTable->count = 0;
+    if (hashTable->entries != NULL) {
+        free(hashTable->entries);
+    }
+}
+
+void HashTableForNewLinkSoftReset(HashTableForNewLinkT *hashTable) {
     hashTable->count = 0;
     if (hashTable->capacity > 0) {
         memset(hashTable->entries, 0, sizeof(HashTableForNewLinkEntryT) * hashTable->capacity);
@@ -41,9 +49,10 @@ void HashTableForNewLinkReset(HashTableForNewLinkT *hashTable) {
 
 
 // automatically reset while expand
-void HashTableForNewLinkExpand(HashTableForNewLinkT *hashTable, int capacity) {
+void HashTableForNewLinkExpandAndSoftReset(HashTableForNewLinkT *hashTable, int capacity) {
     ValidValueCheck(capacity > 0);
     if (hashTable->capacity >= capacity) {
+        HashTableForNewLinkSoftReset(hashTable);
         return;
     }
     if (hashTable->capacity > 0) {
@@ -79,9 +88,9 @@ static inline int TryGetIdAtPosition(HashTableForNewLinkT *hashTable, int slotId
 static inline uint64_t Hash(TupleIdOrMaxLinkAddrT key) {
     uint64_t hash_result = 0;
     if (key.type == TupleId) {
-        hash_result = hash64((uint64_t)key.value.tupleId.tableId) ^ hash64((uint64_t)key.value.tupleId.tupleAddr);
+        hash_result = hash64_2((uint64_t)key.value.tupleId.tableId) ^ hash64_2((uint64_t)key.value.tupleId.tupleAddr);
     } else if (key.type == MaxLinkAddr) {
-        hash_result = hash64(RemotePtrToI64(key.value.maxLinkAddr.rPtr));
+        hash_result = hash64_2(RemotePtrToI64(key.value.maxLinkAddr.rPtr));
     } else {
         ValueOverflowCheck(0);
     }
@@ -105,13 +114,14 @@ int HashTableForNewlinkGetId(HashTableForNewLinkT *hashTable, TupleIdOrMaxLinkAd
         }
     }
     ValidValueCheck(0);
+    return 0;
 }
 
 bool HashTableForNewLinkTest() {
     const int MAXN = 1000;
     HashTableForNewLinkT ht;
     HashTableForNewLinkInit(&ht);
-    HashTableForNewLinkExpand(&ht, 1.5 * MAXN); // very dense
+    HashTableForNewLinkExpandAndSoftReset(&ht, 1.5 * MAXN); // very dense
     TupleIdOrMaxLinkAddrT keys[MAXN];
     for (int i = 0; i < MAXN; i ++) {
         if (i & 1) {
