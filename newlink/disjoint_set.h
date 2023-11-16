@@ -3,7 +3,7 @@
 // union set: counts only valid for roots
 typedef struct DisjointSetNodeT {
     int tupleIdCount;
-    int mAddrCount;
+    int maxLinkAddrCount;
     struct DisjointSetNodeT* parent;
 } DisjointSetNodeT;
 

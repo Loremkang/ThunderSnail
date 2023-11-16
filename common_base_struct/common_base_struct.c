@@ -21,6 +21,10 @@ inline RemotePtrT RemotePtrFromI64(uint64_t i64) {
     return tmp.rPtr;
 }
 
+inline bool RemotePtrInvalid(RemotePtrT rPtr) {
+    return RemotePtrToI64(rPtr) == RemotePtrToI64(INVALID_REMOTEPTR);
+}
+
 inline bool RemotePtrAndUint64Test() {
     RemotePtrT x = (RemotePtrT){.id = rand(), .addr = rand()};
     uint64_t xi64 = RemotePtrToI64(x);
@@ -32,7 +36,18 @@ inline bool RemotePtrAndUint64Test() {
     return true;
 }
 
+inline void RemotePtrPrint(RemotePtrT rPtr) {
+    printf("(RemotePtrT){.dpuId = %x\t, .dpuAddr = %x}\n", rPtr.id, rPtr.addr);
+}
 
+void MaxLinkAddrPrint(MaxLinkAddrT maxLinkAddr) {
+    printf("MaxLinkAddrT.rPtr = ");
+    RemotePtrPrint(maxLinkAddr.rPtr);
+}
+
+inline void TupleIdPrint(TupleIdT tupleId) {
+    printf("(TupleIdT){.tableId = %d\t, .tupleAddr = %llx}\n", tupleId.tableId, tupleId.tupleAddr);
+}
 
 bool TupleIdOrMaxLinkAddrEqual(TupleIdOrMaxLinkAddrT a, TupleIdOrMaxLinkAddrT b) {
     if (a.type != b.type) {

@@ -88,6 +88,7 @@ static inline uint64_t Hash(TupleIdOrMaxLinkAddrT key) {
     return hash_result;
 }
 
+// return unique mapping Id(key): 1, 2, ...
 int HashTableForNewlinkGetId(HashTableForNewLinkT *hashTable, TupleIdOrMaxLinkAddrT key) {
     int capacity = hashTable->capacity;
     int count = hashTable->count;

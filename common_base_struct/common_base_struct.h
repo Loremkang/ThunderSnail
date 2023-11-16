@@ -10,8 +10,13 @@ typedef struct {
     uint32_t addr;
 } RemotePtrT;
 
+void RemotePtrPrint(RemotePtrT rPtr);
+
+#define INVALID_REMOTEPTR ((RemotePtrT){.id = UINT32_MAX, .addr = UINT32_MAX})
+
 uint64_t RemotePtrToI64(RemotePtrT rPtr);
 RemotePtrT RemotePtrFromI64(uint64_t i64);
+bool RemotePtrInvalid(RemotePtrT rPtr);
 
 typedef struct {
     RemotePtrT rPtr;
@@ -21,11 +26,15 @@ typedef struct {
     RemotePtrT rPtr;
 } MaxLinkAddrT;
 
+void MaxLinkAddrPrint(MaxLinkAddrT maxLinkAddr);
+
 // Base Elements
 typedef struct {
     int tableId;
     int64_t tupleAddr;
 } TupleIdT;
+
+void TupleIdPrint(TupleIdT tupleId);
 
 // used as reply value of "HashTableGetOrInsert"
 typedef enum {
