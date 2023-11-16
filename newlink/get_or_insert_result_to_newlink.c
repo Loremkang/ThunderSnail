@@ -1,6 +1,6 @@
 #include "get_or_insert_result_to_newlink.h"
 
-const int MAXBATCHSIZE = 10000;
+const int MAXBATCHSIZE = 24000;
 
 static inline void UpdateDSNode(TupleIdOrMaxLinkAddrT value, DisjointSetNodeT* node) {
     if (value.type == TupleId) {
@@ -34,15 +34,15 @@ static inline void FillNewLinkBuffer(int* idxPos, bool* processed, DisjointSetNo
     int idx = idxPos[rootId];
     NewLinkT* newLink =
         (NewLinkT*)VariableLengthStructBufferGet(newLinkResultBuffer, idx);
-    printf("Insert to NewLink %d[%d/%d]: ", idx, newLink->tupleIDCount - dsNode[rootId].tupleIdCount, newLink->maxLinkAddrCount - dsNode[rootId].maxLinkAddrCount);
+    // printf("Insert to NewLink %d[%d/%d]: ", idx, newLink->tupleIDCount - dsNode[rootId].tupleIdCount, newLink->maxLinkAddrCount - dsNode[rootId].maxLinkAddrCount);
     if (value.type == TupleId) {
-        TupleIdPrint(value.value.tupleId);
+        // TupleIdPrint(value.value.tupleId);
         ValidValueCheck(dsNode[rootId].tupleIdCount > 0);
         NewLinkGetTupleIDs(newLink)[--dsNode[rootId].tupleIdCount] =
             value.value.tupleId;
     } else {
         ValidValueCheck(value.type == MaxLinkAddr);
-        MaxLinkAddrPrint(value.value.maxLinkAddr);
+        // MaxLinkAddrPrint(value.value.maxLinkAddr);
         ValidValueCheck(dsNode[rootId].maxLinkAddrCount > 0);
         NewLinkGetMaxLinkAddrs(newLink)[--dsNode[rootId].maxLinkAddrCount] = value.value.maxLinkAddr;
     }
@@ -85,14 +85,14 @@ void BuildNewLinkFromHashTableGetOrInsertResult(
             UpdateDSNode(right, &dsNode[rightId]);
         }
         
-        TupleIdPrint(left.value.tupleId);
-        printf("lid=%d\trid=%d\n", leftId, rightId);
+        // TupleIdPrint(left.value.tupleId);
+        // printf("lid=%d\trid=%d\n", leftId, rightId);
         DisjointSetJoin(&dsNode[leftId], &dsNode[rightId]);
     }
     memset(processed, 0, (2 * length + 1) * sizeof(bool));
-    for (int i = 1; i <= length * 2; i ++) {
-        printf("rootId[%d] = %ld\n", i, DisjointSetFind(&dsNode[i]) - dsNode);
-    }
+    // for (int i = 1; i <= length * 2; i ++) {
+    //     printf("rootId[%d] = %ld\n", i, DisjointSetFind(&dsNode[i]) - dsNode);
+    // }
     for (int i = 0; i < length; i++) {
         TupleIdOrMaxLinkAddrT left = (TupleIdOrMaxLinkAddrT){
             .type = TupleId, .value.tupleId = tupleIDs[i]};
@@ -105,10 +105,10 @@ void BuildNewLinkFromHashTableGetOrInsertResult(
     }
 
     // correctness check
-    for (int i = 0; i < newLinkResultBuffer->count; i ++) {
-        NewLinkT* newLink = (NewLinkT*)VariableLengthStructBufferGet(newLinkResultBuffer, i);
-        NewLinkPrint(newLink);
-    }
+    // for (int i = 0; i < newLinkResultBuffer->count; i ++) {
+    //     NewLinkT* newLink = (NewLinkT*)VariableLengthStructBufferGet(newLinkResultBuffer, i);
+    //     NewLinkPrint(newLink);
+    // }
 }
 
 // entry of this part of code
@@ -123,7 +123,7 @@ void BuildNewLinkFromHashTableGetOrInsertResultTest() {
     static VariableLengthStructBufferT buf;
     VariableLengthStructBufferInit(&buf);
 
-    const int testbatchsize = 32;
+    const int testbatchsize = 3600;
     TupleIdT tupleIds[MAXBATCHSIZE];
     TupleIdOrMaxLinkAddrT counterpart[MAXBATCHSIZE];
 
@@ -144,7 +144,7 @@ void BuildNewLinkFromHashTableGetOrInsertResultTest() {
     for (int i = 0; i < testbatchsize; i ++) { // table B->C
         tupleIds[i + 2 * testbatchsize] = (TupleIdT){.tableId = 1, .tupleAddr = i};
         counterpart[i + 2 * testbatchsize].type = MaxLinkAddr;
-        counterpart[i + 2 * testbatchsize].value.maxLinkAddr.rPtr = (RemotePtrT){.id = 1, .addr = i};
+        counterpart[i + 2 * testbatchsize].value.maxLinkAddr.rPtr = (RemotePtrT){.dpuId = 1, .dpuAddr = i};
     }
 
     BuildNewLinkFromHashTableGetOrInsertResult(3 * testbatchsize, idxPos, processed, dsNode, &ht, tupleIds, counterpart, &buf);

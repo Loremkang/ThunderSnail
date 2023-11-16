@@ -26,18 +26,18 @@ inline bool RemotePtrInvalid(RemotePtrT rPtr) {
 }
 
 inline bool RemotePtrAndUint64Test() {
-    RemotePtrT x = (RemotePtrT){.id = rand(), .addr = rand()};
+    RemotePtrT x = (RemotePtrT){.dpuId = rand(), .dpuAddr = rand()};
     uint64_t xi64 = RemotePtrToI64(x);
     RemotePtrT y = RemotePtrFromI64(xi64);
     uint64_t yi64 = RemotePtrToI64(y);
-    if (x.id != y.id || x.addr != y.addr || xi64 != yi64) {
+    if (x.dpuId != y.dpuId || x.dpuAddr != y.dpuAddr || xi64 != yi64) {
         return false;
     }
     return true;
 }
 
 inline void RemotePtrPrint(RemotePtrT rPtr) {
-    printf("(RemotePtrT){.dpuId = %x\t, .dpuAddr = %x}\n", rPtr.id, rPtr.addr);
+    printf("(RemotePtrT){.dpuId = %x\t, .dpuAddr = %x}\n", rPtr.dpuId, rPtr.dpuAddr);
 }
 
 void MaxLinkAddrPrint(MaxLinkAddrT maxLinkAddr) {
@@ -73,7 +73,7 @@ static inline TupleIdT* GetTupleIDsFromMaxLink(MaxLink* maxLink) {
 
 // Cannot pass reference. Passing pointer instead.
 inline TupleIdT* GetKthTupleIDFromMaxLink(MaxLink* maxLink, int i) {
-    ArrayOverflowCheck(i < maxLink->tupleIDCount);
+    ArrayOverflowCheck(i >= 0 && i < maxLink->tupleIDCount);
     return GetTupleIDsFromMaxLink(maxLink) + i;
 }
 
@@ -83,7 +83,7 @@ static inline HashAddrT* GetHashAddrsFromMaxLink(MaxLink* maxLink) {
 }
 
 inline HashAddrT* GetKthHashAddrFromMaxLink(MaxLink* maxLink, int i) {
-    ArrayOverflowCheck(i < maxLink->hashAddrCount);
+    ArrayOverflowCheck(i >= 0 && i < maxLink->hashAddrCount);
     return GetHashAddrsFromMaxLink(maxLink) + i;
 }
 

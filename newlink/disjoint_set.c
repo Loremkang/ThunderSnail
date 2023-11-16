@@ -1,5 +1,5 @@
 #include "disjoint_set.h"
-#include "../safety_check_macro.h"
+#include "safety_check_macro.h"
 
 void DisjointSetInit(DisjointSetNodeT* node) {
     node->parent = node;

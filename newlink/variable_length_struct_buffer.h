@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-#include "../safety_check_macro.h"
+#include "safety_check_macro.h"
 
 // notice: these buffer may dynamically expand, therefore don't store pointers to them
 typedef int OffsetT;

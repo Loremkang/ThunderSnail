@@ -37,9 +37,9 @@ void NewLinkTest() {
     NewLinkGetTupleIDs(newLink)[0] = (TupleIdT){.tableId = 1, .tupleAddr = 0};
     NewLinkGetTupleIDs(newLink)[1] = (TupleIdT){.tableId = 1, .tupleAddr = 1};
     NewLinkGetTupleIDs(newLink)[2] = (TupleIdT){.tableId = 1, .tupleAddr = 2};
-    NewLinkGetMaxLinkAddrs(newLink)[0] = (MaxLinkAddrT){.rPtr = (RemotePtrT){.id = 2, .addr = 0}};
-    NewLinkGetMaxLinkAddrs(newLink)[1] = (MaxLinkAddrT){.rPtr = (RemotePtrT){.id = 2, .addr = 1}};
-    NewLinkGetMaxLinkAddrs(newLink)[2] = (MaxLinkAddrT){.rPtr = (RemotePtrT){.id = 2, .addr = 2}};
+    NewLinkGetMaxLinkAddrs(newLink)[0] = (MaxLinkAddrT){.rPtr = (RemotePtrT){.dpuId = 2, .dpuAddr = 0}};
+    NewLinkGetMaxLinkAddrs(newLink)[1] = (MaxLinkAddrT){.rPtr = (RemotePtrT){.dpuId = 2, .dpuAddr = 1}};
+    NewLinkGetMaxLinkAddrs(newLink)[2] = (MaxLinkAddrT){.rPtr = (RemotePtrT){.dpuId = 2, .dpuAddr = 2}};
     NewLinkPrint(newLink);
     free(newLink);
 }
