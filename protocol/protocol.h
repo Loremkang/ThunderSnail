@@ -28,6 +28,7 @@
 #define BUFFER_HEAD_LEN 4 // |epochNumber blockCnt totalSize|
 #define BLOCK_HEAD_LEN sizeof(BlockDescriptorBase)
 #define BATCH_SIZE 320
+#define NUM_BLOCKS 8
 
 typedef struct {
   uint8_t taskType;

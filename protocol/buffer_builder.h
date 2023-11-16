@@ -12,7 +12,9 @@ typedef struct {
   uint8_t *buffer;
   uint8_t *curPtr;
   Offset curOffset;
-  uint8_t curBlock;
+  uint8_t varLenBlockIdx;
+  uint8_t fixedLenBlockIdx;
+  uint8_t totalBlocks;
 } BufferBuilder;
 
 void BufferBuilderInit(BufferBuilder *builder, CpuToDpuBufferDescriptor *bufferDesc);

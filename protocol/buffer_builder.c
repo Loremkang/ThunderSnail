@@ -14,12 +14,19 @@ void BufferBuilderInit(BufferBuilder *builder, CpuToDpuBufferDescriptor *bufferD
   builder->curPtr = builder->buffer + BUFFER_HEAD_LEN;
   builder->curOffset = BUFFER_HEAD_LEN;
 
-  builder->curBlock = 0;
+  builder->varLenBlockIdx = 0;
+  builder->fixedLenBlockIdx = 0;
+  builder->totalBlocks = 0;
+
+  // offsets
+  bufferDesc->offsets = malloc(sizeof(Offset) * NUM_BLOCKS);
   return;
 }
 
 void BufferBuilderBeginBlock(BufferBuilder *builder, Task* firstTask)
 {
+  builder->bufferDesc->offsets[builder->totalBlocks++] = builder->curOffset;
+  builder->bufferDesc->totalSize += sizeof(Offset);
   // fill block header
   // fill task type, skip two fields
   uint8_t taskType = firstTask->taskType;
@@ -27,9 +34,10 @@ void BufferBuilderBeginBlock(BufferBuilder *builder, Task* firstTask)
   builder->curPtr += BLOCK_HEAD_LEN;
   builder->curOffset += BLOCK_HEAD_LEN;
 
+
   // block descriptor fill
   if (IsVarLenTask(taskType)) {
-    VarLenBlockDescriptor* varLenBlockDesc = &builder->bufferDesc->varLenBlockDescs[builder->curBlock];
+    VarLenBlockDescriptor* varLenBlockDesc = &builder->bufferDesc->varLenBlockDescs[builder->varLenBlockIdx++];
     varLenBlockDesc->blockDescBase = (BlockDescriptorBase) {
       .taskType = taskType,
       .taskCount = 0,
@@ -38,7 +46,7 @@ void BufferBuilderBeginBlock(BufferBuilder *builder, Task* firstTask)
     // how many tasks?
     varLenBlockDesc->offsets = malloc(sizeof(Offset) * BATCH_SIZE);
   } else {
-    builder->bufferDesc->fixedLenBlockDescs[builder->curBlock].blockDescBase = (BlockDescriptorBase) {
+    builder->bufferDesc->fixedLenBlockDescs[builder->fixedLenBlockIdx++].blockDescBase = (BlockDescriptorBase) {
       .taskType = taskType,
       .taskCount = 0,
       .totalSize = sizeof(BlockDescriptorBase)
@@ -52,10 +60,15 @@ void BufferBuilderBeginBlock(BufferBuilder *builder, Task* firstTask)
 
 void BufferBuilderEndBlock(BufferBuilder *builder)
 {
+  // update blockCnt and flush to buffer
+  *(builder->buffer + sizeof(uint8_t)) = ++builder->bufferDesc->blockCnt;
+  // update total size of the block and flush
+  *(builder->buffer + sizeof(uint8_t) * 2) = builder->bufferDesc->totalSize;
 }
 
 uint8_t* BufferBuilderFinish(BufferBuilder *builder, size_t *size)
 {
+  *size = builder->bufferDesc->totalSize;
   return builder->buffer;
 }
 
@@ -65,7 +78,7 @@ void BufferBuilderAppendTask(BufferBuilder *builder, Task *task)
   case GET_OR_INSERT_REQ: {
     GetOrInsertReq *req = (GetOrInsertReq*)task;
     // record the offset and task count++
-    VarLenBlockDescriptor* varLenBlockDesc = &builder->bufferDesc->varLenBlockDescs[builder->curBlock];
+    VarLenBlockDescriptor* varLenBlockDesc = &builder->bufferDesc->varLenBlockDescs[builder->varLenBlockIdx];
     varLenBlockDesc->offsets[varLenBlockDesc->blockDescBase.taskCount++] = builder->curOffset;
     // key
     memcpy(builder->curPtr, req->ptr, req->len);

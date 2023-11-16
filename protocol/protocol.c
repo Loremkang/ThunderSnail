@@ -32,7 +32,7 @@ uint16_t GetFixedLenTaskSize(void *task)
 
 uint16_t GetVarLenTaskSize(void *task)
 {
-  return GetFixedLenTaskSize(task) + sizeof(uint32_t);
+  return GetFixedLenTaskSize(task) + sizeof(Offset);
 }
 
 void CreateCpuToDpuBufferForEachDPU()
