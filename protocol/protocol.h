@@ -26,7 +26,7 @@ typedef uint32_t HashTableId;
 #define NUM_FIXED_LEN_BLOCK_OUTPUT 3
 #define NUM_VAR_LEN_BLOCK_OUTPUT 1 // contain maxlink as output value tasks
 
-#define BUFFER_HEAD_LEN 4 // |epochNumber blockCnt totalSize|
+#define BUFFER_HEAD_LEN 6 // |epochNumber blockCnt totalSize|
 #define BLOCK_HEAD_LEN sizeof(BlockDescriptorBase)
 #define BATCH_SIZE 320
 #define NUM_BLOCKS 8
@@ -49,7 +49,7 @@ typedef struct {
 typedef struct {
   uint8_t epochNumber;
   uint8_t blockCnt;
-  uint16_t totalSize;
+  uint32_t totalSize;
   FixedLenBlockDescriptor fixedLenBlockDescs[NUM_FIXED_LEN_BLOCK_INPUT];
   VarLenBlockDescriptor varLenBlockDescs[NUM_VAR_LEN_BLOCK_INPUT];
   uint16_t *offsets;
@@ -97,5 +97,4 @@ uint16_t GetFixedLenTaskSize(void *task);
 
 uint16_t GetVarLenTaskSize(void *task);
 
-void CreateCpuToDpuBufferForEachDPU();
 #endif
