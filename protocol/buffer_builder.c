@@ -37,7 +37,8 @@ void BufferBuilderBeginBlock(BufferBuilder *builder, Task* firstTask)
 
   // block descriptor fill
   if (IsVarLenTask(taskType)) {
-    VarLenBlockDescriptor* varLenBlockDesc = &builder->bufferDesc->varLenBlockDescs[builder->varLenBlockIdx++];
+    builder->isCurVarLenBlock = true;
+    VarLenBlockDescriptor* varLenBlockDesc = &builder->bufferDesc->varLenBlockDescs[builder->varLenBlockIdx];
     varLenBlockDesc->blockDescBase = (BlockDescriptorBase) {
       .taskType = taskType,
       .taskCount = 0,
@@ -46,6 +47,7 @@ void BufferBuilderBeginBlock(BufferBuilder *builder, Task* firstTask)
     // how many tasks?
     varLenBlockDesc->offsets = malloc(sizeof(Offset) * BATCH_SIZE);
   } else {
+    builder->isCurVarLenBlock = false;
     builder->bufferDesc->fixedLenBlockDescs[builder->fixedLenBlockIdx++].blockDescBase = (BlockDescriptorBase) {
       .taskType = taskType,
       .taskCount = 0,
@@ -64,16 +66,28 @@ void BufferBuilderEndBlock(BufferBuilder *builder)
   *(builder->buffer + sizeof(uint8_t)) = ++builder->bufferDesc->blockCnt;
   // update total size of the block and flush
   *(builder->buffer + sizeof(uint8_t) * 2) = builder->bufferDesc->totalSize;
+  // flush offsets of block
+  if (builder->isCurVarLenBlock) {
+    uint32_t offsetsLen = builder->totalTasks * sizeof(Offset);
+    VarLenBlockDescriptor* varLenBlockDesc = builder->bufferDesc->varLenBlockDescs[builder->varLenBlockIdx++];
+    uint8_t* offsetsBegin = varLenBlockDesc.blockDescBase.totalSize - offsetsLen;
+    memcpy(offsetsBegin, varLenBlockDesc->offsets, offsetsLen);
+  }
 }
 
 uint8_t* BufferBuilderFinish(BufferBuilder *builder, size_t *size)
 {
+  // flush offsets of buffer
   *size = builder->bufferDesc->totalSize;
+  uint32_t offsetsLen = builder->totalBlocks * sizeof(Offset);
+  uint8_t* offsetsBegin = *size - offsetsLen;
+  memcpy(offsetsBegin, builder->bufferDesc->offsets, offsetsLen);
   return builder->buffer;
 }
 
 void BufferBuilderAppendTask(BufferBuilder *builder, Task *task)
 {
+  builder->totalTasks++;
   switch(task->taskType) {
   case GET_OR_INSERT_REQ: {
     GetOrInsertReq *req = (GetOrInsertReq*)task;
@@ -96,6 +110,7 @@ void BufferBuilderAppendTask(BufferBuilder *builder, Task *task)
     builder->bufferDesc->totalSize += taskSize;
     break;
   }
+    // TODO impl other tasks
   default:
     break;
   }

@@ -6,6 +6,7 @@
 #include "../common_base_struct/common_base_struct.h"
 
 typedef uint32_t HashTableId;
+typedef uint32_t Offset; // The buffer offset
 
 // define task names, request and response
 #define GET_OR_INSERT_REQ 0
@@ -43,7 +44,7 @@ typedef struct {
 
 typedef struct {
   BlockDescriptorBase blockDescBase;
-  uint32_t *offsets;
+  Offset *offsets;
 } VarLenBlockDescriptor;
 
 typedef struct {
@@ -52,7 +53,7 @@ typedef struct {
   uint32_t totalSize;
   FixedLenBlockDescriptor fixedLenBlockDescs[NUM_FIXED_LEN_BLOCK_INPUT];
   VarLenBlockDescriptor varLenBlockDescs[NUM_VAR_LEN_BLOCK_INPUT];
-  uint16_t *offsets;
+  Offset *offsets;
 } CpuToDpuBufferDescriptor;
 
 typedef struct {

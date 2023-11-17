@@ -5,8 +5,6 @@
 
 #define BUFFER_LEN 65535
 
-typedef uint32_t Offset; // The buffer offset
-
 typedef struct {
   CpuToDpuBufferDescriptor *bufferDesc;
   uint8_t *buffer;
@@ -15,6 +13,8 @@ typedef struct {
   uint8_t varLenBlockIdx;
   uint8_t fixedLenBlockIdx;
   uint8_t totalBlocks;
+  uint16_t totalTasks;
+  bool isCurVarLenBlock;
 } BufferBuilder;
 
 void BufferBuilderInit(BufferBuilder *builder, CpuToDpuBufferDescriptor *bufferDesc);
