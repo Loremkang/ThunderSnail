@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include "../common_base_struct/common_base_struct.h"
 
+typedef uint32_t HashTableId;
 
 // define task names, request and response
 #define GET_OR_INSERT_REQ 0
@@ -63,8 +64,32 @@ typedef struct {
   uint8_t *ptr; // key
   uint8_t len;
   TupleIdT tid; // value
-  uint32_t hashTableId;
+  HashTableId hashTableId;
 } GetOrInsertReq;
+
+typedef struct {
+  Task base;
+  uint8_t *ptr; // key
+  uint8_t len;
+  HashTableId hashTableId;
+} GetPointerReq;
+
+typedef struct {
+  HashAddrT hashEntry;
+  MaxLinkAddrT maxLinkAddr;
+} UpdatePointerReq;
+
+typedef struct {
+  MaxLinkAddrT maxLinkAddr;
+} GetMaxLinkSizeReq;
+
+tyepdef struct {
+  MaxLinkAddrT maxLinkAddr;
+} FetchMaxLinkReq;
+
+typedef struct {
+  MaxLink maxLink;
+} MergeMaxLinkReq;
 
 bool IsVarLenTask(uint8_t taskType);
 
