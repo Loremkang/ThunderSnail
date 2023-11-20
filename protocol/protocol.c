@@ -21,13 +21,13 @@ uint16_t GetFixedLenTaskSize(void *task)
   case GET_OR_INSERT_REQ: {
     GetOrInsertReq *req = (GetOrInsertReq*)task;
     // |key + value + hash_id|
-    ret += req->len + sizeof(TupleIdT) + sizeof(HashTableId);
+    ret += req->len + sizeof(GetOrInsertReq);
     break;
   }
   case GET_POINTER_REQ: {
     GetPointerReq *req = (GetPointerReq*)task;
     // |key + hash_id|
-    ret += req->len + sizeof(HashTableId);
+    ret += req->len + sizeof(GetPointerReq);
     break;
   }
   case UPDATE_POINTER_REQ: {
@@ -47,17 +47,15 @@ uint16_t GetFixedLenTaskSize(void *task)
   }
   case MERGE_MAX_LINK_REQ: {
     MergeMaxLinkReq *req = (MergeMaxLinkReq*)task;
-    ret += req->maxLink.tupleIdCount + req->maxLink.hashAddrCount + sizeof(int)*2;
+    // add task type in the end, because we always remove it.
+    ret += req->maxLink.tupleIdCount * sizeof(TupuIdT) + req->maxLink.hashAddrCount * sizeof(HashAddrT) + sizeof(MaxLink) + sizeof(uint8_t);
     break;
   }
   default:
     break;
   }
+  // remove task type.
+  ret -= sizeof(uint8_t);
   return ret;
-}
-
-uint16_t GetVarLenTaskSize(void *task)
-{
-  return GetFixedLenTaskSize(task) + sizeof(Offset);
 }
 

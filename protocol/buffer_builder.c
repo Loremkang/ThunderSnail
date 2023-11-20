@@ -23,17 +23,15 @@ void BufferBuilderInit(BufferBuilder *builder, CpuToDpuBufferDescriptor *bufferD
   return;
 }
 
-void BufferBuilderBeginBlock(BufferBuilder *builder, Task* firstTask)
+void BufferBuilderBeginBlock(BufferBuilder *builder, uint8_t taskType)
 {
   builder->bufferDesc->offsets[builder->totalBlocks++] = builder->curOffset;
   builder->bufferDesc->totalSize += sizeof(Offset);
   // fill block header
   // fill task type, skip two fields
-  uint8_t taskType = firstTask->taskType;
   *builder->curPtr = taskType;
   builder->curPtr += BLOCK_HEAD_LEN;
   builder->curOffset += BLOCK_HEAD_LEN;
-
 
   // block descriptor fill
   if (IsVarLenTask(taskType)) {
@@ -56,8 +54,6 @@ void BufferBuilderBeginBlock(BufferBuilder *builder, Task* firstTask)
   }
   // update total size of buffer
   builder->bufferDesc->totalSize += sizeof(BlockDescriptorBase);
-  // fill buffer,  first task
-  BufferBuilderAppendTask(builder, firstTask);
 }
 
 void BufferBuilderEndBlock(BufferBuilder *builder)
@@ -94,25 +90,13 @@ void BufferBuilderAppendTask(BufferBuilder *builder, Task *task)
     // record the offset and task count++
     VarLenBlockDescriptor* varLenBlockDesc = &builder->bufferDesc->varLenBlockDescs[builder->varLenBlockIdx];
     varLenBlockDesc->offsets[varLenBlockDesc->blockDescBase.taskCount++] = builder->curOffset;
-    // key len
-    *builder->curPtr = req->len;
-    builder->curPtr++;
-    builder->curOffset++;
-
-    // key
-    memcpy(builder->curPtr, req->ptr, req->len);
-    builder->curPtr += req->len;
-    builder->curOffset += req->len;
-
-    // value, tid
-    *((TupleIdT*)builder->curPtr) = req->tid;
-    builder->curPtr += sizeof(TupleIdT);
-    builder->curOffset += sizeof(TupleIdT);
-
+    uint32_t taskSize = GetFixedLenTaskSize(task);
+    memcpy(builder->curPtr, req + sizeof(uint8_t), taskLen);
+    builder->curPtr += taskLen
+    builder->curOffset += taskLen;
     // updata total size
-    uint16_t taskSize = GetVarLenTaskSize(task);
-    varLenBlockDesc->blockDescBase.totalSize += taskSize;
-    builder->bufferDesc->totalSize += taskSize;
+    varLenBlockDesc->blockDescBase.totalSize += taskSize + sizeof(Offset);
+    builder->bufferDesc->totalSize += taskSize + sizeof(Offset);
     break;
   }
     // TODO impl other tasks

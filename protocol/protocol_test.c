@@ -11,9 +11,9 @@ void CreateCpuToDpuBufferForEachDPU()
   for (int i = 0; i < BATCH_SIZE; i++) {
     GetOrInsertReq req = {
       .base = { .taskType = GET_OR_INSERT_REQ },
-      .ptr = malloc(8),
       .len = 8,
       .tid = { .tableId = i, .tupleAddr = i },
+      .ptr = 'a' + i,
       .hashTableId = i % 64
     };
     tasks[i] = (Task*)&req;
@@ -23,9 +23,9 @@ void CreateCpuToDpuBufferForEachDPU()
   };
   BufferBuilderInit(B, &bufferDesc);
   // suppose we have only one block
-  BufferBuilderBeginBlock(B, &tasks[0]);
+  BufferBuilderBeginBlock(B, GET_OR_INSERT_REQ);
   // input stream to get task
-  for (int i = 1; i < BATCH_SIZE; i++) {
+  for (int i = 0; i < BATCH_SIZE; i++) {
     BufferBuilderAppendTask(B, &tasks[i]);
   }
   BufferBuilderEndBlock(B);

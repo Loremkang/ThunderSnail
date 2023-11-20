@@ -62,40 +62,42 @@ typedef struct {
 
 typedef struct {
   Task base;
-  uint8_t *ptr; // key
-  uint8_t len;
+  uint8_t len;  // key len
   TupleIdT tid; // value
   HashTableId hashTableId;
+  uint8_t ptr[]; // key
 } GetOrInsertReq;
 
 typedef struct {
   Task base;
-  uint8_t *ptr; // key
   uint8_t len;
   HashTableId hashTableId;
+  uint8_t ptr[]; // key
 } GetPointerReq;
 
 typedef struct {
+  Task base;
   HashAddrT hashEntry;
   MaxLinkAddrT maxLinkAddr;
 } UpdatePointerReq;
 
 typedef struct {
+  Task base;
   MaxLinkAddrT maxLinkAddr;
 } GetMaxLinkSizeReq;
 
 tyepdef struct {
+  Task base;
   MaxLinkAddrT maxLinkAddr;
 } FetchMaxLinkReq;
 
 typedef struct {
+  Task base;
   MaxLink maxLink;
 } MergeMaxLinkReq;
 
 bool IsVarLenTask(uint8_t taskType);
 
 uint16_t GetFixedLenTaskSize(void *task);
-
-uint16_t GetVarLenTaskSize(void *task);
 
 #endif

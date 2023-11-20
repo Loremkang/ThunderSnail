@@ -19,7 +19,7 @@ typedef struct {
 
 void BufferBuilderInit(BufferBuilder *builder, CpuToDpuBufferDescriptor *bufferDesc);
 
-void BufferBuilderBeginBlock(BufferBuilder *builder, Task *firstTask);
+void BufferBuilderBeginBlock(BufferBuilder *builder, uint8_t taskType);
 
 void BufferBuilderEndBlock(BufferBuilder *builder);
 
