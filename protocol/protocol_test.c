@@ -1,5 +1,6 @@
 #include "protocol.h"
 #include "buffer_builder.h"
+#include <string.h>
 
 void CreateCpuToDpuBufferForEachDPU()
 {
@@ -8,15 +9,18 @@ void CreateCpuToDpuBufferForEachDPU()
   BufferBuilder builder, *B;
   B = &builder;
   Task *tasks[BATCH_SIZE];
+  GetOrInsertReq *reqs[BATCH_SIZE];
   for (int i = 0; i < BATCH_SIZE; i++) {
-    GetOrInsertReq req = {
+    char *key = 'a' + i;
+    reqs[i] = calloc(sizeof(GetOrInsertReq) + 8, 0);
+    memcpy(reqs[i], &(GetOrInsertReq) {
       .base = { .taskType = GET_OR_INSERT_REQ },
       .len = 8,
       .tid = { .tableId = i, .tupleAddr = i },
-      .ptr = 'a' + i,
       .hashTableId = i % 64
-    };
-    tasks[i] = (Task*)&req;
+      }, sizeof(GetOrInsertReq));
+    memcpy(reqs[i] + sizeof(GetOrInsertReq), key, 1);
+    tasks[i] = (Task*)&reqs[i];
   }
   CpuToDpuBufferDescriptor bufferDesc = {
     .epochNumber = 1,

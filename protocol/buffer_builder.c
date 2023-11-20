@@ -1,7 +1,6 @@
 #include "buffer_builder.h"
 #include <string.h>
 
-
 void BufferBuilderInit(BufferBuilder *builder, CpuToDpuBufferDescriptor *bufferDesc)
 {
   // alloc the whole buffer
@@ -65,8 +64,8 @@ void BufferBuilderEndBlock(BufferBuilder *builder)
   // flush offsets of block
   if (builder->isCurVarLenBlock) {
     uint32_t offsetsLen = builder->totalTasks * sizeof(Offset);
-    VarLenBlockDescriptor* varLenBlockDesc = builder->bufferDesc->varLenBlockDescs[builder->varLenBlockIdx++];
-    uint8_t* offsetsBegin = builder->curBlockPtr + varLenBlockDesc.blockDescBase.totalSize - offsetsLen;
+    VarLenBlockDescriptor* varLenBlockDesc = &builder->bufferDesc->varLenBlockDescs[builder->varLenBlockIdx++];
+    uint8_t* offsetsBegin = builder->curBlockPtr + varLenBlockDesc->blockDescBase.totalSize - offsetsLen;
     memcpy(offsetsBegin, varLenBlockDesc->offsets, offsetsLen);
     builder->curBlockOffset += varLenBlockDesc->blockDescBase.totalSize;
   } else {
@@ -95,7 +94,7 @@ void BufferBuilderAppendTask(BufferBuilder *builder, Task *task)
     varLenBlockDesc->offsets[varLenBlockDesc->blockDescBase.taskCount++] = builder->curTaskOffset;
     uint32_t taskSize = GetFixedLenTaskSize(task);
     memcpy(builder->curTaskPtr, req + sizeof(Task), taskSize);
-    builder->curTaskPtr += taskSize
+    builder->curTaskPtr += taskSize;
     builder->curTaskOffset += taskSize;
     // updata total size
     varLenBlockDesc->blockDescBase.totalSize += taskSize + sizeof(Offset);

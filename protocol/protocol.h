@@ -86,7 +86,7 @@ typedef struct {
   MaxLinkAddrT maxLinkAddr;
 } GetMaxLinkSizeReq;
 
-tyepdef struct {
+typedef struct {
   Task base;
   MaxLinkAddrT maxLinkAddr;
 } FetchMaxLinkReq;

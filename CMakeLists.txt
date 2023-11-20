@@ -5,7 +5,7 @@ project(ThunderSnail LANGUAGES C)
 set(CMAKE_VERBOSE_MAKEFILE true)
 
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/common_base_struct SRC_COMMON_BASE_STRUCT)
-aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/protocol SRC_COMMON_PROTOCOL)
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/protocol SRC_PROTOCOL)
 
 add_executable(host testdriver.c ${SRC_COMMON_BASE_STRUCT} ${SRC_PROTOCOL})
 target_include_directories(host PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/common_base_struct ${CMAKE_CURRENT_SOURCE_DIR}/protocol)
