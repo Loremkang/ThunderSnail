@@ -94,11 +94,16 @@ void BufferBuilderAppendTask(BufferBuilder *builder, Task *task)
     // record the offset and task count++
     VarLenBlockDescriptor* varLenBlockDesc = &builder->bufferDesc->varLenBlockDescs[builder->varLenBlockIdx];
     varLenBlockDesc->offsets[varLenBlockDesc->blockDescBase.taskCount++] = builder->curOffset;
+    // key len
+    *builder->curPtr = req->len;
+    builder->curPtr++;
+    builder->curOffset++;
+
     // key
     memcpy(builder->curPtr, req->ptr, req->len);
     builder->curPtr += req->len;
     builder->curOffset += req->len;
-    
+
     // value, tid
     *((TupleIdT*)builder->curPtr) = req->tid;
     builder->curPtr += sizeof(TupleIdT);
