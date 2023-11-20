@@ -8,8 +8,10 @@
 typedef struct {
   CpuToDpuBufferDescriptor *bufferDesc;
   uint8_t *buffer;
-  uint8_t *curPtr;
-  Offset curOffset;
+  uint8_t *curBlockPtr;
+  Offset curBlockOffset;
+  uint8_t *curTaskPtr;
+  Offset curTaskOffset;
   uint8_t varLenBlockIdx;
   uint8_t fixedLenBlockIdx;
   uint8_t totalBlocks;
