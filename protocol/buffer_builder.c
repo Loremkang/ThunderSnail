@@ -94,9 +94,9 @@ void BufferBuilderAppendTask(BufferBuilder *builder, Task *task)
     VarLenBlockDescriptor* varLenBlockDesc = &builder->bufferDesc->varLenBlockDescs[builder->varLenBlockIdx];
     varLenBlockDesc->offsets[varLenBlockDesc->blockDescBase.taskCount++] = builder->curTaskOffset;
     uint32_t taskSize = GetFixedLenTaskSize(task);
-    memcpy(builder->curTaskPtr, req + sizeof(uint8_t), taskLen);
-    builder->curTaskPtr += taskLen
-    builder->curTaskOffset += taskLen;
+    memcpy(builder->curTaskPtr, req + sizeof(Task), taskSize);
+    builder->curTaskPtr += taskSize
+    builder->curTaskOffset += taskSize;
     // updata total size
     varLenBlockDesc->blockDescBase.totalSize += taskSize + sizeof(Offset);
     builder->bufferDesc->totalSize += taskSize + sizeof(Offset);
