@@ -1,12 +1,32 @@
 cmake_minimum_required(VERSION 3.16.0)
 
-project(ThunderSnail LANGUAGES C)
+project(ThunderSnail)
+
+# Avoid warning about DOWNLOAD_EXTRACT_TIMESTAMP in CMake 3.24:
+if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
+  cmake_policy(SET CMP0135 NEW)
+endif()
+
+# For googletest
+include(FetchContent)
+FetchContent_Declare(
+  googletest
+  # Specify the commit you depend on and update it regularly.
+  URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
+)
+FetchContent_MakeAvailable(googletest)
 
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/common_base_struct SRC_COMMON_BASE_STRUCT)
 
 add_executable(host testdriver.c ${SRC_COMMON_BASE_STRUCT})
 target_include_directories(host PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/common_base_struct)
 
+# Build tests:
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/tests SRC_TEST)
+add_executable(test ${SRC_TEST} ${SRC_COMMON_BASE_STRUCT})
+target_include_directories(test PRIVATE .)
+target_link_libraries(test gtest_main)
+add_test(NAME example_test COMMAND test)
 
 set(UPMEM_SDK_DIR "$ENV{UPMEM_SDK_DIR}")
 if(NOT UPMEM_SDK_DIR)
