@@ -70,6 +70,7 @@ void BufferBuilderEndBlock(BufferBuilder *builder)
     builder->curBlockOffset += varLenBlockDesc->blockDescBase.totalSize;
   } else {
     // TODO
+    Unimplemented("fixed len block to be impl!\n");
   }
 }
 
@@ -102,6 +103,7 @@ void BufferBuilderAppendTask(BufferBuilder *builder, Task *task)
     break;
   }
     // TODO impl other tasks
+    Unimplemented("ohter tasks to be impl!\n");
   default:
     break;
   }
