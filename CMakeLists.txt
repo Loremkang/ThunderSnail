@@ -18,11 +18,16 @@ FetchContent_MakeAvailable(googletest)
 
 set(CMAKE_VERBOSE_MAKEFILE true)
 
+set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
+
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/common_base_struct SRC_COMMON_BASE_STRUCT)
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/newlink SRC_NEWLINK)
+
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/protocol SRC_PROTOCOL)
 
-add_executable(host testdriver.c ${SRC_COMMON_BASE_STRUCT} ${SRC_PROTOCOL})
+add_executable(host testdriver.c ${SRC_COMMON_BASE_STRUCT} ${SRC_PROTOCOL} ${SRC_NEWLINK})
 target_include_directories(host PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/common_base_struct ${CMAKE_CURRENT_SOURCE_DIR}/protocol)
+target_include_directories(host PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/newlink)
 
 # Build tests:
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/tests SRC_TEST)

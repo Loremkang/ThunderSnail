@@ -21,6 +21,10 @@ inline RemotePtrT RemotePtrFromI64(uint64_t i64) {
     return tmp.rPtr;
 }
 
+inline bool RemotePtrInvalid(RemotePtrT rPtr) {
+    return RemotePtrToI64(rPtr) == RemotePtrToI64(INVALID_REMOTEPTR);
+}
+
 inline bool RemotePtrAndUint64Test() {
     RemotePtrT x = (RemotePtrT){.dpuId = rand(), .dpuAddr = rand()};
     uint64_t xi64 = RemotePtrToI64(x);
@@ -32,20 +36,36 @@ inline bool RemotePtrAndUint64Test() {
     return true;
 }
 
+inline void RemotePtrPrint(RemotePtrT rPtr) {
+    printf("(RemotePtrT){.dpuId = %x\t, .dpuAddr = %x}\n", rPtr.dpuId, rPtr.dpuAddr);
+}
 
+void MaxLinkAddrPrint(MaxLinkAddrT maxLinkAddr) {
+    printf("MaxLinkAddrT.rPtr = ");
+    RemotePtrPrint(maxLinkAddr.rPtr);
+}
 
-bool TupleIdOrMaxLinkAddrEqual(TupleIdOrMaxLinkAddrT a, TupleIdOrMaxLinkAddrT b) {
+inline void TupleIdPrint(TupleIdT tupleId) {
+    printf("(TupleIdT){.tableId = %d\t, .tupleAddr = %llx}\n", tupleId.tableId, tupleId.tupleAddr);
+}
+
+bool HashTableQueryReplyEqual(HashTableQueryReplyT a, HashTableQueryReplyT b) {
     if (a.type != b.type) {
         return false;
     }
-    if (a.type == TupleId) {
-        return a.value.tupleId.tableId == b.value.tupleId.tableId &&
+    switch (a.type) {
+        case TupleId:
+            return a.value.tupleId.tableId == b.value.tupleId.tableId &&
                 a.value.tupleId.tupleAddr == b.value.tupleId.tupleAddr;
-    } else if (a.type == MaxLinkAddr) {
-        return RemotePtrToI64(a.value.maxLinkAddr.rPtr) == RemotePtrToI64(b.value.maxLinkAddr.rPtr);
-    } else {
-        ValueOverflowCheck(0);
+        case MaxLinkAddr:
+            return RemotePtrToI64(a.value.maxLinkAddr.rPtr) == RemotePtrToI64(b.value.maxLinkAddr.rPtr);
+        case HashAddr:
+            return RemotePtrToI64(a.value.hashAddr.rPtr) == RemotePtrToI64(b.value.hashAddr.rPtr);
+        default:
+            ValueOverflowCheck(0);
+            break;
     }
+    return false;
 }
 
 
@@ -78,4 +98,5 @@ int GetMaxLinkSize(int tupleIdCount, int hashAddrCount) {
 
 int BuildMaxLink(int tupleIdCount, int hashAddrCount, TupleIdT* tupleIds, HashAddrT* hashAddrs) {
     Unimplemented("BuildMaxLink");
+    return 0;
 }
