@@ -1,5 +1,5 @@
 #include "protocol.h"
-#include "buffer_builder.h"
+#include "cpu_buffer_builder.h"
 #include <string.h>
 
 void CreateCpuToDpuBufferForEachDPU()

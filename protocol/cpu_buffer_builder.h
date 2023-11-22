@@ -1,5 +1,5 @@
-#ifndef BUFFER_BUILDER_H
-#define BUFFER_BUILDER_H
+#ifndef CPU_BUFFER_BUILDER_H
+#define CPU_BUFFER_BUILDER_H
 
 #include "protocol.h"
 

@@ -57,6 +57,14 @@ typedef struct {
 } CpuToDpuBufferDescriptor;
 
 typedef struct {
+  uint8_t blockCnt;
+  uint32_t totalSize;
+  FixedLenBlockDescriptor fixedLenBlockDescs[NUM_FIXED_LEN_BLOCK_OUTPUT];
+  VarLenBlockDescriptor varLenBlockDescs[NUM_VAR_LEN_BLOCK_OUTPUT];
+  Offset *offsets;
+} DpuToCpuBufferDescriptor;
+
+typedef struct {
   uint8_t taskType;
 } Task;
 
@@ -95,6 +103,26 @@ typedef struct {
   Task base;
   MaxLink maxLink;
 } MergeMaxLinkReq;
+
+typedef struct {
+  Task base;
+  TupleIdOrMaxLinkAddrT tupleIdOrMaxLinkAddr;
+} GetOrInsertResp;
+
+typedef struct {
+  Task base;
+  MaxLinkAddrT maxLinkAddr;
+} GetPointerResp;
+
+typedef struct {
+  Task base;
+  uint8_t maxLinkSize;
+} GetMaxLinkSizeResp;
+
+typedef struct {
+  Task base;
+  MaxLink maxLink;
+} FetchMaxLinkResp;
 
 bool IsVarLenTask(uint8_t taskType);
 
