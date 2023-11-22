@@ -11,7 +11,6 @@ int main() {
     // assert(HashTableForNewLinkTest());
     // NewLinkTest();
     // assert(VariableLengthStructBufferTest());
-    // BuildNewLinkFromHashTableGetOrInsertResultTest();
     BuildNewLinkFromHashTableGetOrInsertResultPerformanceTest();
     return 0;
 }

@@ -4,6 +4,7 @@
 typedef struct DisjointSetNodeT {
     int tupleIdCount;
     int maxLinkAddrCount;
+    int hashAddrCount;
     struct DisjointSetNodeT* parent;
 } DisjointSetNodeT;
 

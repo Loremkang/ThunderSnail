@@ -49,19 +49,23 @@ inline void TupleIdPrint(TupleIdT tupleId) {
     printf("(TupleIdT){.tableId = %d\t, .tupleAddr = %llx}\n", tupleId.tableId, tupleId.tupleAddr);
 }
 
-bool TupleIdOrMaxLinkAddrEqual(TupleIdOrMaxLinkAddrT a, TupleIdOrMaxLinkAddrT b) {
+bool HashTableQueryReplyEqual(HashTableQueryReplyT a, HashTableQueryReplyT b) {
     if (a.type != b.type) {
         return false;
     }
-    if (a.type == TupleId) {
-        return a.value.tupleId.tableId == b.value.tupleId.tableId &&
+    switch (a.type) {
+        case TupleId:
+            return a.value.tupleId.tableId == b.value.tupleId.tableId &&
                 a.value.tupleId.tupleAddr == b.value.tupleId.tupleAddr;
-    } else if (a.type == MaxLinkAddr) {
-        return RemotePtrToI64(a.value.maxLinkAddr.rPtr) == RemotePtrToI64(b.value.maxLinkAddr.rPtr);
-    } else {
-        ValueOverflowCheck(0);
-        return false;
+        case MaxLinkAddr:
+            return RemotePtrToI64(a.value.maxLinkAddr.rPtr) == RemotePtrToI64(b.value.maxLinkAddr.rPtr);
+        case HashAddr:
+            return RemotePtrToI64(a.value.hashAddr.rPtr) == RemotePtrToI64(b.value.hashAddr.rPtr);
+        default:
+            ValueOverflowCheck(0);
+            break;
     }
+    return false;
 }
 
 

@@ -5,7 +5,7 @@
 #include "common_base_struct/common_base_struct.h"
 
 typedef struct HashTableForNewLinkEntryT {
-    TupleIdOrMaxLinkAddrT key;
+    HashTableQueryReplyT key;
     int value;
 } HashTableForNewLinkEntryT;
 
@@ -20,7 +20,7 @@ void HashTableForNewLinkFree(HashTableForNewLinkT *hashTable);
 void HashTableForNewLinkExpandAndSoftReset(HashTableForNewLinkT *hashTable, int capacity);
 void HashTableForNewLinkShrink(HashTableForNewLinkT *hashTable, int capacity);
 // Id Starting from 1
-int HashTableForNewlinkGetId(HashTableForNewLinkT *hashTable, TupleIdOrMaxLinkAddrT key);
+int HashTableForNewlinkGetId(HashTableForNewLinkT *hashTable, HashTableQueryReplyT key);
 void HashTableForNewLinkSoftReset(HashTableForNewLinkT *hashTable);
 bool HashTableForNewLinkTest();
 

@@ -3,7 +3,7 @@
 
 void DisjointSetInit(DisjointSetNodeT* node) {
     node->parent = node;
-    node->maxLinkAddrCount = node->tupleIdCount = 0;
+    node->maxLinkAddrCount = node->tupleIdCount = node->hashAddrCount = 0;
 }
 
 DisjointSetNodeT* DisjointSetFind(DisjointSetNodeT* node) {
@@ -20,6 +20,7 @@ void DisjointSetJoin(DisjointSetNodeT* a, DisjointSetNodeT* b) {
     if (DisjointSetFind(a) != DisjointSetFind(b)) {
         DisjointSetFind(b)->tupleIdCount += DisjointSetFind(a)->tupleIdCount;
         DisjointSetFind(b)->maxLinkAddrCount += DisjointSetFind(a)->maxLinkAddrCount;
+        DisjointSetFind(b)->hashAddrCount += DisjointSetFind(a)->hashAddrCount;
         DisjointSetFind(a)->parent = DisjointSetFind(b);
     }
 }
@@ -35,6 +36,7 @@ int DisjointSetTest() {
         DisjointSetInit(&node[i]);
         node[i].tupleIdCount = 1;
         node[i].maxLinkAddrCount = i;
+        node[i].hashAddrCount = i + 1;
     }
     for (int i = 0; i < MAXN; i ++) {
         TEST_FAIL(DisjointSetFind(&node[i]) == &node[i]);
@@ -44,6 +46,7 @@ int DisjointSetTest() {
         }
         TEST_FAIL(DisjointSetFind(&node[i])->tupleIdCount == i + 1);
         TEST_FAIL(DisjointSetFind(&node[i])->maxLinkAddrCount == (i * (i + 1) / 2));
+        TEST_FAIL(DisjointSetFind(&node[i])->hashAddrCount == ((i + 2) * (i + 1) / 2));
     }
     return 1;
 

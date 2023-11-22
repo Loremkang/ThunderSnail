@@ -73,32 +73,38 @@ static inline int NextSlot(HashTableForNewLinkT *hashTable, int x) {
 }
 
 // return 0 for failure. otherwise return id.
-static inline int TryGetIdAtPosition(HashTableForNewLinkT *hashTable, int slotId, TupleIdOrMaxLinkAddrT key) {
+static inline int TryGetIdAtPosition(HashTableForNewLinkT *hashTable, int slotId, HashTableQueryReplyT key) {
     if (hashTable->entries[slotId].value == 0) { // empty slot. insert
         hashTable->entries[slotId].key = key;
         hashTable->entries[slotId].value = ++hashTable->count; // id starting from 1
         return hashTable->entries[slotId].value;
-    } else if (TupleIdOrMaxLinkAddrEqual(hashTable->entries[slotId].key, key)) { // match
+    } else if (HashTableQueryReplyEqual(hashTable->entries[slotId].key, key)) { // match
         return hashTable->entries[slotId].value;
     } else { // mismatch
         return 0;
     }
 }
 
-static inline uint64_t Hash(TupleIdOrMaxLinkAddrT key) {
-    uint64_t hash_result = 0;
-    if (key.type == TupleId) {
-        hash_result = hash64_2((uint64_t)key.value.tupleId.tableId) ^ hash64_2((uint64_t)key.value.tupleId.tupleAddr);
-    } else if (key.type == MaxLinkAddr) {
-        hash_result = hash64_2(RemotePtrToI64(key.value.maxLinkAddr.rPtr));
-    } else {
-        ValueOverflowCheck(0);
+static inline uint64_t Hash(HashTableQueryReplyT key) {
+    uint64_t hash_result = hash64_2(key.type);
+    switch (key.type) {
+        case TupleId:
+            hash_result ^= hash64_2((uint64_t)key.value.tupleId.tableId) ^ hash64_2((uint64_t)key.value.tupleId.tupleAddr);
+            break;
+        case MaxLinkAddr:
+            hash_result ^= hash64_2(RemotePtrToI64(key.value.maxLinkAddr.rPtr));
+            break;
+        case HashAddr:
+            hash_result ^= hash64_2(RemotePtrToI64(key.value.hashAddr.rPtr));
+            break;
+        default:
+            ValidValueCheck(0);
     }
     return hash_result;
 }
 
 // return unique mapping Id(key): 1, 2, ...
-int HashTableForNewlinkGetId(HashTableForNewLinkT *hashTable, TupleIdOrMaxLinkAddrT key) {
+int HashTableForNewlinkGetId(HashTableForNewLinkT *hashTable, HashTableQueryReplyT key) {
     int capacity = hashTable->capacity;
     int count = hashTable->count;
     ValidValueCheck((capacity >= 0 && IsPowerOf2(capacity) && count < capacity));
@@ -122,7 +128,7 @@ bool HashTableForNewLinkTest() {
     HashTableForNewLinkT ht;
     HashTableForNewLinkInit(&ht);
     HashTableForNewLinkExpandAndSoftReset(&ht, 1.5 * MAXN); // very dense
-    TupleIdOrMaxLinkAddrT keys[MAXN];
+    HashTableQueryReplyT keys[MAXN];
     for (int i = 0; i < MAXN; i ++) {
         if (i & 1) {
             keys[i].type = TupleId;

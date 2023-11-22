@@ -5,7 +5,7 @@
 #define MAXBATCHSIZE (24000)
 
 static inline void FillNewLinkBuffer(int* idxPos, bool* processed, DisjointSetNodeT* dsNode,
-                       int id, TupleIdOrMaxLinkAddrT value,
+                       int id, HashTableQueryReplyT value,
                        VariableLengthStructBufferT* newLinkResultBuffer) {
     if (processed[id]) {
         return;
@@ -13,7 +13,7 @@ static inline void FillNewLinkBuffer(int* idxPos, bool* processed, DisjointSetNo
     int rootId = DisjointSetFind(&dsNode[id]) - dsNode;
     if (idxPos[rootId] == -1) {
         int size = NewLinkGetSize(dsNode[rootId].tupleIdCount,
-                                  dsNode[rootId].maxLinkAddrCount);
+                                  dsNode[rootId].maxLinkAddrCount, dsNode[rootId].hashAddrCount);
 
         int idx = VariableLengthStructBufferAppendPlaceholder(
             newLinkResultBuffer, size);
@@ -21,51 +21,68 @@ static inline void FillNewLinkBuffer(int* idxPos, bool* processed, DisjointSetNo
             (NewLinkT*)VariableLengthStructBufferGet(newLinkResultBuffer, idx);
         nextNewLink->tupleIDCount = dsNode[rootId].tupleIdCount;
         nextNewLink->maxLinkAddrCount = dsNode[rootId].maxLinkAddrCount;
+        nextNewLink->hashAddrCount = dsNode[rootId].hashAddrCount;
         idxPos[rootId] = idx;
     }
     int idx = idxPos[rootId];
     NewLinkT* newLink =
         (NewLinkT*)VariableLengthStructBufferGet(newLinkResultBuffer, idx);
     // printf("Insert to NewLink %d[%d/%d]: ", idx, newLink->tupleIDCount - dsNode[rootId].tupleIdCount, newLink->maxLinkAddrCount - dsNode[rootId].maxLinkAddrCount);
-    if (value.type == TupleId) {
-        // TupleIdPrint(value.value.tupleId);
-        ValidValueCheck(dsNode[rootId].tupleIdCount > 0);
-        NewLinkGetTupleIDs(newLink)[--dsNode[rootId].tupleIdCount] =
-            value.value.tupleId;
-    } else {
-        ValidValueCheck(value.type == MaxLinkAddr);
-        // MaxLinkAddrPrint(value.value.maxLinkAddr);
-        ValidValueCheck(dsNode[rootId].maxLinkAddrCount > 0);
-        NewLinkGetMaxLinkAddrs(newLink)[--dsNode[rootId].maxLinkAddrCount] = value.value.maxLinkAddr;
+    switch (value.type) {
+        case TupleId:
+            // TupleIdPrint(value.value.tupleId);
+            ValidValueCheck(dsNode[rootId].tupleIdCount > 0);
+            NewLinkGetTupleIDs(newLink)[--dsNode[rootId].tupleIdCount] =
+                value.value.tupleId;
+            break;
+        case MaxLinkAddr:
+            // MaxLinkAddrPrint(value.value.maxLinkAddr);
+            ValidValueCheck(dsNode[rootId].maxLinkAddrCount > 0);
+            NewLinkGetMaxLinkAddrs(newLink)[--dsNode[rootId].maxLinkAddrCount] = value.value.maxLinkAddr;
+            break;
+        case HashAddr:
+            ValidValueCheck(dsNode[rootId].hashAddrCount > 0);
+            NewLinkGetHashAddrs(newLink)[--dsNode[rootId].hashAddrCount] = value.value.hashAddr;
+            break;
+        default:
+            ValidValueCheck(0);
     }
     processed[id] = true;
 }
 
+static inline bool ValidHashTableQueryReply(HashTableQueryReplyT reply) {
+    switch (reply.type) {
+        case TupleId:
+            return reply.value.tupleId.tableId > 0 && (void*)reply.value.tupleId.tupleAddr != NULL;
+        case MaxLinkAddr:
+            return !RemotePtrInvalid(reply.value.maxLinkAddr.rPtr);
+        case HashAddr:
+            return !RemotePtrInvalid(reply.value.hashAddr.rPtr);
+        default:
+            ValidValueCheck(0);
+    }
+}
+
 static inline void BuildIds(int length, HashTableForNewLinkT* ht, int* leftIds,
                             int* rightIds, TupleIdT* tupleIDs,
-                            TupleIdOrMaxLinkAddrT* counterpart) {
+                            HashTableQueryReplyT* counterpart) {
     assert(length * 2 < MAXBATCHSIZE);
     HashTableForNewLinkExpandAndSoftReset(ht, length * 2 * 1.5);
     for (int i = 0; i < length; i++) {
-        TupleIdOrMaxLinkAddrT left = (TupleIdOrMaxLinkAddrT){
+        HashTableQueryReplyT left = (HashTableQueryReplyT){
             .type = TupleId, .value.tupleId = tupleIDs[i]};
         int leftId = HashTableForNewlinkGetId(ht, left);
         leftIds[i] = leftId;
-        TupleIdOrMaxLinkAddrT right = counterpart[i];
-        if (right.type == MaxLinkAddr &&
-            RemotePtrInvalid(right.value.maxLinkAddr.rPtr)) {
-            rightIds[i] = 0;
-            continue;
-        } else {
-            rightIds[i] = HashTableForNewlinkGetId(ht, right);
-        }
+        HashTableQueryReplyT right = counterpart[i];
+        ValidValueCheck(ValidHashTableQueryReply(right));
+        rightIds[i] = HashTableForNewlinkGetId(ht, right);
     }
 }
 
 void BuildNewLinkFromHashTableGetOrInsertResult(
     int length, int* idxPos, bool* processed, DisjointSetNodeT* dsNode,
     int* leftIds, int* rightIds, TupleIdT* tupleIDs,
-    TupleIdOrMaxLinkAddrT* counterpart,
+    HashTableQueryReplyT* counterpart,
     VariableLengthStructBufferT* newLinkResultBuffer) {
     // HashTableForNewlinkGetId reply starts from 1, not 0. So use "<" here, not
     // "<=".
@@ -83,18 +100,23 @@ void BuildNewLinkFromHashTableGetOrInsertResult(
             continue;
         }
         DisjointSetInit(&dsNode[rightId]);
-        if (counterpart[i].type == TupleId) {
-            dsNode[rightId].tupleIdCount = 1;
-        } else {
-            dsNode[rightId].maxLinkAddrCount = 1;
+        switch (counterpart[i].type) {
+            case TupleId:
+                dsNode[rightId].tupleIdCount = 1;
+                break;
+            case MaxLinkAddr:
+                dsNode[rightId].maxLinkAddrCount = 1;
+                break;
+            case HashAddr:
+                dsNode[rightId].hashAddrCount = 1;
+                break;
+            default:
+                ValidValueCheck(0);
         }
     }
     for (int i = 0; i < length; i++) {
         int leftId = leftIds[i];
         int rightId = rightIds[i];
-        if (rightId == 0) {
-            continue;
-        }
         DisjointSetJoin(&dsNode[leftId], &dsNode[rightId]);
     }
 
@@ -106,72 +128,22 @@ void BuildNewLinkFromHashTableGetOrInsertResult(
     //     dsNode);
     // }
     for (int i = 0; i < length; i++) {
-        TupleIdOrMaxLinkAddrT left = (TupleIdOrMaxLinkAddrT){
+        HashTableQueryReplyT left = (HashTableQueryReplyT){
             .type = TupleId, .value.tupleId = tupleIDs[i]};
-        TupleIdOrMaxLinkAddrT right = counterpart[i];
+        HashTableQueryReplyT right = counterpart[i];
         FillNewLinkBuffer(idxPos, processed, dsNode, leftIds[i], left,
                           newLinkResultBuffer);
-        if (right.type == MaxLinkAddr &&
-            RemotePtrInvalid(right.value.maxLinkAddr.rPtr)) {
-            continue;
-        }
+        ValidValueCheck(ValidHashTableQueryReply(right));
         FillNewLinkBuffer(idxPos, processed, dsNode, rightIds[i], right,
                           newLinkResultBuffer);
     }
 
-    // correctness check
-//     for (int i = 0; i < newLinkResultBuffer->count; i ++) {
-//         NewLinkT* newLink =
-//         (NewLinkT*)VariableLengthStructBufferGet(newLinkResultBuffer, i);
-//         NewLinkPrint(newLink);
-//     }
-}
-
-// need careful consideration on memory management. ignored now.
-void BuildNewLinkFromHashTableGetOrInsertResultTest() {
-    static DisjointSetNodeT dsNode[MAXBATCHSIZE];
-    static int idxPos[MAXBATCHSIZE];
-    static bool processed[MAXBATCHSIZE];
-    static int leftIds[MAXBATCHSIZE];
-    static int rightIds[MAXBATCHSIZE];
-    static HashTableForNewLinkT ht;
-    HashTableForNewLinkInit(&ht);
-    static VariableLengthStructBufferT buf;
-    VariableLengthStructBufferInit(&buf);
-
-    const int testbatchsize = 30;
-    TupleIdT tupleIds[MAXBATCHSIZE];
-    TupleIdOrMaxLinkAddrT counterpart[MAXBATCHSIZE];
-
-    // TESTCASE: NATURAL_JOIN(A, B, C, D)
-    // Existing: C, D
-    // Inserting: A(tableid=0), B(tableid=1)
-
-    for (int i = 0; i < testbatchsize; i++) {  // table A
-        tupleIds[i] = (TupleIdT){.tableId = 0, .tupleAddr = i};
-        counterpart[i].type = MaxLinkAddr;
-        counterpart[i].value.maxLinkAddr.rPtr = INVALID_REMOTEPTR;
-    }
-    for (int i = 0; i < testbatchsize; i++) {  // table B->A
-        tupleIds[i + testbatchsize] = (TupleIdT){.tableId = 1, .tupleAddr = i};
-        counterpart[i + testbatchsize].type = TupleId;
-        counterpart[i + testbatchsize].value.tupleId = tupleIds[i];
-    }
-    for (int i = 0; i < testbatchsize; i++) {  // table B->C
-        tupleIds[i + 2 * testbatchsize] =
-            (TupleIdT){.tableId = 1, .tupleAddr = i};
-        counterpart[i + 2 * testbatchsize].type = MaxLinkAddr;
-        counterpart[i + 2 * testbatchsize].value.maxLinkAddr.rPtr =
-            (RemotePtrT){.dpuId = 1, .dpuAddr = i};
-    }
-
-    int length = 3 * testbatchsize;
-    BuildIds(length, &ht, leftIds, rightIds, tupleIds, counterpart);
-    BuildNewLinkFromHashTableGetOrInsertResult(
-        length, idxPos, processed, dsNode, leftIds, rightIds,
-        tupleIds, counterpart, &buf);
-    VariableLengthStructBufferFree(&buf);
-    HashTableForNewLinkFree(&ht);
+    // print result
+    // for (int i = 0; i < newLinkResultBuffer->count; i ++) {
+    //     NewLinkT* newLink =
+    //     (NewLinkT*)VariableLengthStructBufferGet(newLinkResultBuffer, i);
+    //     NewLinkPrint(newLink);
+    // }
 }
 
 // performance counter
@@ -181,6 +153,7 @@ static inline double get_timestamp() {
     return ts.tv_sec + ts.tv_nsec / 1e9;
 }
 
+// TODO: careful consideration on memory management
 void BuildNewLinkFromHashTableGetOrInsertResultPerformanceTest() {
     static DisjointSetNodeT dsNode[MAXBATCHSIZE];
     static int idxPos[MAXBATCHSIZE];
@@ -194,10 +167,11 @@ void BuildNewLinkFromHashTableGetOrInsertResultPerformanceTest() {
 
     const int testbatchsize = 400;
     TupleIdT tupleIds[MAXBATCHSIZE];
-    TupleIdOrMaxLinkAddrT counterpart[MAXBATCHSIZE];
+    HashTableQueryReplyT counterpart[MAXBATCHSIZE];
 
     // TESTCASE: CHAIN_NATURAL_JOIN(T0, T1, ..., T9, T10)
-    // Existing: T0, T10
+    // Keep Empty: T0
+    // Existing: T10
     // Inserting: T1, ..., T9
 
     const int NR_TABLES = 9;
@@ -205,28 +179,29 @@ void BuildNewLinkFromHashTableGetOrInsertResultPerformanceTest() {
         int offset = testbatchsize * (T - 1) * 2;
         for (int i = 0; i < testbatchsize; i ++) { // T to T-1
             int pos = i + offset;
-            tupleIds[pos] = (TupleIdT){.tableId = T, .tupleAddr = i};
+            tupleIds[pos] = (TupleIdT){.tableId = T, .tupleAddr = i + 1};
             if (T == 1) {
-                counterpart[pos].type = MaxLinkAddr;
-                counterpart[pos].value.maxLinkAddr.rPtr =
-                    (RemotePtrT){.dpuId = 0, .dpuAddr = i};
+                counterpart[pos].type = HashAddr;
+                counterpart[pos].value.hashAddr.rPtr =
+                    (RemotePtrT){.dpuId = 0, .dpuAddr = i + testbatchsize};
             } else {
                 counterpart[pos].type = TupleId;
                 counterpart[pos].value.tupleId =
-                    (TupleIdT){.tableId = T - 1, .tupleAddr = i};
+                    (TupleIdT){.tableId = T - 1, .tupleAddr = i + 1};
             }
         }
         offset += testbatchsize;
         for (int i = 0; i < testbatchsize; i++) { // T to T+1
             int pos = i + offset;
-            tupleIds[pos] = (TupleIdT){.tableId = T, .tupleAddr = i};
+            tupleIds[pos] = (TupleIdT){.tableId = T, .tupleAddr = i + 1};
             if (T == 9) {
                 counterpart[pos].type = MaxLinkAddr;
                 counterpart[pos].value.maxLinkAddr.rPtr =
                     (RemotePtrT){.dpuId = T + 1, .dpuAddr = i};
             } else {
-                counterpart[pos].type = MaxLinkAddr;
-                counterpart[pos].value.maxLinkAddr.rPtr = INVALID_REMOTEPTR;
+                counterpart[pos].type = HashAddr;
+                counterpart[pos].value.hashAddr.rPtr =
+                    (RemotePtrT){.dpuId = T + 1, .dpuAddr = i + testbatchsize};
             }
         }
     }
@@ -246,6 +221,7 @@ void BuildNewLinkFromHashTableGetOrInsertResultPerformanceTest() {
             tupleIds, counterpart, &buf);
     }
     double timeSpent = get_timestamp() - timeStart;
+    printf("Number of Rounds: %d\n", testRound);
     printf("Time Per Task: %lf ns\n",
            timeSpent / testRound * 1e9 / NR_TABLES / testbatchsize);
 

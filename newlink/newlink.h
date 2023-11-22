@@ -3,11 +3,13 @@
 typedef struct {
     int tupleIDCount;
     int maxLinkAddrCount;
-    uint8_t buffer[]; // [[Tuple IDs], [MaxLink Addrs]]
+    int hashAddrCount;
+    uint8_t buffer[]; // [[Tuple IDs], [MaxLink Addrs], [Hash Addrs]]
 } NewLinkT;
 
 TupleIdT* NewLinkGetTupleIDs(NewLinkT* newLink);
 MaxLinkAddrT* NewLinkGetMaxLinkAddrs(NewLinkT* newLink);
-int NewLinkGetSize(int tupleIdCount, int maxLinkAddrCount);
+HashAddrT* NewLinkGetHashAddrs(NewLinkT* newLink);
+int NewLinkGetSize(int tupleIdCount, int maxLinkAddrCount, int hashAddrCount);
 void NewLinkPrint(NewLinkT* newLink);
 void NewLinkTest();

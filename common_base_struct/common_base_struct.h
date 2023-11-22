@@ -41,20 +41,22 @@ void TupleIdPrint(TupleIdT tupleId);
 // used as reply value of "HashTableGetOrInsert"
 typedef enum {
     TupleId = 0,
-    MaxLinkAddr = 1
-} TupleIdOrMaxLinkAddrTypeT;
+    MaxLinkAddr = 1,
+    HashAddr = 2
+} HashTableQueryReplyTypeT;
 
 typedef union {
     TupleIdT tupleId;
     MaxLinkAddrT maxLinkAddr;
-} TupleIdOrMaxLinkAddrValueT;
+    HashAddrT hashAddr;
+} HashTableQueryReplyValueT;
 
-typedef struct TupleIdOrMaxLinkAddrT{
-    TupleIdOrMaxLinkAddrTypeT type;
-    TupleIdOrMaxLinkAddrValueT value;
-} TupleIdOrMaxLinkAddrT;
+typedef struct HashTableQueryReplyT{
+    HashTableQueryReplyTypeT type;
+    HashTableQueryReplyValueT value;
+} HashTableQueryReplyT;
 
-bool TupleIdOrMaxLinkAddrEqual(TupleIdOrMaxLinkAddrT a, TupleIdOrMaxLinkAddrT b);
+bool HashTableQueryReplyEqual(HashTableQueryReplyT a, HashTableQueryReplyT b);
 
 typedef struct {
     int tupleIDCount;
