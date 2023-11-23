@@ -30,7 +30,7 @@ void IndexGetOrInsertReq(primary_index_dpu *pid, char *key, uint32_t keyLen, Tup
     } else {
         entry = primary_index_dpu_lookup(pid, key, keyLen);
         reply->type = HashAddr;
-        reply->value.hashAddr.rPtr.dpuId = gDpuId;
+        reply->value.hashAddr.rPtr.dpuId = g_dpuId;
         reply->value.hashAddr.rPtr.dpuAddr = (uint32_t)entry;
     }
 }

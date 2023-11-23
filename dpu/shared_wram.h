@@ -4,6 +4,6 @@
 
 #include <stdint.h>
 
-extern uint32_t gDpuId;
+extern uint32_t g_dpuId;
 
 #endif
