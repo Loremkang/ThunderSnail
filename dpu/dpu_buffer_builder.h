@@ -12,7 +12,9 @@ uint8_t __mram_noinit replyBuffer[BUFFER_LEN];
 
 typedef struct {
   DpuToCpuBufferDescriptor bufferDesc;
+  uint8_t *curBlockPtr;
   Offset curBlockOffset;
+  uint8_t *curTaskPtr;
   Offset curTaskOffset;
   uint8_t varLenBlockIdx;
   uint8_t fixedLenBlockIdx;

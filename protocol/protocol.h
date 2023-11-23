@@ -110,7 +110,7 @@ typedef struct {
 
 typedef struct {
   Task base;
-  TupleIdOrMaxLinkAddrT tupleIdOrMaxLinkAddr;
+  HashTableQueryReplyT tupleIdOrMaxLinkAddr;
 } GetOrInsertResp;
 
 typedef struct {

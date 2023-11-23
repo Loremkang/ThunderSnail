@@ -10,8 +10,8 @@ void BufferBuilderInit(BufferBuilder *builder, CpuToDpuBufferDescriptor *bufferD
   builder->buffer = malloc(BUFFER_LEN);
   *builder->buffer = bufferDesc->epochNumber;
   // skip blockCnt and totalSize, later to fill them
-  builder->curBlockPtr = builder->buffer + CPU_BUFFER_HEAD_LEN;
   builder->curBlockOffset = CPU_BUFFER_HEAD_LEN;
+  builder->curBlockPtr = builder->buffer + builder->curBlockOffset;
 
   builder->varLenBlockIdx = 0;
   builder->fixedLenBlockIdx = 0;
@@ -27,9 +27,9 @@ void BufferBuilderBeginBlock(BufferBuilder *builder, uint8_t taskType)
   builder->bufferDesc->totalSize += sizeof(Offset);
   // fill block header
   // fill task type, skip two fields
-  *builder->curTaskPtr = taskType;
-  builder->curTaskPtr += BLOCK_HEAD_LEN;
-  builder->curTaskOffset += BLOCK_HEAD_LEN;
+  *builder->curBlockPtr = taskType;
+  builder->curTaskPtr = builder->curBlockPtr + BLOCK_HEAD_LEN;
+  builder->curTaskOffset = BLOCK_HEAD_LEN;
 
   // block descriptor fill
   if (IsVarLenTask(taskType)) {
@@ -67,7 +67,11 @@ void BufferBuilderEndBlock(BufferBuilder *builder)
     uint8_t* offsetsBegin = builder->curBlockPtr + varLenBlockDesc->blockDescBase.totalSize - offsetsLen;
     memcpy(offsetsBegin, varLenBlockDesc->offsets, offsetsLen);
     builder->curBlockOffset += varLenBlockDesc->blockDescBase.totalSize;
+  } else {
+    FixedLenBlockDescriptor* fixedLenBlockDesc = &builder->bufferDesc->fixedLenBlockDescs[builder->fixedLenBlockIdx++];
+    builder->curBlockOffset += fixedLenBlockDesc->blockDescBase.totalSize;
   }
+  builder->curBlockPtr = builder->buffer + builder->curBlockOffset;
 }
 
 uint8_t* BufferBuilderFinish(BufferBuilder *builder, size_t *size)

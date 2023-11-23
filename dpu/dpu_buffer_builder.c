@@ -14,6 +14,7 @@ void BufferBuilderInit(BufferBuilder *builder)
   replyBuffer[0] = BUFFER_STATE_OK;
 
   // skip blockCnt and totalSize, later to fill them
+  builder->curBlockPtr = (uint8_t*)replyBuffer + DPU_BUFFER_HEAD_LEN;
   builder->curBlockOffset = DPU_BUFFER_HEAD_LEN;
 
   builder->varLenBlockIdx = 0;
