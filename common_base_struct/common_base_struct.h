@@ -33,7 +33,7 @@ void MaxLinkAddrPrint(MaxLinkAddrT maxLinkAddr);
 // Base Elements
 typedef struct {
     int tableId;
-    int64_t tupleAddr;
+    uint64_t tupleAddr;
 } TupleIdT;
 
 void TupleIdPrint(TupleIdT tupleId);
