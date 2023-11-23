@@ -2,6 +2,7 @@
 #include <alloc.h>
 #include <stdlib.h>
 #include <string.h>
+#include <mram.h>
 
 void BufferBuilderInit(BufferBuilder *builder)
 {
@@ -10,11 +11,11 @@ void BufferBuilderInit(BufferBuilder *builder)
   builder->bufferDesc.blockCnt = 0;
   builder->bufferDesc.totalSize = DPU_BUFFER_HEAD_LEN;
   // need clear the reply buffer?
-  memset(replyBuffer, 0, sizeof(replyBuffer));
+  memset(replyBuffer, 0, BUFFER_LEN);
   replyBuffer[0] = BUFFER_STATE_OK;
 
   // skip blockCnt and totalSize, later to fill them
-  builder->curBlockPtr = (uint8_t*)replyBuffer + DPU_BUFFER_HEAD_LEN;
+  builder->curBlockPtr = replyBuffer + DPU_BUFFER_HEAD_LEN;
   builder->curBlockOffset = DPU_BUFFER_HEAD_LEN;
 
   builder->varLenBlockIdx = 0;
@@ -32,7 +33,6 @@ void BufferBuilderBeginBlock(BufferBuilder *builder, uint8_t taskType)
   // fill block header
   // fill task type, skip two fields
   *builder->curBlockPtr = taskType;
-  builder->curTaskPtr = builder->curBlockPtr + BLOCK_HEAD_LEN;
   builder->curTaskOffset = BLOCK_HEAD_LEN;
 
   // block descriptor fill
@@ -44,8 +44,8 @@ void BufferBuilderBeginBlock(BufferBuilder *builder, uint8_t taskType)
       .taskCount = 0,
       .totalSize = sizeof(BlockDescriptorBase)
     };
-    // each time alloc NUM_OF_TASKS
-    varLenBlockDesc->offsets = buddy_alloc(sizeof(Offset) * NUM_OF_TASKS);
+    // each time alloc BATCH_SIZE
+    varLenBlockDesc->offsets = buddy_alloc(sizeof(Offset) * BATCH_SIZE);
   } else {
     builder->isCurVarLenBlock = false;
     builder->bufferDesc.fixedLenBlockDescs[builder->fixedLenBlockIdx++].blockDescBase = (BlockDescriptorBase) {
@@ -68,7 +68,7 @@ void BufferBuilderEndBlock(BufferBuilder *builder)
   if (builder->isCurVarLenBlock) {
     VarLenBlockDescriptor* varLenBlockDesc = &builder->bufferDesc.varLenBlockDescs[builder->varLenBlockIdx++];
     uint32_t offsetsLen = varLenBlockDesc->blockDescBase.taskCount * sizeof(Offset);
-    uint8_t* offsetsBegin = builder->curBlockPtr + varLenBlockDesc->blockDescBase.totalSize - offsetsLen;
+    uint8_t* offsetsBegin = (uint8_t*)builder->curBlockPtr + varLenBlockDesc->blockDescBase.totalSize - offsetsLen;
     memcpy(offsetsBegin, varLenBlockDesc->offsets, offsetsLen);
     builder->curBlockOffset += varLenBlockDesc->blockDescBase.totalSize;
     buddy_free(varLenBlockDesc->offsets);
@@ -76,7 +76,7 @@ void BufferBuilderEndBlock(BufferBuilder *builder)
     FixedLenBlockDescriptor* fixedLenBlockDesc = &builder->bufferDesc.fixedLenBlockDescs[builder->fixedLenBlockIdx++];
     builder->curBlockOffset += fixedLenBlockDesc->blockDescBase.totalSize;
   }
-  builder->curBlockPtr = (uint8_t*)replyBuffer + builder->curBlockOffset;
+  builder->curBlockPtr = replyBuffer + builder->curBlockOffset;
 }
 
 size_t BufferBuilderFinish(BufferBuilder *builder)
@@ -87,4 +87,27 @@ size_t BufferBuilderFinish(BufferBuilder *builder)
   uint8_t* offsetsBegin = (uint8_t*)replyBuffer + size - offsetsLen;
   memcpy(offsetsBegin, builder->bufferDesc.offsets, offsetsLen);
   return size;
+}
+
+void BufferBuilderAppendTask(BufferBuilder *builder, Task *task)
+{
+  switch(task->taskType) {
+  case GET_OR_INSERT_RESP: {
+    GetOrInsertResp *resp = (GetOrInsertResp*)task;
+    // record the offset and task count++
+    VarLenBlockDescriptor* varLenBlockDesc = &builder->bufferDesc.varLenBlockDescs[builder->varLenBlockIdx];
+    varLenBlockDesc->offsets[varLenBlockDesc->blockDescBase.taskCount++] = builder->curTaskOffset;
+    uint32_t taskSize = GetFixedLenTaskSize(task);
+    mram_write(resp + sizeof(Task), builder->curBlockPtr + builder->curTaskOffset, taskSize);
+    builder->curTaskOffset += taskSize;
+    // updata total size
+    varLenBlockDesc->blockDescBase.totalSize += taskSize + sizeof(Offset);
+    builder->bufferDesc.totalSize += taskSize + sizeof(Offset);
+    break;
+  }
+    // TODO impl other tasks
+    Unimplemented("ohter tasks to be impl!\n");
+  default:
+    break;
+  }
 }

@@ -3,8 +3,7 @@
 
 #include "../protocol.h"
 
-#define BUDDY_LEN 1024 // save builder and descriptors
-#define NUM_OF_TASKS 128
+#define BUDDY_LEN 4096 // save builder and descriptors
 #define BUFFER_STATE_OK 0
 
 // reply buffer
@@ -12,7 +11,7 @@ uint8_t __mram_noinit replyBuffer[BUFFER_LEN];
 
 typedef struct {
   DpuToCpuBufferDescriptor bufferDesc;
-  uint8_t *curBlockPtr;
+  __mram_ptr uint8_t *curBlockPtr;
   Offset curBlockOffset;
   uint8_t *curTaskPtr;
   Offset curTaskOffset;
