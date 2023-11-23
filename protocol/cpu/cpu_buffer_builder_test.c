@@ -1,4 +1,4 @@
-#include "protocol.h"
+#include "../protocol.h"
 #include "cpu_buffer_builder.h"
 #include <string.h>
 

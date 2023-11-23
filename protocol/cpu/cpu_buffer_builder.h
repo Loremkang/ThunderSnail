@@ -1,17 +1,11 @@
-#ifndef DPU_BUFFER_BUILDER_H
-#define DPU_BUFFER_BUILDER_H
+#ifndef CPU_BUFFER_BUILDER_H
+#define CPU_BUFFER_BUILDER_H
 
-#include "../protocol/protocol.h"
-
-#define BUDDY_LEN 256 // save builder and descriptors
-#define NUM_OF_TASKS 128
-#define BUFFER_STATE_OK 0
-
-// reply buffer
-uint8_t __mram_noinit replyBuffer[BUFFER_LEN];
+#include "../protocol.h"
 
 typedef struct {
-  DpuToCpuBufferDescriptor bufferDesc;
+  CpuToDpuBufferDescriptor *bufferDesc;
+  uint8_t *buffer;
   uint8_t *curBlockPtr;
   Offset curBlockOffset;
   uint8_t *curTaskPtr;
@@ -21,7 +15,7 @@ typedef struct {
   bool isCurVarLenBlock;
 } BufferBuilder;
 
-void BufferBuilderInit(BufferBuilder *builder);
+void BufferBuilderInit(BufferBuilder *builder, CpuToDpuBufferDescriptor *bufferDesc);
 
 void BufferBuilderBeginBlock(BufferBuilder *builder, uint8_t taskType);
 

@@ -49,6 +49,8 @@ if(NOT EXECUTABLE_OUTPUT_PATH)
 endif()
 
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/dpu DPU_SOURCES)
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/protocol DPU_PROTOCOL_SOURCES)
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/protocol/dpu DPU_PROTOCOL_DPU_SOURCES)
 
 file(GLOB DPU_HEADERS "dpu/*.h")
 
@@ -58,7 +60,9 @@ add_custom_target(${DPU_TASK_NAME} ALL
             -DNR_TASKLETS=${NR_TASKLETS}
             -DSTACK_SIZE_DEFAULT=1024
             -I${CMAKE_CURRENT_SOURCE_DIR}/dpu
-            ${DPU_SOURCES}
+            -I${CMAKE_CURRENT_SOURCE_DIR}/protocol
+	    -I${CMAKE_CURRENT_SOURCE_DIR}/protocol/dpu
+            ${DPU_SOURCES} ${DPU_PROTOCOL_SOURCES} ${DPU_PROTOCOL_DPU_SOURCES}
             -o ${EXECUTABLE_OUTPUT_PATH}/${DPU_TASK_NAME}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     DEPENDS ${DPU_SOURCES}
