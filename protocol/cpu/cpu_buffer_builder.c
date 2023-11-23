@@ -67,6 +67,7 @@ void BufferBuilderEndBlock(BufferBuilder *builder)
     uint8_t* offsetsBegin = builder->curBlockPtr + varLenBlockDesc->blockDescBase.totalSize - offsetsLen;
     memcpy(offsetsBegin, varLenBlockDesc->offsets, offsetsLen);
     builder->curBlockOffset += varLenBlockDesc->blockDescBase.totalSize;
+    free(varLenBlockDesc->offsets);
   } else {
     FixedLenBlockDescriptor* fixedLenBlockDesc = &builder->bufferDesc->fixedLenBlockDescs[builder->fixedLenBlockIdx++];
     builder->curBlockOffset += fixedLenBlockDesc->blockDescBase.totalSize;
@@ -81,6 +82,8 @@ uint8_t* BufferBuilderFinish(BufferBuilder *builder, size_t *size)
   uint32_t offsetsLen = builder->bufferDesc->blockCnt * sizeof(Offset);
   uint8_t* offsetsBegin = builder->buffer + *size - offsetsLen;
   memcpy(offsetsBegin, builder->bufferDesc->offsets, offsetsLen);
+  // free
+  free(bufferDesc->offsets);
   return builder->buffer;
 }
 

@@ -27,7 +27,7 @@ void BufferBuilderBeginBlock(BufferBuilder *builder, uint8_t taskType);
 
 void BufferBuilderEndBlock(BufferBuilder *builder);
 
-uint8_t* BufferBuilderFinish(BufferBuilder *builder, size_t *size);
+size_t BufferBuilderFinish(BufferBuilder *builder);
 
 void BufferBuilderAppendTask(BufferBuilder *builder, Task *task);
 
