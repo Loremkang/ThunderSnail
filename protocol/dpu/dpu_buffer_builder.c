@@ -68,8 +68,8 @@ void BufferBuilderEndBlock(BufferBuilder *builder)
   if (builder->isCurVarLenBlock) {
     VarLenBlockDescriptor* varLenBlockDesc = &builder->bufferDesc.varLenBlockDescs[builder->varLenBlockIdx++];
     uint32_t offsetsLen = varLenBlockDesc->blockDescBase.taskCount * sizeof(Offset);
-    uint8_t* offsetsBegin = (uint8_t*)builder->curBlockPtr + varLenBlockDesc->blockDescBase.totalSize - offsetsLen;
-    memcpy(offsetsBegin, varLenBlockDesc->offsets, offsetsLen);
+    __mram_ptr uint8_t* offsetsBegin = builder->curBlockPtr + varLenBlockDesc->blockDescBase.totalSize - offsetsLen;
+    mram_write(varLenBlockDesc->offsets, offsetsBegin, offsetsLen);
     builder->curBlockOffset += varLenBlockDesc->blockDescBase.totalSize;
     buddy_free(varLenBlockDesc->offsets);
   } else {
@@ -84,8 +84,8 @@ size_t BufferBuilderFinish(BufferBuilder *builder)
   // flush offsets of buffer
   size_t size = builder->bufferDesc.totalSize;
   uint32_t offsetsLen = builder->bufferDesc.blockCnt * sizeof(Offset);
-  uint8_t* offsetsBegin = (uint8_t*)replyBuffer + size - offsetsLen;
-  memcpy(offsetsBegin, builder->bufferDesc.offsets, offsetsLen);
+  __mram_ptr uint8_t* offsetsBegin = replyBuffer + size - offsetsLen;
+  mram_write(builder->bufferDesc.offsets, offsetsBegin, offsetsLen);
   return size;
 }
 
