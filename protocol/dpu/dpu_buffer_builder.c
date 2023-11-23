@@ -4,6 +4,9 @@
 #include <string.h>
 #include <mram.h>
 
+// reply buffer
+uint8_t __mram_noinit replyBuffer[BUFFER_LEN];
+
 void BufferBuilderInit(BufferBuilder *builder)
 {
   buddy_init(BUDDY_LEN);

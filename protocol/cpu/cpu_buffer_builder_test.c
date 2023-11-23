@@ -34,5 +34,8 @@ void CreateCpuToDpuBufferForEachDPU()
   }
   BufferBuilderEndBlock(B);
   buffer = BufferBuilderFinish(B, &size);
+  for (int i = 0; i < BATCH_SIZE; i++) {
+    free(resq[i]);
+  }
   return;
 }

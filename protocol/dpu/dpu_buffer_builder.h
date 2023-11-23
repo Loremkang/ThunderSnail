@@ -6,9 +6,6 @@
 #define BUDDY_LEN 4096 // save builder and descriptors
 #define BUFFER_STATE_OK 0
 
-// reply buffer
-uint8_t __mram_noinit replyBuffer[BUFFER_LEN];
-
 typedef struct {
   DpuToCpuBufferDescriptor bufferDesc;
   __mram_ptr uint8_t *curBlockPtr;
