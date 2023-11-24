@@ -1,7 +1,7 @@
 #include "newlink_to_maxlink.h"
 #include "shared_constants.h"
 #include "variable_length_struct_buffer.h"
-#include "common_base_struct.h"
+#include "../common_base_struct/common_base_struct.h"
 
 void GenerateGetSizeTask(MaxLinkAddrT addr) {
     Unimplemented("GenerateGetSizeTask");
@@ -64,7 +64,7 @@ void BuildPreMaxLinkFromNewLink(VariableLengthStructBufferT* newLinkBuffer, Vari
 
     NewLinkMergerInit(&merger);
     
-    int taskCount = 0;
+    taskCount = 0;
     for (OffsetT i = 0; i < newLinkBuffer->count; i ++) {
         NewLinkT* newLink = (NewLinkT*)VariableLengthStructBufferGet(newLinkBuffer, i);
         for (int j = 0; j < newLink->maxLinkAddrCount; j ++) {
