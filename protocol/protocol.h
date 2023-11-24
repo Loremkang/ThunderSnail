@@ -93,7 +93,7 @@ typedef struct {
 
 typedef struct {
   Task base;
-  MaxLink maxLink;
+  MaxLinkT maxLink;
 } MergeMaxLinkReq;
 
 bool IsVarLenTask(uint8_t taskType);
