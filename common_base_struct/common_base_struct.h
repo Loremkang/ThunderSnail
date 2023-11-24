@@ -4,7 +4,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "safety_check_macro.h"
+#include "../safety_check_macro.h"
 
 // Pointers
 typedef struct {

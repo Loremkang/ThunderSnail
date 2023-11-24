@@ -1,5 +1,5 @@
-#include "protocol.h"
-#include "buffer_builder.h"
+#include "../protocol.h"
+#include "cpu_buffer_builder.h"
 #include <string.h>
 
 void CreateCpuToDpuBufferForEachDPU()
@@ -23,7 +23,9 @@ void CreateCpuToDpuBufferForEachDPU()
     tasks[i] = (Task*)&reqs[i];
   }
   CpuToDpuBufferDescriptor bufferDesc = {
-    .epochNumber = 1,
+    .header = {
+      .epochNumber = 1,
+    }
   };
   BufferBuilderInit(B, &bufferDesc);
   // suppose we have only one block
@@ -34,5 +36,8 @@ void CreateCpuToDpuBufferForEachDPU()
   }
   BufferBuilderEndBlock(B);
   buffer = BufferBuilderFinish(B, &size);
+  for (int i = 0; i < BATCH_SIZE; i++) {
+    free(resq[i]);
+  }
   return;
 }

@@ -27,10 +27,13 @@ typedef uint32_t Offset; // The buffer offset
 #define NUM_FIXED_LEN_BLOCK_OUTPUT 3
 #define NUM_VAR_LEN_BLOCK_OUTPUT 1 // contain maxlink as output value tasks
 
-#define BUFFER_HEAD_LEN 6 // |epochNumber blockCnt totalSize|
+#define CPU_BUFFER_HEAD_LEN 6 // |epochNumber blockCnt totalSize|
+#define DPU_BUFFER_HEAD_LEN 6 // |bufferState blockCnt totalSize|
 #define BLOCK_HEAD_LEN sizeof(BlockDescriptorBase)
 #define BATCH_SIZE 320
 #define NUM_BLOCKS 8
+
+#define BUFFER_LEN 65535
 
 typedef struct {
   uint8_t taskType;
@@ -51,10 +54,27 @@ typedef struct {
   uint8_t epochNumber;
   uint8_t blockCnt;
   uint32_t totalSize;
+} CpuBufferHeader;
+
+typedef struct {
+  CpuBufferHeader header;
   FixedLenBlockDescriptor fixedLenBlockDescs[NUM_FIXED_LEN_BLOCK_INPUT];
   VarLenBlockDescriptor varLenBlockDescs[NUM_VAR_LEN_BLOCK_INPUT];
   Offset *offsets;
 } CpuToDpuBufferDescriptor;
+
+typedef struct {
+  uint8_t bufferState;
+  uint8_t blockCnt;
+  uint32_t totalSize;
+} DpuBufferHeader;
+
+typedef struct {
+  DpuBufferHeader header;
+  FixedLenBlockDescriptor fixedLenBlockDescs[NUM_FIXED_LEN_BLOCK_OUTPUT];
+  VarLenBlockDescriptor varLenBlockDescs[NUM_VAR_LEN_BLOCK_OUTPUT];
+  Offset offsets[NUM_BLOCKS];
+} DpuToCpuBufferDescriptor;
 
 typedef struct {
   uint8_t taskType;
@@ -95,6 +115,26 @@ typedef struct {
   Task base;
   MaxLink maxLink;
 } MergeMaxLinkReq;
+
+typedef struct {
+  Task base;
+  HashTableQueryReplyT tupleIdOrMaxLinkAddr;
+} GetOrInsertResp;
+
+typedef struct {
+  Task base;
+  MaxLinkAddrT maxLinkAddr;
+} GetPointerResp;
+
+typedef struct {
+  Task base;
+  uint8_t maxLinkSize;
+} GetMaxLinkSizeResp;
+
+typedef struct {
+  Task base;
+  MaxLink maxLink;
+} FetchMaxLinkResp;
 
 bool IsVarLenTask(uint8_t taskType);
 

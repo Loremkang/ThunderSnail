@@ -1,21 +1,19 @@
-#include "buffer_builder.h"
+#include "cpu_buffer_builder.h"
 #include <string.h>
 
 void BufferBuilderInit(BufferBuilder *builder, CpuToDpuBufferDescriptor *bufferDesc)
 {
   // alloc the whole buffer
-  bufferDesc->blockCnt = 0;
-  bufferDesc->totalSize = BUFFER_HEAD_LEN;
+  bufferDesc->header.blockCnt = 0;
+  bufferDesc->header.totalSize = CPU_BUFFER_HEAD_LEN;
   builder->bufferDesc = bufferDesc;
   builder->buffer = malloc(BUFFER_LEN);
-  *builder->buffer = bufferDesc->epochNumber;
-  // skip blockCnt and totalSize, later to fill them
-  builder->curBlockPtr = builder->buffer + BUFFER_HEAD_LEN;
-  builder->curBlockOffset = BUFFER_HEAD_LEN;
+
+  builder->curBlockOffset = CPU_BUFFER_HEAD_LEN;
+  builder->curBlockPtr = builder->buffer + builder->curBlockOffset;
 
   builder->varLenBlockIdx = 0;
   builder->fixedLenBlockIdx = 0;
-  builder->totalBlocks = 0;
 
   // offsets
   bufferDesc->offsets = malloc(sizeof(Offset) * NUM_BLOCKS);
@@ -24,13 +22,13 @@ void BufferBuilderInit(BufferBuilder *builder, CpuToDpuBufferDescriptor *bufferD
 
 void BufferBuilderBeginBlock(BufferBuilder *builder, uint8_t taskType)
 {
-  builder->bufferDesc->offsets[builder->totalBlocks++] = builder->curBlockOffset;
-  builder->bufferDesc->totalSize += sizeof(Offset);
+  builder->bufferDesc->offsets[builder->bufferDesc->header.blockCnt++] = builder->curBlockOffset;
+  builder->bufferDesc->header.totalSize += sizeof(Offset);
   // fill block header
   // fill task type, skip two fields
-  *builder->curTaskPtr = taskType;
-  builder->curTaskPtr += BLOCK_HEAD_LEN;
-  builder->curTaskOffset += BLOCK_HEAD_LEN;
+  *builder->curBlockPtr = taskType;
+  builder->curTaskPtr = builder->curBlockPtr + BLOCK_HEAD_LEN;
+  builder->curTaskOffset = BLOCK_HEAD_LEN;
 
   // block descriptor fill
   if (IsVarLenTask(taskType)) {
@@ -52,41 +50,46 @@ void BufferBuilderBeginBlock(BufferBuilder *builder, uint8_t taskType)
     };
   }
   // update total size of buffer
-  builder->bufferDesc->totalSize += sizeof(BlockDescriptorBase);
+  builder->bufferDesc->header.totalSize += sizeof(BlockDescriptorBase);
 }
 
 void BufferBuilderEndBlock(BufferBuilder *builder)
 {
-  // update blockCnt and flush to buffer
-  *(builder->buffer + sizeof(uint8_t)) = ++builder->bufferDesc->blockCnt;
-  // update total size of the block and flush
-  *(builder->buffer + sizeof(uint8_t) * 2) = builder->bufferDesc->totalSize;
+  // flush buffer header
+  memcpy(builder->buffer, builder->bufferDesc->header, sizeof(CpuBufferHeader));
   // flush offsets of block
   if (builder->isCurVarLenBlock) {
-    uint32_t offsetsLen = builder->totalTasks * sizeof(Offset);
     VarLenBlockDescriptor* varLenBlockDesc = &builder->bufferDesc->varLenBlockDescs[builder->varLenBlockIdx++];
+    uint32_t offsetsLen = varLenBlockDesc->blockDescBase.taskCount * sizeof(Offset);
     uint8_t* offsetsBegin = builder->curBlockPtr + varLenBlockDesc->blockDescBase.totalSize - offsetsLen;
     memcpy(offsetsBegin, varLenBlockDesc->offsets, offsetsLen);
     builder->curBlockOffset += varLenBlockDesc->blockDescBase.totalSize;
+    free(varLenBlockDesc->offsets);
+    // flush block header
+    memcpy(builder->curBlockPtr, varLenBlockDesc->header, sizeof(BlockDescriptorBase));
   } else {
-    // TODO
-    Unimplemented("fixed len block to be impl!\n");
+    FixedLenBlockDescriptor* fixedLenBlockDesc = &builder->bufferDesc->fixedLenBlockDescs[builder->fixedLenBlockIdx++];
+    builder->curBlockOffset += fixedLenBlockDesc->blockDescBase.totalSize;
+    // flush block header
+    memcpy(builder->curBlockPtr, fixedLenBlockDesc->header, sizeof(BlockDescriptorBase));
   }
+  builder->curBlockPtr = builder->buffer + builder->curBlockOffset;
 }
 
 uint8_t* BufferBuilderFinish(BufferBuilder *builder, size_t *size)
 {
   // flush offsets of buffer
-  *size = builder->bufferDesc->totalSize;
-  uint32_t offsetsLen = builder->totalBlocks * sizeof(Offset);
+  *size = builder->bufferDesc->header.totalSize;
+  uint32_t offsetsLen = builder->bufferDesc->header.blockCnt * sizeof(Offset);
   uint8_t* offsetsBegin = builder->buffer + *size - offsetsLen;
   memcpy(offsetsBegin, builder->bufferDesc->offsets, offsetsLen);
+  // free
+  free(bufferDesc->offsets);
   return builder->buffer;
 }
 
 void BufferBuilderAppendTask(BufferBuilder *builder, Task *task)
 {
-  builder->totalTasks++;
   switch(task->taskType) {
   case GET_OR_INSERT_REQ: {
     GetOrInsertReq *req = (GetOrInsertReq*)task;
@@ -99,7 +102,7 @@ void BufferBuilderAppendTask(BufferBuilder *builder, Task *task)
     builder->curTaskOffset += taskSize;
     // updata total size
     varLenBlockDesc->blockDescBase.totalSize += taskSize + sizeof(Offset);
-    builder->bufferDesc->totalSize += taskSize + sizeof(Offset);
+    builder->bufferDesc->header.totalSize += taskSize + sizeof(Offset);
     break;
   }
     // TODO impl other tasks
