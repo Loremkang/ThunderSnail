@@ -9,6 +9,7 @@ void GenerateGetSizeTask(MaxLinkAddrT addr) {
 
 int FetchGetSizeReply(int idx) {
     Unimplemented("FetchGetSizeReply");
+    return 0;
 }
 
 void GenerateFetchMaxLinkTask(MaxLinkAddrT addr) {
@@ -17,6 +18,7 @@ void GenerateFetchMaxLinkTask(MaxLinkAddrT addr) {
 
 MaxLinkT* FetchFetchMaxLinkReply(int idx) {
     Unimplemented("FetchGetSizeReply");
+    return NULL;
 }
 
 void BuildPreMaxLinkFromNewLink(VariableLengthStructBufferT* newLinkBuffer, VariableLengthStructBufferT* preMaxLinkBuffer) {
@@ -62,16 +64,18 @@ void BuildPreMaxLinkFromNewLink(VariableLengthStructBufferT* newLinkBuffer, Vari
 
     // run tasks : 1 IO Round
 
-    NewLinkMergerInit(&merger);
+    Unimplemented("Fix Error");
+    // NewLinkMergerInit(&merger);
     
     taskCount = 0;
     for (OffsetT i = 0; i < newLinkBuffer->count; i ++) {
         NewLinkT* newLink = (NewLinkT*)VariableLengthStructBufferGet(newLinkBuffer, i);
         for (int j = 0; j < newLink->maxLinkAddrCount; j ++) {
             if (j != largestMaxLinkPos[i]) {
-                NewLinkT* newLink = FetchFetchMaxLinkReply(taskCount++);
+                MaxLinkT* maxLink = FetchFetchMaxLinkReply(taskCount++);
                 ValidValueCheck(newLink->maxLinkAddrCount == 0);
-                NewLinkMerge(&merger, newLink);
+                Unimplemented("Fix Error");
+                // NewLinkMerge(&merger, newLink);
             } else {
                 merger.maxLinkAddrs[merger.maxLinkAddrCount ++] = NewLinkGetMaxLinkAddrs(newLink)[j];
             }
@@ -80,7 +84,8 @@ void BuildPreMaxLinkFromNewLink(VariableLengthStructBufferT* newLinkBuffer, Vari
         int size = NewLinkGetSize(merger.tupleIDCount, merger.maxLinkAddrCount, merger.hashAddrCount);
         int idx = VariableLengthStructBufferAppendPlaceholder(preMaxLinkBuffer, size);
         PreMaxLinkT* preMaxLink = (PreMaxLinkT*)VariableLengthStructBufferGet(preMaxLinkBuffer, idx);
-        NewLinkMergerExport(&merger, preMaxLink);
+        Unimplemented("Fix Error");
+        // NewLinkMergerExport(&merger, preMaxLink);
     }
 
     // reset buffer

@@ -1,11 +1,11 @@
 #include <gtest/gtest.h>
 
 extern "C" {
-#include "newlink/disjoint_set.h"
-#include "newlink/hash_table_for_newlink.h"
-#include "newlink/hash_function.h"
-#include "newlink/newlink.h"
-#include "newlink/variable_length_struct_buffer.h"
+#include "disjoint_set.h"
+#include "hash_table_for_newlink.h"
+#include "hash_function.h"
+#include "newlink.h"
+#include "variable_length_struct_buffer.h"
 }
 
 TEST(NewLinkTest, DisJointSet) {
