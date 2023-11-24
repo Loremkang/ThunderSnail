@@ -26,13 +26,16 @@ aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/newlink SRC_NEWLINK)
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/protocol SRC_PROTOCOL)
 
 add_executable(host testdriver.c ${SRC_COMMON_BASE_STRUCT} ${SRC_PROTOCOL} ${SRC_NEWLINK})
-target_include_directories(host PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/common_base_struct ${CMAKE_CURRENT_SOURCE_DIR}/protocol)
+target_include_directories(host PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/common_base_struct)
+target_include_directories(host PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/protocol)
 target_include_directories(host PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/newlink)
 
 # Build tests:
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/tests SRC_TEST)
 add_executable(test ${SRC_TEST} ${SRC_COMMON_BASE_STRUCT} ${SRC_NEWLINK})
-target_include_directories(test PRIVATE .)
+target_include_directories(test PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/common_base_struct)
+target_include_directories(test PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/protocol)
+target_include_directories(test PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/newlink)
 target_link_libraries(test gtest_main)
 add_test(NAME example_test COMMAND test)
 

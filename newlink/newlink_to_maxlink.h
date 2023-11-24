@@ -24,7 +24,7 @@ inline void NewLinkMergerInit(NewLinkMergerT *merger) {
     merger->hashAddrCount = 0;
 }
 
-inline void NewLinkMerge(NewLinkMergerT *merger, NewLinkT *newLink) {
+static inline void NewLinkMerge(NewLinkMergerT *merger, NewLinkT *newLink) {
     for (int i = 0; i < newLink->tupleIDCount; i ++) {
         bool duplicate = false;
         TupleIdT tupleId = NewLinkGetTupleIDs(newLink)[i];
@@ -69,7 +69,7 @@ inline void NewLinkMerge(NewLinkMergerT *merger, NewLinkT *newLink) {
     }
 }
 
-inline void NewLinkMergerExport(NewLinkMergerT *merger, NewLinkT *target) {
+static inline void NewLinkMergerExport(NewLinkMergerT *merger, NewLinkT *target) {
     target->tupleIDCount = merger->tupleIDCount;
     target->maxLinkAddrCount = merger->maxLinkAddrCount;
     target->hashAddrCount = merger->hashAddrCount;
@@ -78,7 +78,7 @@ inline void NewLinkMergerExport(NewLinkMergerT *merger, NewLinkT *target) {
     memcpy(NewLinkGetHashAddrs(target), merger->hashAddrs, sizeof(HashAddrT) * merger->hashAddrCount);
 }
 
-inline void NewLinkToMaxLink(NewLinkT *newLink, MaxLink *maxLink) {
+static inline void NewLinkToMaxLink(NewLinkT *newLink, MaxLinkT *maxLink) {
     maxLink->tupleIDCount = newLink->tupleIDCount;
     maxLink->hashAddrCount = newLink->hashAddrCount;
     memcpy(GetTupleIDsFromMaxLink(maxLink), NewLinkGetTupleIDs(newLink), sizeof(TupleIdT) * newLink->tupleIDCount);

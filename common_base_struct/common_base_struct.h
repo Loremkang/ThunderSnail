@@ -20,19 +20,19 @@ typedef union {
 
 #define INVALID_REMOTEPTR ((RemotePtrT){.dpuId = UINT32_MAX, .dpuAddr = UINT32_MAX})
 
-inline uint64_t RemotePtrToI64(RemotePtrT rPtr) {
+static inline uint64_t RemotePtrToI64(RemotePtrT rPtr) {
     RemotePtrConvertT tmp;
     tmp.rPtr = rPtr;
     return tmp.i64;
 }
 
-inline RemotePtrT RemotePtrFromI64(uint64_t i64) {
+static inline RemotePtrT RemotePtrFromI64(uint64_t i64) {
     RemotePtrConvertT tmp;
     tmp.i64 = i64;
     return tmp.rPtr;
 }
 
-inline bool RemotePtrInvalid(RemotePtrT rPtr) {
+static inline bool RemotePtrInvalid(RemotePtrT rPtr) {
     return RemotePtrToI64(rPtr) == RemotePtrToI64(INVALID_REMOTEPTR);
 }
 
@@ -42,7 +42,7 @@ typedef struct {
     RemotePtrT rPtr;
 } HashAddrT;
 
-inline bool HashAddrEqual(HashAddrT a, HashAddrT b) {
+static inline bool HashAddrEqual(HashAddrT a, HashAddrT b) {
     return RemotePtrToI64(a.rPtr) == RemotePtrToI64(b.rPtr);
 }
 
@@ -50,7 +50,7 @@ typedef struct {
     RemotePtrT rPtr;
 } MaxLinkAddrT;
 
-inline bool MaxLinkAddrEqual(MaxLinkAddrT a, MaxLinkAddrT b) {
+static inline bool MaxLinkAddrEqual(MaxLinkAddrT a, MaxLinkAddrT b) {
     return RemotePtrToI64(a.rPtr) == RemotePtrToI64(b.rPtr);
 }
 
@@ -62,7 +62,7 @@ typedef struct {
     int64_t tupleAddr;
 } TupleIdT;
 
-inline bool TupleIdEqual(TupleIdT a, TupleIdT b) {
+static inline bool TupleIdEqual(TupleIdT a, TupleIdT b) {
     return a.tableId == b.tableId && a.tupleAddr == b.tupleAddr;
 }
 
@@ -86,7 +86,7 @@ typedef struct HashTableQueryReplyT{
     HashTableQueryReplyValueT value;
 } HashTableQueryReplyT;
 
-inline bool HashTableQueryReplyEqual(HashTableQueryReplyT a, HashTableQueryReplyT b) {
+static inline bool HashTableQueryReplyEqual(HashTableQueryReplyT a, HashTableQueryReplyT b) {
     if (a.type != b.type) {
         return false;
     }
@@ -110,26 +110,26 @@ typedef struct {
     uint8_t buffer[]; // [[Tuple IDs], [Hash Addrs]]
 } MaxLinkT;
 
-inline TupleIdT* GetTupleIDsFromMaxLink(MaxLinkT* maxLink) {
+static inline TupleIdT* GetTupleIDsFromMaxLink(MaxLinkT* maxLink) {
     return (TupleIdT*)(maxLink->buffer);
 }
-inline TupleIdT* GetKthTupleIDFromMaxLink(MaxLinkT* maxLink, int i) {
+static inline TupleIdT* GetKthTupleIDFromMaxLink(MaxLinkT* maxLink, int i) {
     ArrayOverflowCheck(i >= 0 && i < maxLink->tupleIDCount);
     return GetTupleIDsFromMaxLink(maxLink) + i;
 }
-inline HashAddrT* GetHashAddrsFromMaxLink(MaxLinkT* maxLink) {
+static inline HashAddrT* GetHashAddrsFromMaxLink(MaxLinkT* maxLink) {
     return (HashAddrT*)(maxLink->buffer + sizeof(TupleIdT) * maxLink->tupleIDCount);
 }
-inline HashAddrT* GetKthHashAddrFromMaxLink(MaxLinkT* maxLink, int i) {
+static inline HashAddrT* GetKthHashAddrFromMaxLink(MaxLinkT* maxLink, int i) {
     ArrayOverflowCheck(i >= 0 && i < maxLink->hashAddrCount);
     return GetHashAddrsFromMaxLink(maxLink) + i;
 }
 
-inline int GetMaxLinkSize(int tupleIdCount, int hashAddrCount) {
+static inline int GetMaxLinkSize(int tupleIdCount, int hashAddrCount) {
     return sizeof(MaxLinkT) + tupleIdCount * sizeof(TupleIdT) + hashAddrCount * sizeof(HashAddrT);
 }
 
-inline int BuildMaxLink(int tupleIdCount, int hashAddrCount, TupleIdT* tupleIds, HashAddrT* hashAddrs) {
+static inline int BuildMaxLink(int tupleIdCount, int hashAddrCount, TupleIdT* tupleIds, HashAddrT* hashAddrs) {
     Unimplemented("BuildMaxLink");
     return 0;
 }
