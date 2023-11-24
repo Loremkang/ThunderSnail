@@ -4,7 +4,7 @@
 
 #include "newlink.h"
 #include "shared_constants.h"
-#include "common_base_struct.h"
+#include "../common_base_struct/common_base_struct.h"
 #include <string.h>
 
 typedef NewLinkT PreMaxLinkT;
@@ -78,7 +78,7 @@ inline void NewLinkMergerExport(NewLinkMergerT *merger, NewLinkT *target) {
     memcpy(NewLinkGetHashAddrs(target), merger->hashAddrs, sizeof(HashAddrT) * merger->hashAddrCount);
 }
 
-inline void NewLinkToMaxLink(NewLinkT *newLink, MaxLink *maxLink) {
+inline void NewLinkToMaxLink(NewLinkT *newLink, MaxLinkT *maxLink) {
     maxLink->tupleIDCount = newLink->tupleIDCount;
     maxLink->hashAddrCount = newLink->hashAddrCount;
     memcpy(GetTupleIDsFromMaxLink(maxLink), NewLinkGetTupleIDs(newLink), sizeof(TupleIdT) * newLink->tupleIDCount);
