@@ -1,5 +1,4 @@
 #pragma once
-
 #ifndef VARIABLE_LENGTH_STRUCT_BUFFER_H
 #define VARIABLE_LENGTH_STRUCT_BUFFER_H
 
