@@ -8,19 +8,6 @@ extern "C" {
 #include "newlink/variable_length_struct_buffer.h"
 }
 
-// #define TEST_FAIL(x) if(!(x)) {goto fail;}
-#define TEST_FAIL(x) assert(x);
-
-// simple test code
-bool DisjointSetTest() {
-    
-    
-    return true;
-
-fail:
-    return false;
-}
-
 TEST(NewLinkTest, DisJointSet) {
     const int MAXN = 100;
     DisjointSetNodeT node[MAXN];
