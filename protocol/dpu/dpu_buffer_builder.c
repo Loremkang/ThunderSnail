@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <mram.h>
+#include <mram_unaligned.h>
 
 // reply buffer
 uint8_t __mram_noinit replyBuffer[BUFFER_LEN];
@@ -11,13 +12,12 @@ void BufferBuilderInit(BufferBuilder *builder)
 {
   buddy_init(BUDDY_LEN);
   // alloc the whole buffer
-  builder->bufferDesc.blockCnt = 0;
-  builder->bufferDesc.totalSize = DPU_BUFFER_HEAD_LEN;
+  builder->bufferDesc.header.bufferState = BUFFER_STATE_OK;
+  builder->bufferDesc.header.blockCnt = 0;
+  builder->bufferDesc.header.totalSize = DPU_BUFFER_HEAD_LEN;
   // need clear the reply buffer?
   memset(replyBuffer, 0, BUFFER_LEN);
-  replyBuffer[0] = BUFFER_STATE_OK;
 
-  // skip blockCnt and totalSize, later to fill them
   builder->curBlockPtr = replyBuffer + DPU_BUFFER_HEAD_LEN;
   builder->curBlockOffset = DPU_BUFFER_HEAD_LEN;
 
@@ -31,8 +31,8 @@ void BufferBuilderInit(BufferBuilder *builder)
 
 void BufferBuilderBeginBlock(BufferBuilder *builder, uint8_t taskType)
 {
-  builder->bufferDesc.offsets[builder->bufferDesc.blockCnt++] = builder->curBlockOffset;
-  builder->bufferDesc.totalSize += sizeof(Offset);
+  builder->bufferDesc.offsets[builder->bufferDesc.header.blockCnt++] = builder->curBlockOffset;
+  builder->bufferDesc.header.totalSize += sizeof(Offset);
   // fill block header
   // fill task type, skip two fields
   *builder->curBlockPtr = taskType;
@@ -58,21 +58,19 @@ void BufferBuilderBeginBlock(BufferBuilder *builder, uint8_t taskType)
     };
   }
   // update total size of buffer
-  builder->bufferDesc.totalSize += sizeof(BlockDescriptorBase);
+  builder->bufferDesc.header.totalSize += sizeof(BlockDescriptorBase);
 }
 
 void BufferBuilderEndBlock(BufferBuilder *builder)
 {
-  // update blockCnt and flush to buffer
-  replyBuffer[1] = builder->bufferDesc.blockCnt;
-  // update total size of the block and flush
-  replyBuffer[2] = builder->bufferDesc.totalSize;
+  // flush header
+  mram_write_unaligned(&builder->bufferDesc.header, replyBuffer, sizeof(DpuBufferHeader));
   // flush offsets of block
   if (builder->isCurVarLenBlock) {
     VarLenBlockDescriptor* varLenBlockDesc = &builder->bufferDesc.varLenBlockDescs[builder->varLenBlockIdx++];
     uint32_t offsetsLen = varLenBlockDesc->blockDescBase.taskCount * sizeof(Offset);
     __mram_ptr uint8_t* offsetsBegin = builder->curBlockPtr + varLenBlockDesc->blockDescBase.totalSize - offsetsLen;
-    mram_write(varLenBlockDesc->offsets, offsetsBegin, offsetsLen);
+    mram_write_unaligned(varLenBlockDesc->offsets, offsetsBegin, offsetsLen);
     builder->curBlockOffset += varLenBlockDesc->blockDescBase.totalSize;
     buddy_free(varLenBlockDesc->offsets);
   } else {
@@ -85,10 +83,10 @@ void BufferBuilderEndBlock(BufferBuilder *builder)
 size_t BufferBuilderFinish(BufferBuilder *builder)
 {
   // flush offsets of buffer
-  size_t size = builder->bufferDesc.totalSize;
-  uint32_t offsetsLen = builder->bufferDesc.blockCnt * sizeof(Offset);
+  size_t size = builder->bufferDesc.header.totalSize;
+  uint32_t offsetsLen = builder->bufferDesc.header.blockCnt * sizeof(Offset);
   __mram_ptr uint8_t* offsetsBegin = replyBuffer + size - offsetsLen;
-  mram_write(builder->bufferDesc.offsets, offsetsBegin, offsetsLen);
+  mram_write_unaligned(builder->bufferDesc.offsets, offsetsBegin, offsetsLen);
   return size;
 }
 
@@ -105,7 +103,7 @@ void BufferBuilderAppendTask(BufferBuilder *builder, Task *task)
     builder->curTaskOffset += taskSize;
     // updata total size
     varLenBlockDesc->blockDescBase.totalSize += taskSize + sizeof(Offset);
-    builder->bufferDesc.totalSize += taskSize + sizeof(Offset);
+    builder->bufferDesc.header.totalSize += taskSize + sizeof(Offset);
     break;
   }
     // TODO impl other tasks

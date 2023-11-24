@@ -54,6 +54,10 @@ typedef struct {
   uint8_t epochNumber;
   uint8_t blockCnt;
   uint32_t totalSize;
+} CpuBufferHeader;
+
+typedef struct {
+  CpuBufferHeader header;
   FixedLenBlockDescriptor fixedLenBlockDescs[NUM_FIXED_LEN_BLOCK_INPUT];
   VarLenBlockDescriptor varLenBlockDescs[NUM_VAR_LEN_BLOCK_INPUT];
   Offset *offsets;
@@ -63,6 +67,10 @@ typedef struct {
   uint8_t bufferState;
   uint8_t blockCnt;
   uint32_t totalSize;
+} DpuBufferHeader;
+
+typedef struct {
+  DpuBufferHeader header;
   FixedLenBlockDescriptor fixedLenBlockDescs[NUM_FIXED_LEN_BLOCK_OUTPUT];
   VarLenBlockDescriptor varLenBlockDescs[NUM_VAR_LEN_BLOCK_OUTPUT];
   Offset offsets[NUM_BLOCKS];

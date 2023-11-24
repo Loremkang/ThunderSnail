@@ -23,7 +23,9 @@ void CreateCpuToDpuBufferForEachDPU()
     tasks[i] = (Task*)&reqs[i];
   }
   CpuToDpuBufferDescriptor bufferDesc = {
-    .epochNumber = 1,
+    .header = {
+      .epochNumber = 1,
+    }
   };
   BufferBuilderInit(B, &bufferDesc);
   // suppose we have only one block
