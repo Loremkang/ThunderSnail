@@ -1,9 +1,7 @@
-#ifndef BUFFER_BUILDER_H
-#define BUFFER_BUILDER_H
+#ifndef CPU_BUFFER_BUILDER_H
+#define CPU_BUFFER_BUILDER_H
 
-#include "protocol.h"
-
-#define BUFFER_LEN 65535
+#include "../protocol.h"
 
 typedef struct {
   CpuToDpuBufferDescriptor *bufferDesc;
@@ -14,8 +12,6 @@ typedef struct {
   Offset curTaskOffset;
   uint8_t varLenBlockIdx;
   uint8_t fixedLenBlockIdx;
-  uint8_t totalBlocks;
-  uint16_t totalTasks;
   bool isCurVarLenBlock;
 } BufferBuilder;
 

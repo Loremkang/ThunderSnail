@@ -4,7 +4,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "safety_check_macro.h"
+#include "../safety_check_macro.h"
 
 // Pointers
 typedef struct {
@@ -59,7 +59,7 @@ void MaxLinkAddrPrint(MaxLinkAddrT maxLinkAddr);
 // Base Elements
 typedef struct {
     int tableId;
-    int64_t tupleAddr;
+    uint64_t tupleAddr;
 } TupleIdT;
 
 static inline bool TupleIdEqual(TupleIdT a, TupleIdT b) {

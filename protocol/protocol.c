@@ -24,10 +24,20 @@ uint16_t GetFixedLenTaskSize(void *task)
     ret += req->len + sizeof(GetOrInsertReq);
     break;
   }
+  case GET_OR_INSERT_RESP: {
+    GetOrInsertResp *resp = (GetOrInsertResp*)task;
+    ret += sizeof(GetOrInsertResp);
+    break;
+  }
   case GET_POINTER_REQ: {
     GetPointerReq *req = (GetPointerReq*)task;
     // |key + hash_id|
     ret += req->len + sizeof(GetPointerReq);
+    break;
+  }
+  case GET_POINTER_RESP: {
+    GetPointerResp *resp= (GetPointerResp*)task;
+    ret += sizeof(GetPointerResp);
     break;
   }
   case UPDATE_POINTER_REQ: {
@@ -40,9 +50,20 @@ uint16_t GetFixedLenTaskSize(void *task)
     ret += sizeof(GetMaxLinkSizeReq);
     break;
   }
+  case GET_MAX_LINK_SIZE_RESP: {
+    GetMaxLinkSizeResp *resp = (GetMaxLinkSizeResp*)task;
+    ret += sizeof(GetMaxLinkSizeResp);
+    break;
+  }
   case FETCH_MAX_LINK_REQ: {
     FetchMaxLinkReq *req = (FetchMaxLinkReq*)task;
     ret += sizeof(FetchMaxLinkReq);
+    break;
+  }
+  case FETCH_MAX_LINK_RESP: {
+    FetchMaxLinkResp *resp = (FetchMaxLinkResp*)task;
+    // add task type in the end, because we always remove it.
+    ret += resp->maxLink.tupleIDCount * sizeof(TupleIdT) + resp->maxLink.hashAddrCount * sizeof(HashAddrT) + sizeof(MaxLinkT) + sizeof(Task);
     break;
   }
   case MERGE_MAX_LINK_REQ: {

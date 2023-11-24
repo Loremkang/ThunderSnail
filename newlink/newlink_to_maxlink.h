@@ -4,7 +4,7 @@
 
 #include "newlink.h"
 #include "shared_constants.h"
-#include "common_base_struct.h"
+#include "../common_base_struct/common_base_struct.h"
 #include <string.h>
 
 typedef NewLinkT PreMaxLinkT;

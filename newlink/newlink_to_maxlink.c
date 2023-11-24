@@ -1,7 +1,7 @@
 #include "newlink_to_maxlink.h"
 #include "shared_constants.h"
 #include "variable_length_struct_buffer.h"
-#include "common_base_struct.h"
+#include "../common_base_struct/common_base_struct.h"
 
 void GenerateGetSizeTask(MaxLinkAddrT addr) {
     Unimplemented("GenerateGetSizeTask");
