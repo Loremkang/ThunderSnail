@@ -73,4 +73,6 @@ add_custom_target(${DPU_TASK_NAME} ALL
 install(PROGRAMS ${EXECUTABLE_OUTPUT_PATH}/${DPU_TASK_NAME} DESTINATION bin)
 
 add_library(protocol ${PROTOCOL_SOURCES} ${PROTOCOL_CPU_SOURCES})
-target_include_directories(protocol PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/protocol ${CMAKE_CURRENT_SOURCE_DIR}/protocol/cpu)
+target_include_directories(protocol PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/protocol ${CMAKE_CURRENT_SOURCE_DIR}/protocol/cpu ${UPMEM_SDK_DIR}/include/dpu)
+target_link_directories(protocol PRIVATE ${UPMEM_SDK_DIR}/lib)
+target_link_libraries(protocol dpu)

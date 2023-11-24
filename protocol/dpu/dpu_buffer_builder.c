@@ -7,6 +7,7 @@
 
 // reply buffer
 uint8_t __mram_noinit replyBuffer[BUFFER_LEN];
+uint8_t __mram_noinit receiveBuffer[BUFFER_LEN];
 
 void BufferBuilderInit(BufferBuilder *builder)
 {

@@ -24,6 +24,4 @@ inline static uint8_t GetEpochNumber()
 
 void SendGetOrInsertReq(uint32_t tableId, Key *keys, uint64_t *tupleAddr, size_t batchSize);
 
-void AppendTaskToDpu(BufferBuilder *builder, Task *task);
-
 #endif
