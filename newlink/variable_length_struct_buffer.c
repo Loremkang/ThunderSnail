@@ -101,31 +101,3 @@ void VariableLengthStructBufferFree(VariableLengthStructBufferT *buf) {
     free(buf->data);
     free(buf->offset);
 }
-
-// artificially use uint64_t rather than int
-bool VariableLengthStructBufferTest() {
-    const int MAXN = 100;
-    VariableLengthStructBufferT *buf = malloc(sizeof(VariableLengthStructBufferT));
-    VariableLengthStructBufferInit(buf);
-    for (int i = 1; i < MAXN; i ++) {
-        uint64_t* arr = malloc(i * sizeof(uint64_t));
-        for (int j = 0; j < i; j ++) {
-            arr[j] = i * MAXN + (j + 1);
-        }
-        assert(VariableLengthStructBufferAppend(buf, (uint8_t*)arr, i * sizeof(uint64_t)) == i - 1);
-    }
-    for (int i = 1; i < MAXN; i ++) {
-        uint64_t* arr = (uint64_t*)VariableLengthStructBufferGet(buf, i - 1);
-        OffsetT length = VariableLengthStructBufferGetSize(buf, i - 1);
-        // printf("i=%d\tlength=%d\n", i, length);
-        assert(length == i * sizeof(uint64_t));
-        for (int j = 0; j < i; j ++) {
-            // printf("arr[%d][%d]=%llu\n", i, j, arr[j]);
-            assert(arr[j] == (i * MAXN + (j + 1)));
-        }
-    }
-    VariableLengthStructBufferFree(buf);
-    free(buf);
-    return true;
-}
-

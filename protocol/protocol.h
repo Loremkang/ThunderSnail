@@ -113,7 +113,7 @@ typedef struct {
 
 typedef struct {
   Task base;
-  MaxLink maxLink;
+  MaxLinkT maxLink;
 } MergeMaxLinkReq;
 
 typedef struct {

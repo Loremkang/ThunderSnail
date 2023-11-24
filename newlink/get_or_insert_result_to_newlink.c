@@ -1,8 +1,7 @@
 #include "get_or_insert_result_to_newlink.h"
+#include "shared_constants.h"
 #include <time.h>
 #include <stdlib.h>
-
-#define MAXBATCHSIZE (24000)
 
 static inline void FillNewLinkBuffer(int* idxPos, bool* processed, DisjointSetNodeT* dsNode,
                        int id, HashTableQueryReplyT value,
@@ -66,7 +65,7 @@ static inline bool ValidHashTableQueryReply(HashTableQueryReplyT reply) {
 static inline void BuildIds(int length, HashTableForNewLinkT* ht, int* leftIds,
                             int* rightIds, TupleIdT* tupleIDs,
                             HashTableQueryReplyT* counterpart) {
-    assert(length * 2 < MAXBATCHSIZE);
+    assert(length * 2 < MAXSIZE_HASH_TABLE_QUERY_BATCH);
     HashTableForNewLinkExpandAndSoftReset(ht, length * 2 * 1.5);
     for (int i = 0; i < length; i++) {
         HashTableQueryReplyT left = (HashTableQueryReplyT){
@@ -87,7 +86,7 @@ void BuildNewLinkFromHashTableGetOrInsertResult(
     // HashTableForNewlinkGetId reply starts from 1, not 0. So use "<" here, not
     // "<=".
     // "* 2" for left and right
-    assert(length * 2 < MAXBATCHSIZE);
+    assert(length * 2 < MAXSIZE_HASH_TABLE_QUERY_BATCH);
     memset(idxPos, -1, (2 * length + 1) * sizeof(int));
 
     // Disjoint Set Processing
@@ -155,19 +154,19 @@ static inline double get_timestamp() {
 
 // TODO: careful consideration on memory management
 void BuildNewLinkFromHashTableGetOrInsertResultPerformanceTest() {
-    static DisjointSetNodeT dsNode[MAXBATCHSIZE];
-    static int idxPos[MAXBATCHSIZE];
-    static bool processed[MAXBATCHSIZE];
-    static int leftIds[MAXBATCHSIZE];
-    static int rightIds[MAXBATCHSIZE];
+    static DisjointSetNodeT dsNode[MAXSIZE_HASH_TABLE_QUERY_BATCH];
+    static int idxPos[MAXSIZE_HASH_TABLE_QUERY_BATCH];
+    static bool processed[MAXSIZE_HASH_TABLE_QUERY_BATCH];
+    static int leftIds[MAXSIZE_HASH_TABLE_QUERY_BATCH];
+    static int rightIds[MAXSIZE_HASH_TABLE_QUERY_BATCH];
     static HashTableForNewLinkT ht;
     HashTableForNewLinkInit(&ht);
     static VariableLengthStructBufferT buf;
     VariableLengthStructBufferInit(&buf);
 
     const int testbatchsize = 400;
-    TupleIdT tupleIds[MAXBATCHSIZE];
-    HashTableQueryReplyT counterpart[MAXBATCHSIZE];
+    TupleIdT tupleIds[MAXSIZE_HASH_TABLE_QUERY_BATCH];
+    HashTableQueryReplyT counterpart[MAXSIZE_HASH_TABLE_QUERY_BATCH];
 
     // TESTCASE: CHAIN_NATURAL_JOIN(T0, T1, ..., T9, T10)
     // Keep Empty: T0

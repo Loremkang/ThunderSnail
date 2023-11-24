@@ -69,7 +69,7 @@ uint16_t GetFixedLenTaskSize(void *task)
   case MERGE_MAX_LINK_REQ: {
     MergeMaxLinkReq *req = (MergeMaxLinkReq*)task;
     // add task type in the end, because we always remove it.
-    ret += req->maxLink.tupleIDCount * sizeof(TupleIdT) + req->maxLink.hashAddrCount * sizeof(HashAddrT) + sizeof(MaxLink) + sizeof(Task);
+    ret += req->maxLink.tupleIDCount * sizeof(TupleIdT) + req->maxLink.hashAddrCount * sizeof(HashAddrT) + sizeof(MaxLinkT) + sizeof(Task);
     break;
   }
   default:

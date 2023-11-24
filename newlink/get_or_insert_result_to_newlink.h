@@ -7,7 +7,6 @@
 #include "variable_length_struct_buffer.h"
 
 
-void BuildNewLinkFromHashTableGetOrInsertResultTest();
 void BuildNewLinkFromHashTableGetOrInsertResultPerformanceTest();
 
 #endif
