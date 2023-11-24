@@ -55,7 +55,7 @@ void BufferBuilderBeginBlock(BufferBuilder *builder, uint8_t taskType)
 
 void BufferBuilderEndBlock(BufferBuilder *builder)
 {
-  // flush the header
+  // flush buffer header
   memcpy(builder->buffer, builder->bufferDesc->header, sizeof(CpuBufferHeader));
   // flush offsets of block
   if (builder->isCurVarLenBlock) {
@@ -65,9 +65,13 @@ void BufferBuilderEndBlock(BufferBuilder *builder)
     memcpy(offsetsBegin, varLenBlockDesc->offsets, offsetsLen);
     builder->curBlockOffset += varLenBlockDesc->blockDescBase.totalSize;
     free(varLenBlockDesc->offsets);
+    // flush block header
+    memcpy(builder->curBlockPtr, varLenBlockDesc->header, sizeof(BlockDescriptorBase));
   } else {
     FixedLenBlockDescriptor* fixedLenBlockDesc = &builder->bufferDesc->fixedLenBlockDescs[builder->fixedLenBlockIdx++];
     builder->curBlockOffset += fixedLenBlockDesc->blockDescBase.totalSize;
+    // flush block header
+    memcpy(builder->curBlockPtr, fixedLenBlockDesc->header, sizeof(BlockDescriptorBase));
   }
   builder->curBlockPtr = builder->buffer + builder->curBlockOffset;
 }

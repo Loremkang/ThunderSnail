@@ -63,7 +63,7 @@ void BufferBuilderBeginBlock(BufferBuilder *builder, uint8_t taskType)
 
 void BufferBuilderEndBlock(BufferBuilder *builder)
 {
-  // flush header
+  // flush buffer header
   mram_write_unaligned(&builder->bufferDesc.header, replyBuffer, sizeof(DpuBufferHeader));
   // flush offsets of block
   if (builder->isCurVarLenBlock) {
@@ -73,9 +73,13 @@ void BufferBuilderEndBlock(BufferBuilder *builder)
     mram_write_unaligned(varLenBlockDesc->offsets, offsetsBegin, offsetsLen);
     builder->curBlockOffset += varLenBlockDesc->blockDescBase.totalSize;
     buddy_free(varLenBlockDesc->offsets);
+    // flush block header
+    mram_write_unaligned(varLenBlockDesc, builder->curBlockPtr, sizeof(BlockDescriptorBase));
   } else {
     FixedLenBlockDescriptor* fixedLenBlockDesc = &builder->bufferDesc.fixedLenBlockDescs[builder->fixedLenBlockIdx++];
     builder->curBlockOffset += fixedLenBlockDesc->blockDescBase.totalSize;
+    // flush block header
+    mram_write_unaligned(fixedLenBlockDesc, builder->curBlockPtr, sizeof(BlockDescriptorBase));
   }
   builder->curBlockPtr = replyBuffer + builder->curBlockOffset;
 }
@@ -99,9 +103,9 @@ void BufferBuilderAppendTask(BufferBuilder *builder, Task *task)
     VarLenBlockDescriptor* varLenBlockDesc = &builder->bufferDesc.varLenBlockDescs[builder->varLenBlockIdx];
     varLenBlockDesc->offsets[varLenBlockDesc->blockDescBase.taskCount++] = builder->curTaskOffset;
     uint32_t taskSize = GetFixedLenTaskSize(task);
-    mram_write(resp + sizeof(Task), builder->curBlockPtr + builder->curTaskOffset, taskSize);
+    mram_write_unaligned(resp + sizeof(Task), builder->curBlockPtr + builder->curTaskOffset, taskSize);
     builder->curTaskOffset += taskSize;
-    // updata total size
+    // update total size
     varLenBlockDesc->blockDescBase.totalSize += taskSize + sizeof(Offset);
     builder->bufferDesc.header.totalSize += taskSize + sizeof(Offset);
     break;
