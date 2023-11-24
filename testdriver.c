@@ -6,11 +6,9 @@
 #include "newlink/get_or_insert_result_to_newlink.h"
 
 int main() {
-    // assert(GetMaxLinkSize(5, 5) == 128);
-    // assert(DisjointSetTest());
     // assert(HashTableForNewLinkTest());
     // NewLinkTest();
     // assert(VariableLengthStructBufferTest());
-    BuildNewLinkFromHashTableGetOrInsertResultPerformanceTest();
+    // BuildNewLinkFromHashTableGetOrInsertResultPerformanceTest();
     return 0;
 }

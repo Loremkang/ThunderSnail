@@ -31,7 +31,7 @@ target_include_directories(host PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/newlink)
 
 # Build tests:
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/tests SRC_TEST)
-add_executable(test ${SRC_TEST} ${SRC_COMMON_BASE_STRUCT})
+add_executable(test ${SRC_TEST} ${SRC_COMMON_BASE_STRUCT} ${SRC_NEWLINK})
 target_include_directories(test PRIVATE .)
 target_link_libraries(test gtest_main)
 add_test(NAME example_test COMMAND test)

@@ -22,6 +22,5 @@ void HashTableForNewLinkShrink(HashTableForNewLinkT *hashTable, int capacity);
 // Id Starting from 1
 int HashTableForNewlinkGetId(HashTableForNewLinkT *hashTable, HashTableQueryReplyT key);
 void HashTableForNewLinkSoftReset(HashTableForNewLinkT *hashTable);
-bool HashTableForNewLinkTest();
 
 #endif
