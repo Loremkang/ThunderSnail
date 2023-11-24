@@ -5,6 +5,7 @@ extern "C" {
 #include "newlink/hash_table_for_newlink.h"
 #include "newlink/hash_function.h"
 #include "newlink/newlink.h"
+#include "newlink/variable_length_struct_buffer.h"
 }
 
 // #define TEST_FAIL(x) if(!(x)) {goto fail;}
@@ -72,7 +73,7 @@ TEST(NewLinkTest, NewLink) {
     int size = NewLinkGetSize(MAXN, MAXN, MAXN);
     uint8_t* buf = (uint8_t*)malloc(size);
     NewLinkT* newLink = (NewLinkT*)buf;
-    printf("size=%d\n", NewLinkGetSize(MAXN, MAXN, MAXN));
+    // printf("size=%d\n", NewLinkGetSize(MAXN, MAXN, MAXN));
     newLink->maxLinkAddrCount = newLink->tupleIDCount = newLink->hashAddrCount = MAXN;
     for (uint32_t i = 0; i < MAXN; i ++) {
         NewLinkGetTupleIDs(newLink)[i] = (TupleIdT){.tableId = 10, .tupleAddr = i};
@@ -95,4 +96,30 @@ TEST(NewLinkTest, NewLink) {
     EXPECT_EQ((uint8_t*)&NewLinkGetHashAddrs(newLink)[MAXN], buf + size);
 
     free(newLink);
+}
+
+// artificially use uint64_t rather than int
+TEST(NewLinkTest, VariableLengthStructBuffer) {
+    const int MAXN = 100;
+    VariableLengthStructBufferT *buf = (VariableLengthStructBufferT*)malloc(sizeof(VariableLengthStructBufferT));
+    VariableLengthStructBufferInit(buf);
+    for (int i = 1; i < MAXN; i ++) {
+        uint64_t* arr = (uint64_t*)malloc(i * sizeof(uint64_t));
+        for (int j = 0; j < i; j ++) {
+            arr[j] = i * MAXN + (j + 1);
+        }
+        EXPECT_EQ(VariableLengthStructBufferAppend(buf, (uint8_t*)arr, i * sizeof(uint64_t)), i - 1);
+    }
+    for (int i = 1; i < MAXN; i ++) {
+        uint64_t* arr = (uint64_t*)VariableLengthStructBufferGet(buf, i - 1);
+        OffsetT length = VariableLengthStructBufferGetSize(buf, i - 1);
+        // printf("i=%d\tlength=%d\n", i, length);
+        EXPECT_EQ(length, i * sizeof(uint64_t));
+        for (int j = 0; j < i; j ++) {
+            // printf("arr[%d][%d]=%llu\n", i, j, arr[j]);
+            EXPECT_EQ(arr[j], (i * MAXN + (j + 1)));
+        }
+    }
+    VariableLengthStructBufferFree(buf);
+    free(buf);
 }

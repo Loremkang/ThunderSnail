@@ -44,6 +44,5 @@ OffsetT VariableLengthStructBufferAppendPlaceholder(VariableLengthStructBufferT 
 uint8_t* VariableLengthStructBufferGet(VariableLengthStructBufferT *buf, OffsetT idx);
 OffsetT VariableLengthStructBufferGetSize(VariableLengthStructBufferT *buf, OffsetT idx);
 void VariableLengthStructBufferFree(VariableLengthStructBufferT *buf);
-bool VariableLengthStructBufferTest();
 
 #endif

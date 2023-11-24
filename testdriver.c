@@ -6,9 +6,6 @@
 #include "newlink/get_or_insert_result_to_newlink.h"
 
 int main() {
-    // assert(HashTableForNewLinkTest());
-    // NewLinkTest();
-    // assert(VariableLengthStructBufferTest());
     // BuildNewLinkFromHashTableGetOrInsertResultPerformanceTest();
     return 0;
 }
