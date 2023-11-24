@@ -49,8 +49,9 @@ if(NOT EXECUTABLE_OUTPUT_PATH)
 endif()
 
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/dpu DPU_SOURCES)
-aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/protocol DPU_PROTOCOL_SOURCES)
-aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/protocol/dpu DPU_PROTOCOL_DPU_SOURCES)
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/protocol PROTOCOL_SOURCES)
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/protocol/dpu PROTOCOL_DPU_SOURCES)
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/protocol/cpu PROTOCOL_CPU_SOURCES)
 
 file(GLOB DPU_HEADERS "dpu/*.h")
 
@@ -62,7 +63,7 @@ add_custom_target(${DPU_TASK_NAME} ALL
             -I${CMAKE_CURRENT_SOURCE_DIR}/dpu
             -I${CMAKE_CURRENT_SOURCE_DIR}/protocol
 	    -I${CMAKE_CURRENT_SOURCE_DIR}/protocol/dpu
-            ${DPU_SOURCES} ${DPU_PROTOCOL_SOURCES} ${DPU_PROTOCOL_DPU_SOURCES}
+            ${DPU_SOURCES} ${PROTOCOL_SOURCES} ${PROTOCOL_DPU_SOURCES}
             -o ${EXECUTABLE_OUTPUT_PATH}/${DPU_TASK_NAME}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     DEPENDS ${DPU_SOURCES}
@@ -70,3 +71,6 @@ add_custom_target(${DPU_TASK_NAME} ALL
     VERBATIM)
 
 install(PROGRAMS ${EXECUTABLE_OUTPUT_PATH}/${DPU_TASK_NAME} DESTINATION bin)
+
+add_library(protocol ${PROTOCOL_SOURCES} ${PROTOCOL_CPU_SOURCES})
+target_include_directories(protocol PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/protocol ${CMAKE_CURRENT_SOURCE_DIR}/protocol/cpu)

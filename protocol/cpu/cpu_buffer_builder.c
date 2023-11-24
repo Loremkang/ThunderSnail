@@ -1,5 +1,6 @@
 #include "cpu_buffer_builder.h"
 #include <string.h>
+#include <stdlib.h>
 
 void BufferBuilderInit(BufferBuilder *builder, CpuToDpuBufferDescriptor *bufferDesc)
 {
@@ -7,7 +8,7 @@ void BufferBuilderInit(BufferBuilder *builder, CpuToDpuBufferDescriptor *bufferD
   bufferDesc->header.blockCnt = 0;
   bufferDesc->header.totalSize = CPU_BUFFER_HEAD_LEN;
   builder->bufferDesc = bufferDesc;
-  builder->buffer = malloc(BUFFER_LEN);
+  builder->buffer = (uint8_t*)malloc(BUFFER_LEN);
 
   builder->curBlockOffset = CPU_BUFFER_HEAD_LEN;
   builder->curBlockPtr = builder->buffer + builder->curBlockOffset;
@@ -56,7 +57,7 @@ void BufferBuilderBeginBlock(BufferBuilder *builder, uint8_t taskType)
 void BufferBuilderEndBlock(BufferBuilder *builder)
 {
   // flush buffer header
-  memcpy(builder->buffer, builder->bufferDesc->header, sizeof(CpuBufferHeader));
+  memcpy(builder->buffer, &builder->bufferDesc->header, sizeof(CpuBufferHeader));
   // flush offsets of block
   if (builder->isCurVarLenBlock) {
     VarLenBlockDescriptor* varLenBlockDesc = &builder->bufferDesc->varLenBlockDescs[builder->varLenBlockIdx++];
@@ -66,12 +67,12 @@ void BufferBuilderEndBlock(BufferBuilder *builder)
     builder->curBlockOffset += varLenBlockDesc->blockDescBase.totalSize;
     free(varLenBlockDesc->offsets);
     // flush block header
-    memcpy(builder->curBlockPtr, varLenBlockDesc->header, sizeof(BlockDescriptorBase));
+    memcpy(builder->curBlockPtr, &varLenBlockDesc->blockDescBase, sizeof(BlockDescriptorBase));
   } else {
     FixedLenBlockDescriptor* fixedLenBlockDesc = &builder->bufferDesc->fixedLenBlockDescs[builder->fixedLenBlockIdx++];
     builder->curBlockOffset += fixedLenBlockDesc->blockDescBase.totalSize;
     // flush block header
-    memcpy(builder->curBlockPtr, fixedLenBlockDesc->header, sizeof(BlockDescriptorBase));
+    memcpy(builder->curBlockPtr, &fixedLenBlockDesc->blockDescBase, sizeof(BlockDescriptorBase));
   }
   builder->curBlockPtr = builder->buffer + builder->curBlockOffset;
 }
@@ -84,7 +85,7 @@ uint8_t* BufferBuilderFinish(BufferBuilder *builder, size_t *size)
   uint8_t* offsetsBegin = builder->buffer + *size - offsetsLen;
   memcpy(offsetsBegin, builder->bufferDesc->offsets, offsetsLen);
   // free
-  free(bufferDesc->offsets);
+  free(builder->bufferDesc->offsets);
   return builder->buffer;
 }
 
