@@ -38,7 +38,7 @@ GetTaskStateT GetNextTask (BufferDecoder *decoder, Task *task) {
       task = NULL;
       state = NO_MORE_TASK;
       return state;
-    } else { // move to next unempty block
+    } else { // move to next non-empty block
       decoder->taskIdx = 0;
       (decoder->blockHeader).taskCount = 0;
       state = NEW_BLOCK;
@@ -138,6 +138,8 @@ void DpuMainLoop () {
     ExecuteTaskThenAppend(&builder, task);
   }
 
-  BufferBuilderEndBlock(&builder);
+  if (decoder.bufHeader.blockCnt > 0) {
+    BufferBuilderEndBlock(&builder);
+  }
   BufferBuilderFinish(&builder);
 }
