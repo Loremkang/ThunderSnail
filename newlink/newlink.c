@@ -3,27 +3,6 @@
 #include <stdlib.h>
 #include <inttypes.h>
 
-TupleIdT* NewLinkGetTupleIDs(NewLinkT* newLink) {
-    return (TupleIdT*)(newLink->buffer);
-}
-
-MaxLinkAddrT* NewLinkGetMaxLinkAddrs(NewLinkT* newLink) {
-    return (MaxLinkAddrT*)(newLink->buffer +
-                           sizeof(TupleIdT) * newLink->tupleIDCount);
-}
-
-HashAddrT* NewLinkGetHashAddrs(NewLinkT* newLink) {
-    return (HashAddrT*)(newLink->buffer +
-                        sizeof(TupleIdT) * newLink->tupleIDCount +
-                        sizeof(MaxLinkAddrT) * newLink->maxLinkAddrCount);
-}
-
-int NewLinkGetSize(int tupleIdCount, int maxLinkAddrCount, int hashAddrCount) {
-    return sizeof(NewLinkT) + sizeof(TupleIdT) * tupleIdCount +
-           sizeof(MaxLinkAddrT) * maxLinkAddrCount +
-           sizeof(HashAddrT) * hashAddrCount;
-}
-
 void NewLinkPrint(NewLinkT* newLink) {
     printf("NewLink: %" PRIu64 "\n", (uint64_t)newLink);
     printf("TupleIdCount = %d\n", newLink->tupleIDCount);
