@@ -14,11 +14,11 @@ typedef struct {
 static uint8_t epochNumber = 0;
 
 inline static uint8_t GetEpochNumber()
-{  
+{
   if (epochNumber == 255) {
     epochNumber = 0;
     return 255;
-  } 
+  }
   return epochNumber++;
 }
 

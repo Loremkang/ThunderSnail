@@ -2,6 +2,7 @@
 #include "task_executor.h"
 
 int main() {
-    //DpuMainLoop();
-    printf("helloworld");
+    printf("Aloha!\n");
+    DpuMainLoop();
+    printf("Hello world!\n");
 }

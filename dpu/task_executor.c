@@ -80,13 +80,28 @@ GetTaskStateT GetNextTask (BufferDecoder *decoder, Task *task) {
   return state;
 }
 
-void ExecuteTask (BufferBuilder *builder, Task *task) {
+void GetOrInsertFake (HashTableId id, char *key, uint32_t keyLen, TupleIdT tupleId, HashTableQueryReplyT *reply) {
+  printf("Warning: this is GetOrInsertFake!\n");
+  printf("id=%d, keyLen=%d, key=", id, keyLen);
+  for (int i=0; i < keyLen; i++) {
+    printf("\\%02hhx", (unsigned char)key[i]);
+  }
+  printf(" (TupleIdT){.tableId = %d\t, .tupleAddr = %lx}\n", tupleId.tableId, tupleId.tupleAddr);
+
+  // To fill a fake reply
+  reply->type = HashAddr;
+  (reply->value).hashAddr.rPtr.dpuId = 0xaaaa;
+  (reply->value).hashAddr.rPtr.dpuAddr = 0xffff;
+}
+
+void ExecuteTaskThenAppend (BufferBuilder *builder, Task *task) {
   switch(task->taskType) {
   case GET_OR_INSERT_REQ: {
     GetOrInsertReq *req = (GetOrInsertReq*)task;
     __dma_aligned HashTableQueryReplyT reply_buffer;
-    primary_index_dpu *pid = IndexCheck(req->hashTableId);
-    IndexGetOrInsertReq(pid, (char*)(req->ptr), req->len, req->tid, &reply_buffer);
+    /* primary_index_dpu *pid = IndexCheck(req->hashTableId); */
+    /* IndexGetOrInsertReq(pid, (char*)(req->ptr), req->len, req->tid, &reply_buffer); */
+    GetOrInsertFake(req->hashTableId, (char*)(req->ptr), req->len, req->tid, &reply_buffer);
     GetOrInsertResp resp = {
       .base = {.taskType = GET_OR_INSERT_RESP},
       .tupleIdOrMaxLinkAddr = reply_buffer
@@ -120,7 +135,7 @@ void DpuMainLoop () {
       BufferBuilderEndBlock(&builder);
       BufferBuilderBeginBlock(&builder, decoder.blockHeader.taskType);
     }
-    ExecuteTask(&builder, task);
+    ExecuteTaskThenAppend(&builder, task);
   }
 
   BufferBuilderEndBlock(&builder);
