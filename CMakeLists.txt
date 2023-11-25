@@ -65,7 +65,7 @@ add_custom_target(${DPU_TASK_NAME} ALL
             -DSTACK_SIZE_DEFAULT=1024
             -I${CMAKE_CURRENT_SOURCE_DIR}/dpu
             -I${CMAKE_CURRENT_SOURCE_DIR}/protocol
-	    -I${CMAKE_CURRENT_SOURCE_DIR}/protocol/dpu
+            -I${CMAKE_CURRENT_SOURCE_DIR}/protocol/dpu
             ${DPU_SOURCES} ${PROTOCOL_SOURCES} ${PROTOCOL_DPU_SOURCES}
             -o ${EXECUTABLE_OUTPUT_PATH}/${DPU_TASK_NAME}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
