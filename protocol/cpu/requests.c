@@ -17,13 +17,16 @@ void SendGetOrInsertReq(uint32_t tableId, Key *keys, uint64_t *tupleAddrs, size_
   uint8_t *buffers[NUM_DPU];
   size_t sizes[NUM_DPU];
   BufferBuilder builders[NUM_DPU];
-  CpuToDpuBufferDescriptor bufferDesc = {
-    .header = {
-      .epochNumber = GetEpochNumber(),
-    }
-  };
+  CpuToDpuBufferDescriptor bufferDescs[NUM_DPU];
   for (int i = 0; i < NUM_DPU; i++) {
-    BufferBuilderInit(&builders[i], &bufferDesc);
+    bufferDescs[i] = (CpuToDpuBufferDescriptor) {
+      .header = {
+	.epochNumber = GetEpochNumber(),
+      }
+    };
+  }
+  for (int i = 0; i < NUM_DPU; i++) {
+    BufferBuilderInit(&builders[i], &bufferDescs[i]);
     BufferBuilderBeginBlock(&builders[i], GET_OR_INSERT_REQ);
   }
   for (int i = 0; i < batchSize; i++){
