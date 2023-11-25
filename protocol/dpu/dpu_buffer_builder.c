@@ -115,9 +115,9 @@ void BufferBuilderAppendTask(BufferBuilder *builder, Task *task)
     builder->bufferDesc.header.totalSize += taskSize + sizeof(Offset);
     break;
   }
-    // TODO impl other tasks
-    Unimplemented("ohter tasks to be impl!\n");
   default:
+    // TODO impl other tasks
+    Unimplemented("other tasks to be impl!\n");
     break;
   }
 }
