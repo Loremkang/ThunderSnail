@@ -10,7 +10,7 @@ int cmpfunc (const void * a, const void * b)
    return ( *(int*)b - *(int*)a );
 }
 
-void SendGetOrInsertReq(uint32_t tableId, Key *keys, uint64_t *tupleAddrs, size_t batchSize)
+void SendGetOrInsertReq(uint32_t tableId, Key *keys, uint64_t *tupleAddrs, size_t batchSize, uint8_t *recvBuffers[])
 {
   ValidValueCheck(batchSize <= BATCH_SIZE * NUM_DPU);
   // prepare dpu buffers
@@ -53,11 +53,22 @@ void SendGetOrInsertReq(uint32_t tableId, Key *keys, uint64_t *tupleAddrs, size_
   DPU_ASSERT(dpu_load(set, DPU_BINARY, NULL));
 
   DPU_ASSERT(dpu_launch(set, DPU_SYNCHRONOUS));
-  size_t idx = 0;
-  DPU_FOREACH(set, dpu) {
+  uint32_t idx;
+  DPU_FOREACH(set, dpu, idx) {
     DPU_ASSERT(dpu_prepare_xfer(dpu, &buffers[idx]));
-    idx++;
   }
   DPU_ASSERT(dpu_push_xfer(set, DPU_XFER_TO_DPU, "receiveBuffer", 0, sizes[0], DPU_XFER_DEFAULT));
+  DPU_ASSERT(dpu_launch(set, DPU_SYNCHRONOUS));
+
+  // receive
+  DPU_FOREACH(set, dpu, idx) {
+    DPU_ASSERT(dpu_prepare_xfer(dpu, &recvBuffers[idx]));
+  }
+  // how to get the reply buffer size? it seems that the reply buffer size will less then send buffer size
+  DPU_ASSERT(dpu_push_xfer(set, DPU_XFER_FROM_DPU, "replyBuffer", 0, sizes[0], DPU_XFER_DEFAULT));
+  //free
   DPU_ASSERT(dpu_free(set));
+  for (int i = 0; i < NUM_DPU; i++) {
+    free(buffers[i]);
+  }  
 }

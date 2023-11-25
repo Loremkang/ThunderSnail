@@ -22,6 +22,6 @@ inline static uint8_t GetEpochNumber()
   return epochNumber++;
 }
 
-void SendGetOrInsertReq(uint32_t tableId, Key *keys, uint64_t *tupleAddr, size_t batchSize);
+void SendGetOrInsertReq(uint32_t tableId, Key *keys, uint64_t *tupleAddr, size_t batchSize, uint8_t *recvBuffers[]);
 
 #endif
