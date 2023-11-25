@@ -21,4 +21,12 @@ uint16_t GetBlockTotalSize(uint8_t *blockPtr);
 
 Offset* GetBufferOffsetsPtr(uint8_t *buffer);
 
+Offset* GetBlockOffsetsPtr(uint8_t *blockPtr);
+
+void* ProcessTask(uint8_t *taskPtr, uint8_t taskType);
+
+void TraverseBlock(uint8_t *blockPtr);
+
+void TraverseReceiveBuffer(uint8_t *buffer);
+
 #endif
