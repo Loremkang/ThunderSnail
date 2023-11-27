@@ -8,15 +8,23 @@ if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
 endif()
 
 # For googletest
+## if you do not want to download it after you run build.sh clean
+## you can put the zip file into the $HOME/local/repo/googletest directory
+if(EXISTS $ENV{HOME}/local/repo/googletest)
+  message(WARNING "googletest found")
+  set(REPO_GOOGLETEST "file://$ENV{HOME}/local/repo/googletest/v1.14.0.zip")
+else()
+  message(WARNING "googletest not found, need to download")
+  set(REPO_GOOGLETEST "https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip")
+endif()
+
 include(FetchContent)
 FetchContent_Declare(
   googletest
   # Specify the commit you depend on and update it regularly.
-  URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
+  URL ${REPO_GOOGLETEST}
 )
 FetchContent_MakeAvailable(googletest)
-
-set(CMAKE_VERBOSE_MAKEFILE true)
 
 set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
 

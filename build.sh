@@ -5,6 +5,7 @@ pushd . 2>&1 > /dev/null
 
 if [[ $1 == "clean" ]]; then
     rm ${SOURCE_DIR}/build -rf
+    popd
     exit
 fi
 
