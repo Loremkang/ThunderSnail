@@ -1,5 +1,22 @@
 #include "index_req.h"
 #include "shared_wram.h"
+#include "mram_space.h"
+
+void IndexAllocatorInit() {
+    primary_index_dpu_allocator_init(INDEX_ALLOCATOR_ADDR, INDEX_ALLOCATOR_SIZE);
+}
+
+void IndexSpaceInit() {
+    primary_index_dpu_space_init(INDEX_SPACE_ADDR, INDEX_SPACE_SIZE);
+}
+
+primary_index_dpu *IndexCreate(uint32_t indexId) {
+    return primary_index_dpu_create(indexId);
+}
+
+void IndexInitBuckets(primary_index_dpu *pid, uint32_t taskletId) {
+    primary_index_dpu_init_buckets(pid, taskletId);
+}
 
 primary_index_dpu *IndexCheck(uint32_t indexId){
     return primary_index_dpu_check(indexId);
