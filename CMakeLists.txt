@@ -73,6 +73,7 @@ add_custom_target(${DPU_TASK_NAME} ALL
             -I${CMAKE_CURRENT_SOURCE_DIR}/protocol/dpu
             -I${CMAKE_CURRENT_SOURCE_DIR}/deps/pim-index/dpu/sto
             -I${CMAKE_CURRENT_SOURCE_DIR}/deps/pim-index/util
+            -I${CMAKE_CURRENT_SOURCE_DIR}/common_base_struct
             ${DPU_SOURCES} ${SRC_PROTOCOL} ${PROTOCOL_DPU_SOURCES} ${PIM_INDEX_DPU_STO} ${PIM_INDEX_UTIL}
             -o ${EXECUTABLE_OUTPUT_PATH}/${DPU_TASK_NAME}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
