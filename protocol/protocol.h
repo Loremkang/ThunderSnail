@@ -22,10 +22,11 @@ typedef uint32_t Offset; // The buffer offset
 #define FETCH_MAX_LINK_RESP 10
 #define MERGE_MAX_LINK_RESP 11
 
-#define NUM_FIXED_LEN_BLOCK_INPUT 3
-#define NUM_VAR_LEN_BLOCK_INPUT 3 // contain key, maxlink as input parameters tasks
-#define NUM_FIXED_LEN_BLOCK_OUTPUT 3
-#define NUM_VAR_LEN_BLOCK_OUTPUT 1 // contain maxlink as output value tasks
+// align to 8
+#define NUM_FIXED_LEN_BLOCK_INPUT 4
+#define NUM_VAR_LEN_BLOCK_INPUT 4
+#define NUM_FIXED_LEN_BLOCK_OUTPUT 4
+#define NUM_VAR_LEN_BLOCK_OUTPUT 4
 
 #define CPU_BUFFER_HEAD_LEN 8 // |epochNumber blockCnt totalSize|
 #define DPU_BUFFER_HEAD_LEN 8 // |bufferState blockCnt totalSize|
