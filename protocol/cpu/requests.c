@@ -39,7 +39,7 @@ void SendGetOrInsertReq(uint32_t tableId, Key *keys, uint64_t *tupleAddrs, size_
     };
     memcpy(&req + sizeof(GetOrInsertReq), &keys[i].data, keys[i].len);
   // append one task for each dpu
-    BufferBuilderAppendTask(&builders[i], (Task*)&req);
+    BufferBuilderAppendTask(&builders[dpuIdx], (Task*)&req);
   }
   // end block
   for (int i = 0; i < NUM_DPU; i++) {
@@ -55,7 +55,6 @@ void SendGetOrInsertReq(uint32_t tableId, Key *keys, uint64_t *tupleAddrs, size_
   DPU_ASSERT(dpu_alloc(NUM_DPU, NULL, &set));
   DPU_ASSERT(dpu_load(set, DPU_BINARY, NULL));
 
-  DPU_ASSERT(dpu_launch(set, DPU_SYNCHRONOUS));
   uint32_t idx;
   DPU_FOREACH(set, dpu, idx) {
     DPU_ASSERT(dpu_prepare_xfer(dpu, &buffers[idx]));
