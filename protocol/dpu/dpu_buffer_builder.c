@@ -104,7 +104,7 @@ void BufferBuilderAppendTask(BufferBuilder *builder, Task *task)
     VarLenBlockDescriptor* varLenBlockDesc = &builder->bufferDesc.varLenBlockDescs[builder->varLenBlockIdx];
     varLenBlockDesc->offsets[varLenBlockDesc->blockDescBase.taskCount++] = builder->curTaskOffset;
     uint32_t taskSize = GetFixedLenTaskSize(task);
-    mram_write_unaligned(resp + sizeof(Task), builder->curBlockPtr + builder->curTaskOffset, taskSize);
+    mram_write_unaligned(resp, builder->curBlockPtr + builder->curTaskOffset, taskSize);
     builder->curTaskOffset += taskSize;
     // update total size
     varLenBlockDesc->blockDescBase.totalSize += taskSize + sizeof(Offset);

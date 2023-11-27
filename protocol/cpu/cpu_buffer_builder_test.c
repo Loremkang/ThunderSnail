@@ -13,7 +13,7 @@ void CreateCpuToDpuBufferForEachDPU()
   GetOrInsertReq *reqs[BATCH_SIZE];
   for (int i = 0; i < BATCH_SIZE; i++) {
     char key = (char)('a' + i);
-    reqs[i] = (GetOrInsertReq*)malloc(GetFixedLenTaskSize(GET_OR_INSERT_REQ));
+    reqs[i] = (GetOrInsertReq*)malloc(ROUND_UP_TO_8(1) + sizeof(GetOrInsertReq));
     memcpy(reqs[i], &(GetOrInsertReq) {
       .base = { .taskType = GET_OR_INSERT_REQ },
       .len = 1,
