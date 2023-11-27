@@ -86,7 +86,7 @@ void TraverseBlock(uint8_t *blockPtr)
   uint16_t taskCount = GetTaskCount(blockPtr);
   if(IsVarLenTask(taskType)){
     Offset *offsetsPtr = GetBlockOffsetsPtr(blockPtr);
-    Iterator *taskIterator = CreateOffsetsIterator(offsetsPtr, taskCount);
+    Iterator *taskIterator = OffsetsIteratorCreate(offsetsPtr, taskCount);
     while (taskIterator->hasNext(taskIterator->data)) {
       Offset *taskOffset = OffsetsIteratorGetData(taskIterator->data);
       uint8_t *taskPtr = blockPtr + *taskOffset;
@@ -106,7 +106,7 @@ void TraverseBlock(uint8_t *blockPtr)
 void TraverseReceiveBuffer(uint8_t *buffer)
 {
   Offset *offsetsPtr = GetBufferOffsetsPtr(buffer);
-  Iterator *blockIterator = CreateOffsetsIterator(offsetsPtr, GetBlockCnt(buffer));
+  Iterator *blockIterator = OffsetsIteratorCreate(offsetsPtr, GetBlockCnt(buffer));
   while (blockIterator->hasNext(blockIterator->data)) {
     Offset *blockOffset = OffsetsIteratorGetData(blockIterator->data);
     uint8_t *blockPtr = buffer + *blockOffset;

@@ -41,7 +41,7 @@ Offset* OffsetsIteratorGetData(void *itr)
   return &(iterator->offsets[iterator->index]);
 }
 
-Iterator* CreateOffsetsIterator(Offset *offsetsPtr, size_t size)
+Iterator* OffsetsIteratorCreate(Offset *offsetsPtr, size_t size)
 {
   OffsetsIterator *iterator = malloc(sizeof(OffsetsIterator));
   iterator->iterator = (Iterator) {
@@ -54,6 +54,24 @@ Iterator* CreateOffsetsIterator(Offset *offsetsPtr, size_t size)
   iterator->size = size;
   iterator->index = 0;
   return &(iterator->iterator);
+}
+
+void OffsetIteratorDestroy(Iterator *itr)
+{
+  OffsetsIterator *iterator = (OffsetsIterator*)itr->data;
+  free(iterator);
+}
+
+void OffsetIteratorJumpToKth(Iterator *itr, uint8_t k)
+{
+  OffsetsIterator *iterator = (OffsetsIterator*)itr->data;
+  iterator->index = k;
+}
+
+void OffsetIteratorGetKthData(Iterator *itr, uint8_t k)
+{
+  OffsetsIteratorJumpToKth(itr, k);
+  OffsetsIteratorGetData(itr);
 }
 
 #endif
