@@ -2,7 +2,7 @@
 #ifndef HASH_TABLE_FOR_NEWLINK_H
 #define HASH_TABLE_FOR_NEWLINK_H
 
-#include "common_base_struct/common_base_struct.h"
+#include "common_base_struct.h"
 
 typedef struct HashTableForNewLinkEntryT {
     HashTableQueryReplyT key;
@@ -22,6 +22,5 @@ void HashTableForNewLinkShrink(HashTableForNewLinkT *hashTable, int capacity);
 // Id Starting from 1
 int HashTableForNewlinkGetId(HashTableForNewLinkT *hashTable, HashTableQueryReplyT key);
 void HashTableForNewLinkSoftReset(HashTableForNewLinkT *hashTable);
-bool HashTableForNewLinkTest();
 
 #endif

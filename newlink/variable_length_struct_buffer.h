@@ -1,5 +1,4 @@
 #pragma once
-
 #ifndef VARIABLE_LENGTH_STRUCT_BUFFER_H
 #define VARIABLE_LENGTH_STRUCT_BUFFER_H
 
@@ -44,6 +43,5 @@ OffsetT VariableLengthStructBufferAppendPlaceholder(VariableLengthStructBufferT 
 uint8_t* VariableLengthStructBufferGet(VariableLengthStructBufferT *buf, OffsetT idx);
 OffsetT VariableLengthStructBufferGetSize(VariableLengthStructBufferT *buf, OffsetT idx);
 void VariableLengthStructBufferFree(VariableLengthStructBufferT *buf);
-bool VariableLengthStructBufferTest();
 
 #endif

@@ -26,13 +26,16 @@ aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/newlink SRC_NEWLINK)
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/protocol SRC_PROTOCOL)
 
 add_executable(host testdriver.c ${SRC_COMMON_BASE_STRUCT} ${SRC_PROTOCOL} ${SRC_NEWLINK})
-target_include_directories(host PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/common_base_struct ${CMAKE_CURRENT_SOURCE_DIR}/protocol)
+target_include_directories(host PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/common_base_struct)
+target_include_directories(host PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/protocol)
 target_include_directories(host PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/newlink)
 
 # Build tests:
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/tests SRC_TEST)
-add_executable(test ${SRC_TEST} ${SRC_COMMON_BASE_STRUCT})
-target_include_directories(test PRIVATE .)
+add_executable(test ${SRC_TEST} ${SRC_COMMON_BASE_STRUCT} ${SRC_NEWLINK})
+target_include_directories(test PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/common_base_struct)
+target_include_directories(test PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/protocol)
+target_include_directories(test PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/newlink)
 target_link_libraries(test gtest_main)
 add_test(NAME example_test COMMAND test)
 
@@ -49,8 +52,9 @@ if(NOT EXECUTABLE_OUTPUT_PATH)
 endif()
 
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/dpu DPU_SOURCES)
-aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/protocol DPU_PROTOCOL_SOURCES)
-aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/protocol/dpu DPU_PROTOCOL_DPU_SOURCES)
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/protocol PROTOCOL_SOURCES)
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/protocol/dpu PROTOCOL_DPU_SOURCES)
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/protocol/cpu PROTOCOL_CPU_SOURCES)
 
 file(GLOB DPU_HEADERS "dpu/*.h")
 
@@ -61,8 +65,8 @@ add_custom_target(${DPU_TASK_NAME} ALL
             -DSTACK_SIZE_DEFAULT=1024
             -I${CMAKE_CURRENT_SOURCE_DIR}/dpu
             -I${CMAKE_CURRENT_SOURCE_DIR}/protocol
-	    -I${CMAKE_CURRENT_SOURCE_DIR}/protocol/dpu
-            ${DPU_SOURCES} ${DPU_PROTOCOL_SOURCES} ${DPU_PROTOCOL_DPU_SOURCES}
+            -I${CMAKE_CURRENT_SOURCE_DIR}/protocol/dpu
+            ${DPU_SOURCES} ${PROTOCOL_SOURCES} ${PROTOCOL_DPU_SOURCES}
             -o ${EXECUTABLE_OUTPUT_PATH}/${DPU_TASK_NAME}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     DEPENDS ${DPU_SOURCES}
@@ -70,3 +74,8 @@ add_custom_target(${DPU_TASK_NAME} ALL
     VERBATIM)
 
 install(PROGRAMS ${EXECUTABLE_OUTPUT_PATH}/${DPU_TASK_NAME} DESTINATION bin)
+
+add_library(protocol ${PROTOCOL_SOURCES} ${PROTOCOL_CPU_SOURCES})
+target_include_directories(protocol PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/protocol ${CMAKE_CURRENT_SOURCE_DIR}/protocol/cpu ${UPMEM_SDK_DIR}/include/dpu)
+target_link_directories(protocol PRIVATE ${UPMEM_SDK_DIR}/lib)
+target_link_libraries(protocol dpu)

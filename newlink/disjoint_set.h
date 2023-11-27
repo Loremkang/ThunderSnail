@@ -11,4 +11,3 @@ typedef struct DisjointSetNodeT {
 void DisjointSetInit(DisjointSetNodeT* node);
 DisjointSetNodeT* DisjointSetFind(DisjointSetNodeT* node);
 void DisjointSetJoin(DisjointSetNodeT* a, DisjointSetNodeT* b);
-int DisjointSetTest();

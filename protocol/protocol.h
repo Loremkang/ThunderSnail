@@ -113,7 +113,7 @@ typedef struct {
 
 typedef struct {
   Task base;
-  MaxLink maxLink;
+  MaxLinkT maxLink;
 } MergeMaxLinkReq;
 
 typedef struct {
@@ -133,7 +133,7 @@ typedef struct {
 
 typedef struct {
   Task base;
-  MaxLink maxLink;
+  MaxLinkT maxLink;
 } FetchMaxLinkResp;
 
 bool IsVarLenTask(uint8_t taskType);

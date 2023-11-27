@@ -122,30 +122,3 @@ int HashTableForNewlinkGetId(HashTableForNewLinkT *hashTable, HashTableQueryRepl
     ValidValueCheck(0);
     return 0;
 }
-
-bool HashTableForNewLinkTest() {
-    const int MAXN = 1000;
-    HashTableForNewLinkT ht;
-    HashTableForNewLinkInit(&ht);
-    HashTableForNewLinkExpandAndSoftReset(&ht, 1.5 * MAXN); // very dense
-    HashTableQueryReplyT keys[MAXN];
-    for (int i = 0; i < MAXN; i ++) {
-        if (i & 1) {
-            keys[i].type = TupleId;
-            keys[i].value.tupleId.tableId = hash32(i);
-            keys[i].value.tupleId.tupleAddr = hash64(i);
-        } else {
-            keys[i].type = MaxLinkAddr;
-            keys[i].value.maxLinkAddr.rPtr = RemotePtrFromI64(hash64(i));
-        }
-        int id = HashTableForNewlinkGetId(&ht, keys[i]);
-        printf("i=%d\tid=%d\n", i, id);
-        assert(id == i + 1);
-    }
-    for (int i = 7; i != 0; i = (i + 7) % MAXN) {
-        int id = HashTableForNewlinkGetId(&ht, keys[i]);
-        printf("i=%d\tid=%d\n", i, id);
-        assert(id == i + 1);
-    }
-    return true;
-}
