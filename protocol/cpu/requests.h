@@ -4,7 +4,7 @@
 #include "../protocol.h"
 #include "cpu_buffer_builder.h"
 
-#define NUM_DPU 64
+#define NUM_DPU 1
 
 typedef struct {
   uint8_t *data;

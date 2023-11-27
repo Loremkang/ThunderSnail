@@ -21,6 +21,10 @@ TEST (BufferHandler, DecodeBuffer) {
     keys[i].data[4] = '\0';
     keys[i].len = 4;
   }
+
+  uint8_t** recvBuf;
+  recvBuf = (uint8_t **)malloc(sizeof(uint8_t*));
+  recvBuf[0] = (uint8_t *)malloc(65535);
   printf("Now calling SendGetOrInsertReq\n");
-  SendGetOrInsertReq(/*tableId*/3, keys, tupleAddrs, TEST_BATCH);
+  SendGetOrInsertReq(/*tableId*/3, keys, tupleAddrs, TEST_BATCH, recvBuf);
 }

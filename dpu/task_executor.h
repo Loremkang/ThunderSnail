@@ -1,6 +1,7 @@
 #ifndef TASK_EXECUTOR_H
 #define TASK_EXECUTOR_H
 
+#include <seqread.h>
 #include "../protocol/protocol.h"
 
 // Make sure TASK_HEADER_LEN is long enough to calculate any task's length
@@ -15,15 +16,21 @@ typedef enum {
 } GetTaskStateT;
 
 typedef struct {
-  uint8_t blockIdx;
-  uint8_t taskIdx;
   CpuBufferHeader bufHeader;
   BlockDescriptorBase blockHeader;
+  Offset* blkOffsets;
+  Offset* tskOffsets;
+  uint8_t blockIdx;
+  uint8_t taskIdx;
   __mram_ptr uint8_t *bufPtr;
   __mram_ptr uint8_t *curBlockPtr;
   __mram_ptr uint8_t *curTaskPtr;
   __mram_ptr Offset *curBlockOffsetPtr;
   __mram_ptr Offset *curTaskOffsetPtr;
+  seqreader_t blkSr;
+  seqreader_t tskSr;
+  seqreader_buffer_t blkCache;
+  seqreader_buffer_t tskCache;
   bool isCurVarLenBlock;
 } BufferDecoder;
 
