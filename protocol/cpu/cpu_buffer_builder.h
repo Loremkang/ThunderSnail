@@ -7,6 +7,7 @@ typedef struct {
   CpuToDpuBufferDescriptor *bufferDesc;
   uint8_t *buffer;
   uint8_t *curBlockPtr;
+  uint8_t *varlenBlockOffsetsBuffer;
   Offset curBlockOffset;
   uint8_t *curTaskPtr;
   Offset curTaskOffset;
@@ -15,7 +16,7 @@ typedef struct {
   bool isCurVarLenBlock;
 } BufferBuilder;
 
-void BufferBuilderInit(BufferBuilder *builder, CpuToDpuBufferDescriptor *bufferDesc);
+void BufferBuilderInit(BufferBuilder *builder, CpuToDpuBufferDescriptor *bufferDesc, uint8_t *buffer, uint8_t* offsetsBuffer, uint8_t* varlenBlockOffsetsBuffer);
 
 void BufferBuilderBeginBlock(BufferBuilder *builder, uint8_t taskType);
 
