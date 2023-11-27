@@ -27,15 +27,18 @@ typedef uint32_t Offset; // The buffer offset
 #define NUM_FIXED_LEN_BLOCK_OUTPUT 3
 #define NUM_VAR_LEN_BLOCK_OUTPUT 1 // contain maxlink as output value tasks
 
-#define CPU_BUFFER_HEAD_LEN 6 // |epochNumber blockCnt totalSize|
-#define DPU_BUFFER_HEAD_LEN 6 // |bufferState blockCnt totalSize|
+#define CPU_BUFFER_HEAD_LEN 8 // |epochNumber blockCnt totalSize|
+#define DPU_BUFFER_HEAD_LEN 8 // |bufferState blockCnt totalSize|
 #define BLOCK_HEAD_LEN sizeof(BlockDescriptorBase)
 #define BATCH_SIZE 320
 #define NUM_BLOCKS 8
 
 #define BUFFER_LEN 65535
 
-typedef struct {
+#define ALIGN8 __attribute__((aligned(8)))
+#define ROUND_UP_TO_8(x) (((x)+7) &~7) // to align key len to 8
+
+typedef ALIGN8 struct {
   uint8_t taskType;
   uint16_t taskCount;
   uint32_t totalSize;
@@ -50,9 +53,9 @@ typedef struct {
   Offset *offsets;
 } VarLenBlockDescriptor;
 
-typedef struct {
+typedef ALIGN8 struct {
   uint8_t epochNumber;
-  uint8_t blockCnt;
+  uint16_t blockCnt;
   uint32_t totalSize;
 } CpuBufferHeader;
 
@@ -63,9 +66,9 @@ typedef struct {
   Offset *offsets;
 } CpuToDpuBufferDescriptor;
 
-typedef struct {
+typedef ALIGN8 struct {
   uint8_t bufferState;
-  uint8_t blockCnt;
+  uint16_t blockCnt;
   uint32_t totalSize;
 } DpuBufferHeader;
 
@@ -80,7 +83,7 @@ typedef struct {
   uint8_t taskType;
 } Task;
 
-typedef struct {
+typedef ALIGN8 struct {
   Task base;
   uint8_t len;  // key len
   TupleIdT tid; // value
@@ -88,50 +91,50 @@ typedef struct {
   uint8_t ptr[]; // key
 } GetOrInsertReq;
 
-typedef struct {
+typedef ALIGN8 struct {
   Task base;
   uint8_t len;
   HashTableId hashTableId;
   uint8_t ptr[]; // key
 } GetPointerReq;
 
-typedef struct {
+typedef ALIGN8 struct {
   Task base;
   HashAddrT hashEntry;
   MaxLinkAddrT maxLinkAddr;
 } UpdatePointerReq;
 
-typedef struct {
+typedef ALIGN8 struct {
   Task base;
   MaxLinkAddrT maxLinkAddr;
 } GetMaxLinkSizeReq;
 
-typedef struct {
+typedef ALIGN8 struct {
   Task base;
   MaxLinkAddrT maxLinkAddr;
 } FetchMaxLinkReq;
 
-typedef struct {
+typedef ALIGN8 struct {
   Task base;
   MaxLinkT maxLink;
 } MergeMaxLinkReq;
 
-typedef struct {
+typedef ALIGN8 struct {
   Task base;
   HashTableQueryReplyT tupleIdOrMaxLinkAddr;
 } GetOrInsertResp;
 
-typedef struct {
+typedef ALIGN8 struct {
   Task base;
   MaxLinkAddrT maxLinkAddr;
 } GetPointerResp;
 
-typedef struct {
+typedef ALIGN8 struct {
   Task base;
   uint8_t maxLinkSize;
 } GetMaxLinkSizeResp;
 
-typedef struct {
+typedef ALIGN8 struct {
   Task base;
   MaxLinkT maxLink;
 } FetchMaxLinkResp;

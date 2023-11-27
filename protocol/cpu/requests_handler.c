@@ -43,14 +43,14 @@ uint16_t GetBlockTotalSize(uint8_t *blockPtr)
 
 Offset* GetBufferOffsetsPtr(uint8_t *buffer)
 {
-  uint8_t blockCnt = GetBlockCnt(buffer);
+  uint16_t blockCnt = GetBlockCnt(buffer);
   uint32_t totalSize = GetBufferTotalSize(buffer);
   return (Offset*)(buffer + totalSize - blockCnt * sizeof(Offset));
 }
 
 Offset* GetBlockOffsetsPtr(uint8_t *blockPtr)
 {
-  uint8_t taskCount = GetTaskCount(blockPtr);
+  uint16_t taskCount = GetTaskCount(blockPtr);
   uint32_t totalSize = GetBlockTotalSize(blockPtr);
   return (Offset*)(blockPtr + totalSize - taskCount * sizeof(Offset));
 }
