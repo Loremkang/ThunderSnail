@@ -21,7 +21,7 @@ uint16_t GetFixedLenTaskSize(void *task)
   case GET_OR_INSERT_REQ: {
     GetOrInsertReq *req = (GetOrInsertReq*)task;
     // |key + value + hash_id|
-    ret += req->len + sizeof(GetOrInsertReq);
+    ret += ROUND_UP_TO_8(req->len) + sizeof(GetOrInsertReq);
     break;
   }
   case GET_OR_INSERT_RESP: {
@@ -32,7 +32,7 @@ uint16_t GetFixedLenTaskSize(void *task)
   case GET_POINTER_REQ: {
     GetPointerReq *req = (GetPointerReq*)task;
     // |key + hash_id|
-    ret += req->len + sizeof(GetPointerReq);
+    ret += ROUND_UP_TO_8(req->len) + sizeof(GetPointerReq);
     break;
   }
   case GET_POINTER_RESP: {
@@ -63,7 +63,7 @@ uint16_t GetFixedLenTaskSize(void *task)
   case FETCH_MAX_LINK_RESP: {
     FetchMaxLinkResp *resp = (FetchMaxLinkResp*)task;
     // add task type in the end, because we always remove it.
-    ret += resp->maxLink.tupleIDCount * sizeof(TupleIdT) + resp->maxLink.hashAddrCount * sizeof(HashAddrT) + sizeof(MaxLinkT);
+    ret += ROUND_UP_TO_8(resp->maxLink.tupleIDCount * sizeof(TupleIdT) + resp->maxLink.hashAddrCount * sizeof(HashAddrT)) + sizeof(FetchMaxLinkResp);
     break;
   }
   case MERGE_MAX_LINK_REQ: {
