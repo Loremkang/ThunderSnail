@@ -82,13 +82,14 @@ void* ProcessTask(uint8_t *taskPtr, uint8_t taskType)
 
 void TraverseBlock(uint8_t *blockPtr)
 {
+  OffsetsIterator iterator;
   uint8_t taskType = GetTaskType(blockPtr);
   uint16_t taskCount = GetTaskCount(blockPtr);
   if(IsVarLenTask(taskType)){
     Offset *offsetsPtr = GetBlockOffsetsPtr(blockPtr);
-    Iterator *taskIterator = OffsetsIteratorCreate(offsetsPtr, taskCount);
+    Iterator *taskIterator = OffsetsIteratorInit(&iterator, blockPtr, offsetsPtr, taskCount);
     while (taskIterator->hasNext(taskIterator->data)) {
-      Offset *taskOffset = OffsetsIteratorGetData(taskIterator->data);
+      Offset *taskOffset = OffsetsIteratorGetOffset(taskIterator->data);
       uint8_t *taskPtr = blockPtr + *taskOffset;
       ProcessTask(taskPtr, taskType);
       taskIterator->next(taskIterator->data);
@@ -105,10 +106,11 @@ void TraverseBlock(uint8_t *blockPtr)
 
 void TraverseReceiveBuffer(uint8_t *buffer)
 {
+  OffsetsIterator iterator;
   Offset *offsetsPtr = GetBufferOffsetsPtr(buffer);
-  Iterator *blockIterator = OffsetsIteratorCreate(offsetsPtr, GetBlockCnt(buffer));
+  Iterator *blockIterator = OffsetsIteratorInit(&iterator, buffer, offsetsPtr, GetBlockCnt(buffer));
   while (blockIterator->hasNext(blockIterator->data)) {
-    Offset *blockOffset = OffsetsIteratorGetData(blockIterator->data);
+    Offset *blockOffset = OffsetsIteratorGetOffset(blockIterator->data);
     uint8_t *blockPtr = buffer + *blockOffset;
     TraverseBlock(blockPtr);
     blockIterator->next(blockIterator->data);
@@ -116,3 +118,24 @@ void TraverseReceiveBuffer(uint8_t *buffer)
   blockIterator->reset(blockIterator->data);
 }
 
+void BlockIteratorInit(OffsetsIterator *iterator, uint8_t *buffer)
+{
+  Offset *offsetsPtr = GetBufferOffsetsPtr(buffer);
+  OffsetsIteratorInit(iterator, buffer, offsetsPtr, GetBlockCnt(buffer));
+}
+
+void TaskIteratorInit(OffsetsIterator *iterator, Iterator *blockIterator) {
+  if (!blockIterator->hasNext(blockIterator->data)) {
+    iterator = NULL;
+  }
+  Offset *blockPtr = OffsetsIteratorGetData(blockIterator->data);
+  uint8_t taskType = GetTaskType(blockPtr);
+  uint16_t taskCount = GetTaskCount(blockPtr);
+  if(IsVarLenTask(taskType)){
+    Offset *offsetsPtr = GetBlockOffsetsPtr(blockPtr);
+    OffsetsIteratorInit(iterator, blockPtr, offsetsPtr, taskCount);
+  } else {
+    uint32_t eachTaskSize = (GetBlockTotalSize(blockPtr) - DPU_BUFFER_HEAD_LEN) / taskCount;
+    OffsetsIteratorInit(iterator, blockPtr, blockPtr, taskCount);
+  }
+}

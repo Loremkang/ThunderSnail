@@ -12,6 +12,7 @@ typedef struct {
 
 typedef struct {
   Iterator iterator;
+  uint8_t* baseAddr; // base address of the buffer
   Offset *offsets; // offsets
   size_t size;
   size_t index; // current offsets index
@@ -35,43 +36,42 @@ void OffsetsIteratorReset(void *itr)
   iterator->index = 0;
 }
 
-Offset* OffsetsIteratorGetData(void *itr)
+Offset* OffsetsIteratorGetOffset(void *itr)
 {
   OffsetsIterator *iterator = (OffsetsIterator*)itr;
   return &(iterator->offsets[iterator->index]);
 }
 
-Iterator* OffsetsIteratorCreate(Offset *offsetsPtr, size_t size)
+uint8_t* OffsetsIteratorGetData(void *itr)
 {
-  OffsetsIterator *iterator = malloc(sizeof(OffsetsIterator));
+  OffsetsIterator *iterator = (OffsetsIterator*)itr;
+  return iterator->baseAddr + iterator->offsets[iterator->index];
+}
+
+Iterator* OffsetsIteratorInit(OffsetsIterator* iterator, uint8_t* basePtr, Offset *offsetsPtr, size_t size)
+{
   iterator->iterator = (Iterator) {
     .data = iterator,
     .next = OffsetsIteratorNext,
     .hasNext = OffsetsIteratorHasNext,
     .reset = OffsetsIteratorReset,
   };
+  iterator->baseAddr = basePtr;
   iterator->offsets = offsetsPtr;
   iterator->size = size;
   iterator->index = 0;
   return &(iterator->iterator);
 }
 
-void OffsetIteratorDestroy(Iterator *itr)
+void OffsetIteratorJumpToKth(OffsetsIterator *iterator, uint8_t k)
 {
-  OffsetsIterator *iterator = (OffsetsIterator*)itr->data;
-  free(iterator);
-}
-
-void OffsetIteratorJumpToKth(Iterator *itr, uint8_t k)
-{
-  OffsetsIterator *iterator = (OffsetsIterator*)itr->data;
   iterator->index = k;
 }
 
-void OffsetIteratorGetKthData(Iterator *itr, uint8_t k)
+uint8_t* OffsetIteratorGetKthData(OffsetsIterator *iterator, uint8_t k)
 {
-  OffsetsIteratorJumpToKth(itr, k);
-  OffsetsIteratorGetData(itr);
+  OffsetsIteratorJumpToKth(iterator, k);
+  OffsetsIteratorGetData(iterator);
 }
 
 #endif
