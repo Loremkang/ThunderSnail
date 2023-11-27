@@ -37,7 +37,7 @@ fi
 if [[ $FLAG == "debug" ]]; then
     cd ${SOURCE_DIR} && cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
     cd ${SOURCE_DIR}/build && make -j
-else if [[ $FLAG == "release"]]
+elif [[ $FLAG == "release" ]]; then 
     cd ${SOURCE_DIR} && cmake -S . -B build
     cd ${SOURCE_DIR}/build && make -j
 fi
