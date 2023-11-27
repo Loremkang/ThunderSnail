@@ -57,22 +57,21 @@ Offset* GetBlockOffsetsPtr(uint8_t *blockPtr)
 
 void* ProcessTask(uint8_t *taskPtr, uint8_t taskType)
 {
-  uint8_t *task = taskPtr - sizeof(Task);
   switch(taskType) {
   case GET_OR_INSERT_RESP: {
-    GetOrInsertResp *resp = (GetOrInsertResp*)task;
+    GetOrInsertResp *resp = (GetOrInsertResp*)taskPtr;
     break;
   }
   case GET_POINTER_RESP: {
-    GetPointerResp *resp= (GetPointerResp*)task;
+    GetPointerResp *resp= (GetPointerResp*)taskPtr;
     break;
   }
   case GET_MAX_LINK_SIZE_RESP: {
-    GetMaxLinkSizeResp *resp = (GetMaxLinkSizeResp*)task;
+    GetMaxLinkSizeResp *resp = (GetMaxLinkSizeResp*)taskPtr;
     break;
   }
   case FETCH_MAX_LINK_RESP: {
-    FetchMaxLinkResp *resp = (FetchMaxLinkResp*)task;
+    FetchMaxLinkResp *resp = (FetchMaxLinkResp*)taskPtr;
     break;
   }
   default:
