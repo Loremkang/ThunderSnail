@@ -31,7 +31,7 @@ void SendGetOrInsertReq(uint32_t tableId, Key *keys, uint64_t *tupleAddrs, size_
   }
   for (int i = 0; i < batchSize; i++){
     int dpuIdx = i % NUM_DPU;
-    GetOrInsertReq *req = malloc(GetFixedLenTaskSize(GET_OR_INERT_REQ));
+    GetOrInsertReq *req = malloc(GetFixedLenTaskSize(GET_OR_INSERT_REQ));
     req->base = (Task) { .taskType = GET_OR_INSERT_REQ };
     req->len = keys[i].len;
     req->tid = (TupleIdT) { .tableId = tableId, .tupleAddr = tupleAddrs[i] };
