@@ -12,8 +12,8 @@ typedef struct {
   Offset curBlockOffset;
   uint8_t *curTaskPtr;
   Offset curTaskOffset;
-  uint8_t varLenBlockIdx;
-  uint8_t fixedLenBlockIdx;
+  uint16_t varLenBlockIdx;
+  uint16_t fixedLenBlockIdx;
   bool isCurVarLenBlock;
 } BufferBuilder;
 

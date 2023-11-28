@@ -20,6 +20,7 @@ void BufferDecoderInit(BufferDecoder *decoder) {
       decoder->curTaskPtr = NULL;
       decoder->curBlockOffsetPtr = NULL;
   } else { // point to the 1st task of the 1st block, don't mind if it's empty
+    decoder->blockIdx++;
     decoder->curBlockPtr = decoder->bufPtr + sizeof(CpuBufferHeader);
     mram_read_unaligned(decoder->curBlockPtr, &(decoder->blockHeader), sizeof(BlockDescriptorBase));
     decoder->curTaskPtr = decoder->curBlockPtr + sizeof(BlockDescriptorBase);
@@ -98,11 +99,11 @@ GetTaskStateT GetNextTask (BufferDecoder *decoder, Task *task) {
 
 void GetOrInsertFake (HashTableId id, char *key, uint32_t keyLen, TupleIdT tupleId, HashTableQueryReplyT *reply) {
   printf("Warning: this is GetOrInsertFake!\n");
-  printf("id=%d, keyLen=%d, key=", id, keyLen);
+  printf("hashTableId=%d, keyLen=%d, key=", id, keyLen);
   for (int i=0; i < keyLen; i++) {
-    printf("\\%02hhx", (unsigned char)key[i]);
+    printf("%c", (unsigned char)key[i]);
   }
-  printf(" (TupleIdT){.tableId = %d\t, .tupleAddr = %lx}\n", tupleId.tableId, tupleId.tupleAddr);
+  printf(" (TupleIdT){.tableId = %d,\t .tupleAddr = 0x%lx}\n", tupleId.tableId, tupleId.tupleAddr);
 
   // To fill a fake reply
   reply->type = HashAddr;
@@ -141,7 +142,7 @@ void DpuMainLoop () {
   }
 
   __dma_aligned uint8_t taskBuf[TASK_MAX_LEN];
-  Task *task = (Task*)&taskBuf;
+  Task *task = (Task*)taskBuf;
   while (true) {
     GetTaskStateT state = GetNextTask(&decoder, task);
     if (NO_MORE_TASK == state) { // All tasks consumed

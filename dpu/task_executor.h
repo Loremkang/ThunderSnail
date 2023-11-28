@@ -20,8 +20,8 @@ typedef struct {
   BlockDescriptorBase blockHeader;
   Offset* blkOffsets;
   Offset* tskOffsets;
-  uint8_t blockIdx;
-  uint8_t taskIdx;
+  uint16_t blockIdx;
+  uint16_t taskIdx;
   __mram_ptr uint8_t *bufPtr;
   __mram_ptr uint8_t *curBlockPtr;
   __mram_ptr uint8_t *curTaskPtr;
