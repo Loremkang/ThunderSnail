@@ -64,6 +64,10 @@ void BufferBuilderEndBlock(BufferBuilder *builder)
     uint32_t offsetsLen = varLenBlockDesc->blockDescBase.taskCount * sizeof(Offset);
     uint8_t* offsetsBegin = builder->curBlockPtr + varLenBlockDesc->blockDescBase.totalSize - offsetsLen;
     memcpy(offsetsBegin, varLenBlockDesc->offsets, offsetsLen);
+    uint32_t paddingOffsetsLen = ROUND_UP_TO_8(offsetsLen);
+    // update total size
+    varLenBlockDesc->blockDescBase.totalSize += paddingOffsetsLen - offsetsLen;
+    builder->bufferDesc->header.totalSize += paddingOffsetsLen - offsetsLen;
     builder->curBlockOffset += varLenBlockDesc->blockDescBase.totalSize;
     free(varLenBlockDesc->offsets);
     // flush block header

@@ -72,6 +72,10 @@ void BufferBuilderEndBlock(BufferBuilder *builder)
     uint32_t offsetsLen = varLenBlockDesc->blockDescBase.taskCount * sizeof(Offset);
     __mram_ptr uint8_t* offsetsBegin = builder->curBlockPtr + varLenBlockDesc->blockDescBase.totalSize - offsetsLen;
     mram_write_unaligned(varLenBlockDesc->offsets, offsetsBegin, offsetsLen);
+    uint32_t paddingOffsetsLen = ROUND_UP_TO_8(offsetsLen);
+    // update total size
+    varLenBlockDesc->blockDescBase.totalSize += paddingOffsetsLen - offsetsLen;
+    builder->bufferDesc.header.totalSize += paddingOffsetsLen - offsetsLen;
     builder->curBlockOffset += varLenBlockDesc->blockDescBase.totalSize;
     buddy_free(varLenBlockDesc->offsets);
     // flush block header
