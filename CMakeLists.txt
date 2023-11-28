@@ -38,15 +38,6 @@ target_include_directories(host PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/common_bas
 target_include_directories(host PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/protocol)
 target_include_directories(host PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/newlink)
 
-# Build tests:
-aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/tests SRC_TEST)
-add_executable(test ${SRC_TEST} ${SRC_COMMON_BASE_STRUCT} ${SRC_NEWLINK})
-target_include_directories(test PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/common_base_struct)
-target_include_directories(test PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/protocol)
-target_include_directories(test PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/newlink)
-target_link_libraries(test gtest_main)
-add_test(NAME example_test COMMAND test)
-
 set(UPMEM_SDK_DIR "$ENV{UPMEM_SDK_DIR}")
 if(NOT UPMEM_SDK_DIR)
     message(FATAL_ERROR "environment variable UPMEM_SDK_DIR is not set")
@@ -60,7 +51,6 @@ if(NOT EXECUTABLE_OUTPUT_PATH)
 endif()
 
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/dpu DPU_SOURCES)
-aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/protocol PROTOCOL_SOURCES)
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/protocol/dpu PROTOCOL_DPU_SOURCES)
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/protocol/cpu PROTOCOL_CPU_SOURCES)
 
@@ -74,7 +64,7 @@ add_custom_target(${DPU_TASK_NAME} ALL
             -I${CMAKE_CURRENT_SOURCE_DIR}/dpu
             -I${CMAKE_CURRENT_SOURCE_DIR}/protocol
             -I${CMAKE_CURRENT_SOURCE_DIR}/protocol/dpu
-            ${DPU_SOURCES} ${PROTOCOL_SOURCES} ${PROTOCOL_DPU_SOURCES}
+            ${DPU_SOURCES} ${SRC_PROTOCOL} ${PROTOCOL_DPU_SOURCES}
             -o ${EXECUTABLE_OUTPUT_PATH}/${DPU_TASK_NAME}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     DEPENDS ${DPU_SOURCES}
@@ -83,7 +73,17 @@ add_custom_target(${DPU_TASK_NAME} ALL
 
 install(PROGRAMS ${EXECUTABLE_OUTPUT_PATH}/${DPU_TASK_NAME} DESTINATION bin)
 
-add_library(protocol ${PROTOCOL_SOURCES} ${PROTOCOL_CPU_SOURCES})
+add_library(protocol ${SRC_PROTOCOL} ${PROTOCOL_CPU_SOURCES})
 target_include_directories(protocol PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/protocol ${CMAKE_CURRENT_SOURCE_DIR}/protocol/cpu ${UPMEM_SDK_DIR}/include/dpu)
 target_link_directories(protocol PRIVATE ${UPMEM_SDK_DIR}/lib)
 target_link_libraries(protocol dpu)
+
+# Build tests:
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/tests SRC_TEST)
+add_executable(test ${SRC_TEST} ${SRC_COMMON_BASE_STRUCT} ${SRC_NEWLINK})
+target_include_directories(test PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/common_base_struct)
+target_include_directories(test PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/protocol)
+target_include_directories(test PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/newlink)
+target_link_directories(test PRIVATE ${UPMEM_SDK_DIR}/lib)
+target_link_libraries(test gtest_main protocol)
+add_test(NAME example_test COMMAND test)

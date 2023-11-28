@@ -17,7 +17,7 @@ void BufferBuilderInit(BufferBuilder *builder)
   builder->bufferDesc.header.blockCnt = 0;
   builder->bufferDesc.header.totalSize = DPU_BUFFER_HEAD_LEN;
   // need clear the reply buffer?
-  memset(replyBuffer, 0, BUFFER_LEN);
+  //memset(replyBuffer, 0, BUFFER_LEN);
 
   builder->curBlockPtr = replyBuffer + DPU_BUFFER_HEAD_LEN;
   builder->curBlockOffset = DPU_BUFFER_HEAD_LEN;
@@ -115,9 +115,9 @@ void BufferBuilderAppendTask(BufferBuilder *builder, Task *task)
     builder->bufferDesc.header.totalSize += taskSize + sizeof(Offset);
     break;
   }
-    // TODO impl other tasks
-    Unimplemented("ohter tasks to be impl!\n");
   default:
+    // TODO impl other tasks
+    Unimplemented("other tasks to be impl!\n");
     break;
   }
 }

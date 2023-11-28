@@ -4,7 +4,7 @@
 #include "../protocol.h"
 #include "cpu_buffer_builder.h"
 
-#define NUM_DPU 64
+#define NUM_DPU 1
 
 typedef struct {
   uint8_t *data;
@@ -14,11 +14,11 @@ typedef struct {
 static uint8_t epochNumber = 0;
 
 inline static uint8_t GetEpochNumber()
-{  
+{
   if (epochNumber == 255) {
     epochNumber = 0;
     return 255;
-  } 
+  }
   return epochNumber++;
 }
 

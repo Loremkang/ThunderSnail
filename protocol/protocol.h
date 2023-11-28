@@ -39,6 +39,9 @@ typedef uint32_t Offset; // The buffer offset
 #define ALIGN8 __attribute__((aligned(8)))
 #define ROUND_UP_TO_8(x) (((x)+7) &~7) // to align key len to 8
 
+#define ALIGN_TO( sizeToAlign, PowerOfTwo )                         \
+        (((sizeToAlign) + (PowerOfTwo) - 1) & ~((PowerOfTwo) - 1))
+
 typedef ALIGN8 struct {
   uint8_t taskType;
   uint16_t taskCount;
