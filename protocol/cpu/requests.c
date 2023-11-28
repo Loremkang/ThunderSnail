@@ -49,7 +49,7 @@ void SendGetOrInsertReq(uint32_t tableId, Key *keys, uint64_t *tupleAddrs, size_
   }
   // get max sizes
   qsort(sizes, NUM_DPU, sizeof(size_t), cmpfunc);
-  
+  size_t bufferSize = ROUND_UP_TO_8(sizes[0]);
   // send
   struct dpu_set_t set, dpu;
 
@@ -60,7 +60,7 @@ void SendGetOrInsertReq(uint32_t tableId, Key *keys, uint64_t *tupleAddrs, size_
   DPU_FOREACH(set, dpu, idx) {
     DPU_ASSERT(dpu_prepare_xfer(dpu, &buffers[idx]));
   }
-  DPU_ASSERT(dpu_push_xfer(set, DPU_XFER_TO_DPU, "receiveBuffer", 0, sizes[0], DPU_XFER_DEFAULT));
+  DPU_ASSERT(dpu_push_xfer(set, DPU_XFER_TO_DPU, "receiveBuffer", 0, bufferSize, DPU_XFER_DEFAULT));
   DPU_ASSERT(dpu_launch(set, DPU_SYNCHRONOUS));
 
   // receive
@@ -68,7 +68,7 @@ void SendGetOrInsertReq(uint32_t tableId, Key *keys, uint64_t *tupleAddrs, size_
     DPU_ASSERT(dpu_prepare_xfer(dpu, &recvBuffers[idx]));
   }
   // how to get the reply buffer size? it seems that the reply buffer size will less then send buffer size
-  DPU_ASSERT(dpu_push_xfer(set, DPU_XFER_FROM_DPU, "replyBuffer", 0, sizes[0], DPU_XFER_DEFAULT));
+  DPU_ASSERT(dpu_push_xfer(set, DPU_XFER_FROM_DPU, "replyBuffer", 0, bufferSize, DPU_XFER_DEFAULT));
   //free
   DPU_ASSERT(dpu_free(set));
   for (int i = 0; i < NUM_DPU; i++) {
