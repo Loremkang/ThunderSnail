@@ -64,8 +64,6 @@ void BufferBuilderBeginBlock(BufferBuilder *builder, uint8_t taskType)
 
 void BufferBuilderEndBlock(BufferBuilder *builder)
 {
-  // flush buffer header
-  mram_write_unaligned(&builder->bufferDesc.header, replyBuffer, sizeof(DpuBufferHeader));
   // flush offsets of block
   if (builder->isCurVarLenBlock) {
     VarLenBlockDescriptor* varLenBlockDesc = &builder->bufferDesc.varLenBlockDescs[builder->varLenBlockIdx++];
@@ -87,6 +85,8 @@ void BufferBuilderEndBlock(BufferBuilder *builder)
     mram_write_unaligned(fixedLenBlockDesc, builder->curBlockPtr, sizeof(BlockDescriptorBase));
   }
   builder->curBlockPtr = replyBuffer + builder->curBlockOffset;
+  // flush buffer header
+  mram_write_unaligned(&builder->bufferDesc.header, replyBuffer, sizeof(DpuBufferHeader));
 }
 
 size_t BufferBuilderFinish(BufferBuilder *builder)
