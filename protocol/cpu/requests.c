@@ -31,12 +31,14 @@ void SendGetOrInsertReq(uint32_t tableId, Key *keys, uint64_t *tupleAddrs, size_
   }
   for (int i = 0; i < batchSize; i++){
     int dpuIdx = i % NUM_DPU;
-    GetOrInsertReq *req = malloc(ROUND_UP_TO_8(keys[i].len) + sizeof(GetOrInsertReq));
+    size_t taskSize = ROUND_UP_TO_8(keys[i].len) + sizeof(GetOrInsertReq);
+    GetOrInsertReq *req = malloc(taskSize);
+    memset(req, 0, taskSize);
     req->base = (Task) { .taskType = GET_OR_INSERT_REQ };
     req->len = keys[i].len;
     req->tid = (TupleIdT) { .tableId = tableId, .tupleAddr = tupleAddrs[i] };
     req->hashTableId = i % NUM_DPU;
-    memcpy(req->ptr, &keys[i].data, keys[i].len);
+    memcpy(req->ptr, keys[i].data, keys[i].len);
   // append one task for each dpu
     BufferBuilderAppendTask(&builders[dpuIdx], (Task*)req);
   }
