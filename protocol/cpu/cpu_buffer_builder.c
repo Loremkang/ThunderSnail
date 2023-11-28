@@ -56,8 +56,6 @@ void BufferBuilderBeginBlock(BufferBuilder *builder, uint8_t taskType)
 
 void BufferBuilderEndBlock(BufferBuilder *builder)
 {
-  // flush buffer header
-  memcpy(builder->buffer, &builder->bufferDesc->header, sizeof(CpuBufferHeader));
   // flush offsets of block
   if (builder->isCurVarLenBlock) {
     VarLenBlockDescriptor* varLenBlockDesc = &builder->bufferDesc->varLenBlockDescs[builder->varLenBlockIdx++];
@@ -79,6 +77,8 @@ void BufferBuilderEndBlock(BufferBuilder *builder)
     memcpy(builder->curBlockPtr, &fixedLenBlockDesc->blockDescBase, sizeof(BlockDescriptorBase));
   }
   builder->curBlockPtr = builder->buffer + builder->curBlockOffset;
+  // flush buffer header
+  memcpy(builder->buffer, &builder->bufferDesc->header, sizeof(CpuBufferHeader));
 }
 
 uint8_t* BufferBuilderFinish(BufferBuilder *builder, size_t *size)
