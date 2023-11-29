@@ -65,7 +65,7 @@ void SendGetOrInsertReq(uint32_t tableId, Key *keys, uint64_t *tupleAddrs, size_
 
   // receive
   DPU_FOREACH(set, dpu, idx) {
-    DPU_ASSERT(dpu_prepare_xfer(dpu, &recvBuffers[idx]));
+    DPU_ASSERT(dpu_prepare_xfer(dpu, recvBuffers[idx]));
   }
   // how to get the reply buffer size? it seems that the reply buffer size will less then send buffer size
   DPU_ASSERT(dpu_push_xfer(set, DPU_XFER_FROM_DPU, "replyBuffer", 0, bufferSize, DPU_XFER_DEFAULT));
