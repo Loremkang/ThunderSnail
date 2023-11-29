@@ -96,6 +96,10 @@ size_t BufferBuilderFinish(BufferBuilder *builder)
   uint32_t offsetsLen = builder->bufferDesc.header.blockCnt * sizeof(Offset);
   __mram_ptr uint8_t* offsetsBegin = replyBuffer + size - offsetsLen;
   mram_write_unaligned(builder->bufferDesc.offsets, offsetsBegin, offsetsLen);
+  size = ROUND_UP_TO_8(size);
+  builder->bufferDesc.header.totalSize = size;
+  // flush buffer header
+  mram_write_unaligned(&builder->bufferDesc.header, replyBuffer, sizeof(DpuBufferHeader));
   return size;
 }
 
