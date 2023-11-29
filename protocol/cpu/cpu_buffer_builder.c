@@ -44,7 +44,7 @@ void BufferBuilderBeginBlock(BufferBuilder *builder, uint8_t taskType)
     varLenBlockDesc->offsets = malloc(sizeof(Offset) * BATCH_SIZE);
   } else {
     builder->isCurVarLenBlock = false;
-    builder->bufferDesc->fixedLenBlockDescs[builder->fixedLenBlockIdx++].blockDescBase = (BlockDescriptorBase) {
+    builder->bufferDesc->fixedLenBlockDescs[builder->fixedLenBlockIdx].blockDescBase = (BlockDescriptorBase) {
       .taskType = taskType,
       .taskCount = 0,
       .totalSize = sizeof(BlockDescriptorBase)
