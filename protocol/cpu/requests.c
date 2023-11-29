@@ -49,7 +49,6 @@ void SendGetOrInsertReq(uint32_t tableId, Key *keys, uint64_t *tupleAddrs, size_
   }
   // get max sizes
   qsort(sizes, NUM_DPU, sizeof(size_t), cmpfunc);
-  size_t bufferSize = ROUND_UP_TO_8(sizes[0]);
   // send
   struct dpu_set_t set, dpu;
 
