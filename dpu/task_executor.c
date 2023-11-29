@@ -10,8 +10,6 @@ void BufferDecoderInit(BufferDecoder *decoder) {
   decoder->blockIdx = 0;
   decoder->taskIdx = 0;
   decoder->bufPtr = receiveBuffer;
-  decoder->blkCache = seqread_alloc();
-  decoder->tskCache = seqread_alloc();
   mram_read_unaligned(decoder->bufPtr, &(decoder->bufHeader), sizeof(CpuBufferHeader));
   decoder->curTaskOffsetPtr = NULL;
   decoder->isCurVarLenBlock = false;
@@ -27,20 +25,14 @@ void BufferDecoderInit(BufferDecoder *decoder) {
     uint32_t offsetsLenBlock = (decoder->bufHeader).blockCnt * sizeof(Offset);
     offsetsLenBlock = ALIGN_TO(offsetsLenBlock, 8);
     decoder->curBlockOffsetPtr = (__mram_ptr Offset*)(decoder->bufPtr + (decoder->bufHeader).totalSize - offsetsLenBlock);
+    mram_read_unaligned(decoder->curBlockOffsetPtr, decoder->blkOffsets, sizeof(Offset) * OFFSETS_BUF_CAP);
     decoder->isCurVarLenBlock = IsVarLenTask((decoder->blockHeader).taskType);
     if (decoder->isCurVarLenBlock) {
       uint32_t offsetsLenTask = (decoder->blockHeader).taskCount * sizeof(Offset);
       offsetsLenTask = ALIGN_TO(offsetsLenTask, 8);
       decoder->curTaskOffsetPtr = (__mram_ptr Offset*)(decoder->curBlockPtr + (decoder->blockHeader).totalSize - offsetsLenTask);
+      mram_read_unaligned(decoder->curTaskOffsetPtr, decoder->tskOffsets, sizeof(Offset) * OFFSETS_BUF_CAP);
     }
-  }
-  // Init sequencial reader of offsets
-  if (decoder->curBlockOffsetPtr != NULL) {
-    decoder->blkOffsets = seqread_init(decoder->blkCache, decoder->curBlockOffsetPtr, &(decoder->blkSr));
-  }
-
-  if (decoder->curTaskOffsetPtr != NULL) {
-    decoder->tskOffsets = seqread_init(decoder->tskCache, decoder->curTaskOffsetPtr, &(decoder->tskSr));
   }
 }
 
@@ -61,8 +53,11 @@ GetTaskStateT GetNextTask (BufferDecoder *decoder, Task *task) {
           state = NO_MORE_TASK;
           return state;
         }
-        Offset blockOffset = *(Offset*)decoder->blkOffsets;
-        decoder->blkOffsets = seqread_get(decoder->blkOffsets, sizeof(Offset), &(decoder->blkSr));
+        if (decoder->blockIdx % OFFSETS_BUF_CAP == 0) { // Fetch new offsets buffer
+          uint32_t offset = decoder->blockIdx / OFFSETS_BUF_CAP * OFFSETS_BUF_CAP;
+          mram_read_unaligned(decoder->curBlockOffsetPtr + offset, decoder->blkOffsets, sizeof(Offset) * OFFSETS_BUF_CAP);
+        }
+        Offset blockOffset = decoder->blkOffsets[decoder->blockIdx % OFFSETS_BUF_CAP];
         decoder->curBlockPtr = decoder->bufPtr + blockOffset;
         decoder->blockIdx++;
         mram_read_unaligned(decoder->curBlockPtr, &(decoder->blockHeader), sizeof(BlockDescriptorBase));
@@ -73,7 +68,7 @@ GetTaskStateT GetNextTask (BufferDecoder *decoder, Task *task) {
       if (decoder->isCurVarLenBlock) {
         uint32_t offsetsLenTask = (decoder->blockHeader).taskCount * sizeof(Offset);
         decoder->curTaskOffsetPtr = (__mram_ptr Offset*)(decoder->curBlockPtr + (decoder->blockHeader).totalSize - offsetsLenTask);
-        decoder->tskOffsets = seqread_init(decoder->tskCache, decoder->curTaskOffsetPtr, &(decoder->tskSr));
+        mram_read_unaligned(decoder->curTaskOffsetPtr, decoder->tskOffsets, sizeof(Offset) * OFFSETS_BUF_CAP);
       }
     }
   }
@@ -86,14 +81,17 @@ GetTaskStateT GetNextTask (BufferDecoder *decoder, Task *task) {
   if (taskLen > TASK_HEADER_LEN) {
     mram_read_unaligned(decoder->curTaskPtr, task, taskLen);
   }
+  decoder->taskIdx++;
   if (decoder->isCurVarLenBlock) { // Var-length task
-    Offset taskOffset = *(decoder->tskOffsets);
-    decoder->tskOffsets = seqread_get(decoder->tskOffsets, sizeof(Offset), &(decoder->tskSr));
+    if (decoder->taskIdx % OFFSETS_BUF_CAP == 0) { // Fetch new offsets buffer
+      uint32_t offset = (decoder->taskIdx / OFFSETS_BUF_CAP) * OFFSETS_BUF_CAP;
+      mram_read_unaligned(decoder->curTaskOffsetPtr + offset, decoder->tskOffsets, sizeof(Offset) * OFFSETS_BUF_CAP);
+    }
+    Offset taskOffset = decoder->tskOffsets[decoder->taskIdx % OFFSETS_BUF_CAP];
     decoder->curTaskPtr = decoder->curBlockPtr + taskOffset;
   } else { // Fix-length task
     decoder->curTaskPtr += taskLen;
   }
-  decoder->taskIdx++;
   return state;
 }
 
@@ -131,14 +129,29 @@ void ExecuteTaskThenAppend (BufferBuilder *builder, Task *task) {
   }
 }
 
+uint8_t RespTaskType(uint8_t taskType) {
+  switch(taskType) {
+  case GET_OR_INSERT_REQ:
+    return GET_OR_INSERT_RESP;
+  case GET_POINTER_REQ:
+    return GET_POINTER_RESP;
+  case UPDATE_POINTER_REQ:
+    return UPDATE_POINTER_RESP;
+  case GET_MAX_LINK_SIZE_REQ:
+    return GET_MAX_LINK_SIZE_RESP;
+  default:
+    ValidValueCheck(0);
+    return -1;
+  }
+}
+
 void DpuMainLoop () {
   __dma_aligned BufferDecoder decoder;
   BufferDecoderInit(&decoder);
-
   __dma_aligned BufferBuilder builder;
   BufferBuilderInit(&builder);
   if (decoder.bufHeader.blockCnt > 0) {
-    BufferBuilderBeginBlock(&builder, decoder.blockHeader.taskType);
+    BufferBuilderBeginBlock(&builder, RespTaskType(decoder.blockHeader.taskType));
   }
 
   __dma_aligned uint8_t taskBuf[TASK_MAX_LEN];
@@ -150,7 +163,7 @@ void DpuMainLoop () {
     }
     if (NEW_BLOCK == state) {
       BufferBuilderEndBlock(&builder);
-      BufferBuilderBeginBlock(&builder, decoder.blockHeader.taskType);
+      BufferBuilderBeginBlock(&builder, RespTaskType(decoder.blockHeader.taskType));
     }
     ExecuteTaskThenAppend(&builder, task);
   }

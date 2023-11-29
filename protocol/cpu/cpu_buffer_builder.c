@@ -88,6 +88,10 @@ uint8_t* BufferBuilderFinish(BufferBuilder *builder, size_t *size)
   uint32_t offsetsLen = builder->bufferDesc->header.blockCnt * sizeof(Offset);
   uint8_t* offsetsBegin = builder->buffer + *size - offsetsLen;
   memcpy(offsetsBegin, builder->bufferDesc->offsets, offsetsLen);
+  *size = ROUND_UP_TO_8(*size);
+  builder->bufferDesc->header.totalSize = *size;
+  // flush buffer header
+  memcpy(builder->buffer, &builder->bufferDesc->header, sizeof(CpuBufferHeader));
   // free
   free(builder->bufferDesc->offsets);
   return builder->buffer;
