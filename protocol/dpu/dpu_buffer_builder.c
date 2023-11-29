@@ -109,14 +109,12 @@ void BufferBuilderAppendTask(BufferBuilder *builder, Task *task)
   case GET_OR_INSERT_RESP: {
     GetOrInsertResp *resp = (GetOrInsertResp*)task;
     // record the offset and task count++
-    VarLenBlockDescriptor* varLenBlockDesc = &builder->bufferDesc.varLenBlockDescs[builder->varLenBlockIdx];
-    varLenBlockDesc->offsets[varLenBlockDesc->blockDescBase.taskCount++] = builder->curTaskOffset;
+    FixedLenBlockDescriptor* fixedLenBlockDesc = &builder->bufferDesc.fixedLenBlockDescs[builder->fixedLenBlockIdx];
+    fixedLenBlockDesc->blockDescBase.taskCount++;
     uint32_t taskSize = GetFixedLenTaskSize(task);
-    mram_write_unaligned(resp, builder->curBlockPtr + builder->curTaskOffset, taskSize);
-    builder->curTaskOffset += taskSize;
     // update total size
-    varLenBlockDesc->blockDescBase.totalSize += taskSize + sizeof(Offset);
-    builder->bufferDesc.header.totalSize += taskSize + sizeof(Offset);
+    fixedLenBlockDesc->blockDescBase.totalSize += taskSize;
+    builder->bufferDesc.header.totalSize += taskSize;
     break;
   }
   default:
