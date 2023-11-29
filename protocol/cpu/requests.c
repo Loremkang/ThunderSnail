@@ -58,7 +58,7 @@ void SendGetOrInsertReq(uint32_t tableId, Key *keys, uint64_t *tupleAddrs, size_
 
   uint32_t idx;
   DPU_FOREACH(set, dpu, idx) {
-    DPU_ASSERT(dpu_prepare_xfer(dpu, &buffers[idx]));
+    DPU_ASSERT(dpu_prepare_xfer(dpu, buffers[idx]));
   }
   DPU_ASSERT(dpu_push_xfer(set, DPU_XFER_TO_DPU, "receiveBuffer", 0, bufferSize, DPU_XFER_DEFAULT));
   DPU_ASSERT(dpu_launch(set, DPU_SYNCHRONOUS));
