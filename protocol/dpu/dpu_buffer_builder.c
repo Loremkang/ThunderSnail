@@ -112,6 +112,8 @@ void BufferBuilderAppendTask(BufferBuilder *builder, Task *task)
     FixedLenBlockDescriptor* fixedLenBlockDesc = &builder->bufferDesc.fixedLenBlockDescs[builder->fixedLenBlockIdx];
     fixedLenBlockDesc->blockDescBase.taskCount++;
     uint32_t taskSize = GetFixedLenTaskSize(task);
+    mram_write_unaligned(resp, builder->curBlockPtr + builder->curTaskOffset, taskSize);
+    builder->curTaskOffset += taskSize;
     // update total size
     fixedLenBlockDesc->blockDescBase.totalSize += taskSize;
     builder->bufferDesc.header.totalSize += taskSize;
