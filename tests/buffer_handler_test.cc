@@ -2,6 +2,7 @@
 
 extern "C" {
 #include "../protocol/cpu/requests.h"
+#include "../protocol/cpu/requests_handler.h"
 }
 
 #define TEST_BATCH 1
@@ -22,10 +23,11 @@ TEST (BufferHandler, DecodeBuffer) {
     keys[i].len = 4;
   }
 
-  uint8_t** recvBuf;
-  recvBuf = (uint8_t **)malloc(sizeof(uint8_t*));
-  recvBuf[0] = (uint8_t *)malloc(65535);
+  uint8_t** recvBufs;
+  recvBufs = (uint8_t **)malloc(sizeof(uint8_t*));
+  recvBufs[0] = (uint8_t *)malloc(65535);
   printf("Now calling SendGetOrInsertReq\n");
 
-  SendGetOrInsertReq(/*tableId*/3, keys, tupleAddrs, TEST_BATCH, recvBuf);
+  SendGetOrInsertReq(/*tableId*/3, keys, tupleAddrs, TEST_BATCH, recvBufs);
+  TraverseReceiveBuffer(recvBufs[0]);
 }

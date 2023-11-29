@@ -60,6 +60,8 @@ void* ProcessTask(uint8_t *taskPtr, uint8_t taskType)
   switch(taskType) {
   case GET_OR_INSERT_RESP: {
     GetOrInsertResp *resp = (GetOrInsertResp*)taskPtr;
+    printf("dpu id: %04x\n", (resp->tupleIdOrMaxLinkAddr.value).hashAddr.rPtr.dpuId);
+    printf("dpu addr: %04x\n", (resp->tupleIdOrMaxLinkAddr.value).hashAddr.rPtr.dpuAddr);
     break;
   }
   case GET_POINTER_RESP: {
@@ -96,7 +98,7 @@ void TraverseBlock(uint8_t *blockPtr)
   } else {
     uint32_t eachTaskSize = (GetBlockTotalSize(blockPtr) - DPU_BUFFER_HEAD_LEN) / taskCount;
     for(int i = 0; i < taskCount; i++){
-      uint8_t *taskPtr = blockPtr + eachTaskSize * i;
+      uint8_t *taskPtr = blockPtr + sizeof(BlockDescriptorBase) + eachTaskSize * i;
       ProcessTask(taskPtr, taskType);
     }
   }
