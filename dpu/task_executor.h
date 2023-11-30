@@ -6,7 +6,7 @@
 // Make sure TASK_HEADER_LEN is long enough to calculate any task's length
 #define TASK_HEADER_LEN 128
 // Could a task longer than this? But mram_read only supports reads <= 2048 Bytes
-#define TASK_MAX_LEN 2048
+#define TASK_MAX_LEN 64
 #define OFFSETS_BUF_CAP 2
 #define OFFSETS_CAP 256
 
@@ -34,5 +34,9 @@ typedef struct {
   bool isCurVarLenBlock;
 } BufferDecoder;
 
+GetTaskStateT GetTaskletNextTask(uint32_t taskletId, Task *task);
+void TaskletBufferBuilderEndBlock(uint32_t taskletId);
+void TaskletBufferBuilderBeginBlock(uint32_t taskletId);
+void TaskletExecuteTaskThenAppend(uint32_t taskletId, Task *task);
 void DpuMainLoop();
 #endif
