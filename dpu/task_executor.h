@@ -6,7 +6,7 @@
 // Make sure TASK_HEADER_LEN is long enough to calculate any task's length
 #define TASK_HEADER_LEN 128
 // Could a task longer than this? But mram_read only supports reads <= 2048 Bytes
-#define TASK_MAX_LEN 64
+#define TASK_MAX_LEN 256
 #define OFFSETS_BUF_CAP 2
 #define OFFSETS_CAP 256
 

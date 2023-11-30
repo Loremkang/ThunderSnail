@@ -25,7 +25,7 @@ static int Master() {
 
 static int Slave() {
     barrier_wait(&barrier1);
-    uint32_t taskletId = me();
+    uint32_t taskletId = me(); // taskletId: 1-17
     __dma_aligned uint8_t taskBuf[TASK_MAX_LEN];
     Task *task = (Task*)taskBuf;
     while (true) {
