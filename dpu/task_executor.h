@@ -34,9 +34,8 @@ typedef struct {
   bool isCurVarLenBlock;
 } BufferDecoder;
 
-GetTaskStateT GetTaskletNextTask(uint32_t taskletId, Task *task);
-void TaskletBufferBuilderEndBlock(uint32_t taskletId);
-void TaskletBufferBuilderBeginBlock(uint32_t taskletId);
-void TaskletExecuteTaskThenAppend(uint32_t taskletId, Task *task);
+void BufferDecoderInit(BufferDecoder *decoder);
+void InitNextBlock(BufferDecoder *decoder);
+GetTaskStateT GetKthTask(BufferDecoder *decoder, uint32_t kthTask, Task *task);
 void DpuMainLoop();
 #endif
