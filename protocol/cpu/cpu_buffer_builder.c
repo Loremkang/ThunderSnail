@@ -114,6 +114,21 @@ void BufferBuilderAppendTask(BufferBuilder *builder, Task *task)
     builder->bufferDesc->header.totalSize += taskSize + sizeof(Offset);
     break;
   }
+  case SET_DPU_ID_REQ:
+    {
+    SetDpuIdReq *req = (SetDpuIdReq*)task;
+    // record the offset and task count++
+    FixedLenBlockDescriptor* fixedLenBlockDesc = &builder->bufferDesc->fixedLenBlockDescs[builder->fixedLenBlockIdx];
+    fixedLenBlockDesc->blockDescBase.taskCount++;
+    uint32_t taskSize = GetFixedLenTaskSize(task);
+    memcpy(builder->curTaskPtr, req, taskSize);
+    builder->curTaskPtr += taskSize;
+    builder->curTaskOffset += taskSize;
+    // updata total size
+    fixedLenBlockDesc->blockDescBase.totalSize += taskSize;
+    builder->bufferDesc->header.totalSize += taskSize;
+    break;
+  }
 
   default:
     // TODO impl other tasks
