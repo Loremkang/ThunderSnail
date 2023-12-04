@@ -41,6 +41,7 @@ static int Master() {
                 __dma_aligned SetDpuIdReq req;
                 GetKthTask(&g_decoder, 0, (Task *)(&req));
                 g_dpuId = req.dpuId;
+                printf("g_dpuId: %u\n", g_dpuId);
                 barrier_wait(&barrierBlockPrepare);
                 break;
             }

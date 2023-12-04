@@ -7,6 +7,10 @@ extern "C" {
 
 #define TEST_BATCH 4
 
+TEST (BufferHandler, SetDpuIdReq) {
+  SendSetDpuIdReq();
+}
+
 TEST (BufferHandler, DecodeBuffer) {
   uint64_t tupleAddrs[TEST_BATCH] = {0x1234, 0x2341, 0x3412, 0x4123};
   Key keys[TEST_BATCH];

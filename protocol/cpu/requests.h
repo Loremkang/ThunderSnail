@@ -4,7 +4,7 @@
 #include "../protocol.h"
 #include "cpu_buffer_builder.h"
 
-#define NUM_DPU 1
+#define NUM_DPU 64
 
 typedef struct {
   uint8_t *data;
@@ -21,7 +21,8 @@ inline static uint8_t GetEpochNumber()
   }
   return epochNumber++;
 }
-
+void SendSetDpuIdReq();
+void SendCreateIndexReq(HashTableId indexId);
 void SendGetOrInsertReq(uint32_t tableId, Key *keys, uint64_t *tupleAddr, size_t batchSize, uint8_t *recvBuffers[]);
 
 #endif

@@ -10,7 +10,15 @@ int cmpfunc (const void * a, const void * b)
    return ( *(int*)b - *(int*)a );
 }
 
-void SendSetDpuIdReq(){
+static void ReadDpuSetLog(struct dpu_set_t set) {
+    struct dpu_set_t dpu;
+    DPU_FOREACH(set, dpu)
+    {
+        DPU_ASSERT(dpu_log_read(dpu, stdout));
+    }
+}
+
+void SendSetDpuIdReq() {
   // prepare dpu buffers
   uint8_t *buffers[NUM_DPU];
   size_t sizes[NUM_DPU];
@@ -54,6 +62,7 @@ void SendSetDpuIdReq(){
   }
   DPU_ASSERT(dpu_push_xfer(set, DPU_XFER_TO_DPU, "receiveBuffer", 0, sizes[0], DPU_XFER_DEFAULT));
   DPU_ASSERT(dpu_launch(set, DPU_SYNCHRONOUS));
+  ReadDpuSetLog(set);
   //free
   DPU_ASSERT(dpu_free(set));
   for (int i = 0; i < NUM_DPU; i++) {
