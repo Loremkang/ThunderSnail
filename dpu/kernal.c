@@ -5,10 +5,11 @@
 #include "task_executor.h"
 #include "shared_wram.h"
 
-BARRIER_INIT(barrierPackage1, NR_TASKLETS);
-BARRIER_INIT(barrierPackage2, NR_TASKLETS);
-BARRIER_INIT(barrierBlock1, NR_TASKLETS);
-BARRIER_INIT(barrierBlock2, NR_TASKLETS);
+BARRIER_INIT(barrierPackagePrepare, NR_TASKLETS);
+BARRIER_INIT(barrierPackageReduce, NR_TASKLETS);
+BARRIER_INIT(barrierBlockInit, NR_TASKLETS);
+BARRIER_INIT(barrierBlockPrepare, NR_TASKLETS);
+BARRIER_INIT(barrierBlockReduce, NR_TASKLETS);
 
 MUTEX_INIT(builderMutex);
 
@@ -26,35 +27,39 @@ static void KernalReduce() {}
 
 static int Master() {
     KernalInitial();
-    barrier_wait(&barrierPackage1);
+    barrier_wait(&barrierPackagePrepare);
     
     for (int i = 0; i < g_decoder.bufHeader.blockCnt; i++) {
+        InitNextBlock(&g_decoder);
+        barrier_wait(&barrierBlockInit);
         uint8_t taskType = g_decoder.blockHeader.taskType;
         BufferBuilderBeginBlock(&g_builder, RespTaskType(taskType));
 
         switch (taskType){
             case GET_OR_INSERT_REQ:
             {
-                barrier_wait(&barrierBlock1);
+                barrier_wait(&barrierBlockPrepare);
+                // do some prepare work
                 break;
             }
             default:
                 Unimplemented("Other tasks need to be supported.\n");
         }
-        barrier_wait(&barrierBlock2);
+        barrier_wait(&barrierBlockReduce);
         BufferBuilderEndBlock(&g_builder);
     }
 
-    barrier_wait(&barrierPackage2);
+    barrier_wait(&barrierPackageReduce);
     KernalReduce();
     return 0;
 }
 
 static int Slave() {
-    barrier_wait(&barrierPackage1);
+    barrier_wait(&barrierPackagePrepare);
     uint32_t slaveTaskletId = me() - 1; // slaveTaskletId: 0-16
 
     for (int i = 0; i < g_decoder.bufHeader.blockCnt; i++) {
+        barrier_wait(&barrierBlockInit);
         uint8_t taskType = g_decoder.blockHeader.taskType;
         uint32_t taskCnt = g_decoder.blockHeader.taskCount;
         __dma_aligned uint8_t taskBuf[TASK_MAX_LEN];
@@ -63,7 +68,7 @@ static int Slave() {
         switch (taskType){
             case GET_OR_INSERT_REQ:
             {
-                barrier_wait(&barrierBlock1);
+                barrier_wait(&barrierBlockPrepare);
                 uint32_t slaveTaskletTaskStart = BLOCK_LOW(slaveTaskletId, NR_SLAVE_TASKLETS, taskCnt);
                 uint32_t slaveTaskletTaskCnt = BLOCK_SIZE(slaveTaskletId, NR_SLAVE_TASKLETS, taskCnt);
                 __dma_aligned HashTableQueryReplyT reply_buffer;
@@ -85,9 +90,9 @@ static int Slave() {
             default:
                 Unimplemented("Other tasks need to be supported.\n");
         }
-        barrier_wait(&barrierBlock2);
+        barrier_wait(&barrierBlockReduce);
     }
-    barrier_wait(&barrierPackage2);
+    barrier_wait(&barrierPackageReduce);
     return 0;
 }
 
