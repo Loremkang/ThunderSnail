@@ -7,6 +7,11 @@ if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
   cmake_policy(SET CMP0135 NEW)
 endif()
 
+if(NOT NR_TASKLETS)
+  set(NR_TASKLETS 17)
+  message(WARNING "NR_TASKLETS is " ${NR_TASKLETS})
+endif()
+
 # For googletest
 ## if you do not want to download it after you run build.sh clean
 ## you can put the zip file into the $HOME/local/repo/googletest directory
@@ -53,6 +58,8 @@ endif()
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/dpu DPU_SOURCES)
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/protocol/dpu PROTOCOL_DPU_SOURCES)
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/protocol/cpu PROTOCOL_CPU_SOURCES)
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/deps/pim-index/dpu/sto PIM_INDEX_DPU_STO)
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/deps/pim-index/util PIM_INDEX_UTIL)
 
 file(GLOB DPU_HEADERS "dpu/*.h")
 
@@ -64,7 +71,9 @@ add_custom_target(${DPU_TASK_NAME} ALL
             -I${CMAKE_CURRENT_SOURCE_DIR}/dpu
             -I${CMAKE_CURRENT_SOURCE_DIR}/protocol
             -I${CMAKE_CURRENT_SOURCE_DIR}/protocol/dpu
-            ${DPU_SOURCES} ${SRC_PROTOCOL} ${PROTOCOL_DPU_SOURCES}
+            -I${CMAKE_CURRENT_SOURCE_DIR}/deps/pim-index/dpu/sto
+            -I${CMAKE_CURRENT_SOURCE_DIR}/deps/pim-index/util
+            ${DPU_SOURCES} ${SRC_PROTOCOL} ${PROTOCOL_DPU_SOURCES} ${PIM_INDEX_DPU_STO} ${PIM_INDEX_UTIL}
             -o ${EXECUTABLE_OUTPUT_PATH}/${DPU_TASK_NAME}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     DEPENDS ${DPU_SOURCES}
