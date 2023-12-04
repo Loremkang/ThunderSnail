@@ -38,8 +38,8 @@ static int Master() {
         switch (taskType){
             case GET_OR_INSERT_REQ:
             {
-                barrier_wait(&barrierBlockPrepare);
                 // do some prepare work
+                barrier_wait(&barrierBlockPrepare);
                 break;
             }
             default:
