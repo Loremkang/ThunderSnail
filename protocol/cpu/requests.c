@@ -10,6 +10,110 @@ int cmpfunc (const void * a, const void * b)
    return ( *(int*)b - *(int*)a );
 }
 
+void SendSetDpuIdReq(){
+  // prepare dpu buffers
+  uint8_t *buffers[NUM_DPU];
+  size_t sizes[NUM_DPU];
+  BufferBuilder builders[NUM_DPU];
+  CpuToDpuBufferDescriptor bufferDescs[NUM_DPU];
+  for (int i = 0; i < NUM_DPU; i++) {
+    bufferDescs[i] = (CpuToDpuBufferDescriptor) {
+      .header = {
+	.epochNumber = GetEpochNumber(),
+      }
+    };
+  }
+  for (int i = 0; i < NUM_DPU; i++) {
+    BufferBuilderInit(&builders[i], &bufferDescs[i]);
+    BufferBuilderBeginBlock(&builders[i], SET_DPU_ID_REQ);
+  }
+  for (int i = 0; i < NUM_DPU; i++){
+    int dpuIdx = i;
+    SetDpuIdReq req;
+    size_t taskSize = sizeof(SetDpuIdReq);
+    req.base = (Task) { .taskType = SET_DPU_ID_REQ };
+    req.dpuId = (uint32_t) dpuIdx;
+    // append one task for each dpu
+    BufferBuilderAppendTask(&builders[dpuIdx], (Task*)(&req));
+  }
+  // end block
+  for (int i = 0; i < NUM_DPU; i++) {
+    BufferBuilderEndBlock(&builders[i]);
+    buffers[i] = BufferBuilderFinish(&builders[i], &sizes[i]);
+  }
+  // get max sizes
+  qsort(sizes, NUM_DPU, sizeof(size_t), cmpfunc);
+  // send
+  struct dpu_set_t set, dpu;
+
+  DPU_ASSERT(dpu_alloc(NUM_DPU, NULL, &set));
+  DPU_ASSERT(dpu_load(set, DPU_BINARY, NULL));
+
+  uint32_t idx;
+  DPU_FOREACH(set, dpu, idx) {
+    DPU_ASSERT(dpu_prepare_xfer(dpu, buffers[idx]));
+  }
+  DPU_ASSERT(dpu_push_xfer(set, DPU_XFER_TO_DPU, "receiveBuffer", 0, sizes[0], DPU_XFER_DEFAULT));
+  DPU_ASSERT(dpu_launch(set, DPU_SYNCHRONOUS));
+  //free
+  DPU_ASSERT(dpu_free(set));
+  for (int i = 0; i < NUM_DPU; i++) {
+    free(buffers[i]);
+  }  
+}
+
+void SendCreateIndexReq(HashTableId indexId){
+  // prepare dpu buffers
+  uint8_t *buffers[NUM_DPU];
+  size_t sizes[NUM_DPU];
+  BufferBuilder builders[NUM_DPU];
+  CpuToDpuBufferDescriptor bufferDescs[NUM_DPU];
+  for (int i = 0; i < NUM_DPU; i++) {
+    bufferDescs[i] = (CpuToDpuBufferDescriptor) {
+      .header = {
+	.epochNumber = GetEpochNumber(),
+      }
+    };
+  }
+  for (int i = 0; i < NUM_DPU; i++) {
+    BufferBuilderInit(&builders[i], &bufferDescs[i]);
+    BufferBuilderBeginBlock(&builders[i], CREATE_INDEX_REQ);
+  }
+  for (int i = 0; i < NUM_DPU; i++){
+    int dpuIdx = i;
+    CreateIndexReq req;
+    size_t taskSize = sizeof(CreateIndexReq);
+    req.base = (Task) { .taskType = CREATE_INDEX_REQ };
+    req.hashTableId = indexId;
+    // append one task for each dpu
+    BufferBuilderAppendTask(&builders[dpuIdx], (Task*)(&req));
+  }
+  // end block
+  for (int i = 0; i < NUM_DPU; i++) {
+    BufferBuilderEndBlock(&builders[i]);
+    buffers[i] = BufferBuilderFinish(&builders[i], &sizes[i]);
+  }
+  // get max sizes
+  qsort(sizes, NUM_DPU, sizeof(size_t), cmpfunc);
+  // send
+  struct dpu_set_t set, dpu;
+
+  DPU_ASSERT(dpu_alloc(NUM_DPU, NULL, &set));
+  DPU_ASSERT(dpu_load(set, DPU_BINARY, NULL));
+
+  uint32_t idx;
+  DPU_FOREACH(set, dpu, idx) {
+    DPU_ASSERT(dpu_prepare_xfer(dpu, buffers[idx]));
+  }
+  DPU_ASSERT(dpu_push_xfer(set, DPU_XFER_TO_DPU, "receiveBuffer", 0, sizes[0], DPU_XFER_DEFAULT));
+  DPU_ASSERT(dpu_launch(set, DPU_SYNCHRONOUS));
+  //free
+  DPU_ASSERT(dpu_free(set));
+  for (int i = 0; i < NUM_DPU; i++) {
+    free(buffers[i]);
+  }  
+}
+
 void SendGetOrInsertReq(uint32_t tableId, Key *keys, uint64_t *tupleAddrs, size_t batchSize, uint8_t *recvBuffers[])
 {
   ValidValueCheck(batchSize <= BATCH_SIZE * NUM_DPU);

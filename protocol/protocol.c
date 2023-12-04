@@ -18,6 +18,16 @@ uint16_t GetFixedLenTaskSize(void *task)
   uint16_t ret = 0;
 
   switch(taskType) {
+  case SET_DPU_ID_REQ: {
+    SetDpuIdReq *req = (SetDpuIdReq*)task;
+    ret += sizeof(SetDpuIdReq);
+    break;
+  }
+  case CREATE_INDEX_REQ: {
+    CreateIndexReq *req = (CreateIndexReq*)task;
+    ret += sizeof(CreateIndexReq);
+    break;
+  }
   case GET_OR_INSERT_REQ: {
     GetOrInsertReq *req = (GetOrInsertReq*)task;
     // |key + value + hash_id|
