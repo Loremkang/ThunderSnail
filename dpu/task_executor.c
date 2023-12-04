@@ -208,6 +208,3 @@ void DpuMainLoop () {
   }
   BufferBuilderFinish(&builder);
 }
-
-void InitNextBlock(BufferDecoder *decoder) {}
-GetTaskStateT GetKthTask(BufferDecoder *decoder, uint32_t kthTask, Task *task) {}
