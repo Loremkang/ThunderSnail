@@ -36,6 +36,22 @@ static int Master() {
         BufferBuilderBeginBlock(&g_builder, RespTaskType(taskType));
 
         switch (taskType){
+            case SET_DPU_ID_REQ:
+            {
+                __dma_aligned SetDpuIdReq req;
+                GetKthTask(&g_decoder, 0, (Task *)(&req));
+                g_dpuId = req.dpuId;
+                barrier_wait(&barrierBlockPrepare);
+                break;
+            }
+            case CREATE_INDEX_REQ:
+            {
+                __dma_aligned CreateIndexReq req;
+                GetKthTask(&g_decoder, 0, (Task *)(&req));
+                IndexCreate(req.hashTableId);
+                barrier_wait(&barrierBlockPrepare);
+                break;
+            }
             case GET_OR_INSERT_REQ:
             {
                 // do some prepare work
@@ -62,13 +78,28 @@ static int Slave() {
         barrier_wait(&barrierBlockInit);
         uint8_t taskType = g_decoder.blockHeader.taskType;
         uint32_t taskCnt = g_decoder.blockHeader.taskCount;
-        __dma_aligned uint8_t taskBuf[TASK_MAX_LEN];
-        Task *task = (Task *)taskBuf;
 
         switch (taskType){
+            case SET_DPU_ID_REQ:
+            {
+                barrier_wait(&barrierBlockPrepare);
+                // do nothing
+                break;
+            }
+            case CREATE_INDEX_REQ:
+            {
+                barrier_wait(&barrierBlockPrepare);
+                __dma_aligned CreateIndexReq req;
+                GetKthTask(&g_decoder, 0, (Task *)(&req));
+                primary_index_dpu *pid = IndexCheck(req.hashTableId);
+                IndexInitBuckets(pid, slaveTaskletId);
+                break;
+            }
             case GET_OR_INSERT_REQ:
             {
                 barrier_wait(&barrierBlockPrepare);
+                __dma_aligned uint8_t taskBuf[TASK_MAX_LEN];
+                Task *task = (Task *)taskBuf;
                 uint32_t slaveTaskletTaskStart = BLOCK_LOW(slaveTaskletId, NR_SLAVE_TASKLETS, taskCnt);
                 uint32_t slaveTaskletTaskCnt = BLOCK_SIZE(slaveTaskletId, NR_SLAVE_TASKLETS, taskCnt);
                 __dma_aligned HashTableQueryReplyT reply_buffer;

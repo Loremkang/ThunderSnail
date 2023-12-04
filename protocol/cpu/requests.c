@@ -30,7 +30,6 @@ void SendSetDpuIdReq(){
   for (int i = 0; i < NUM_DPU; i++){
     int dpuIdx = i;
     SetDpuIdReq req;
-    size_t taskSize = sizeof(SetDpuIdReq);
     req.base = (Task) { .taskType = SET_DPU_ID_REQ };
     req.dpuId = (uint32_t) dpuIdx;
     // append one task for each dpu
@@ -82,7 +81,6 @@ void SendCreateIndexReq(HashTableId indexId){
   for (int i = 0; i < NUM_DPU; i++){
     int dpuIdx = i;
     CreateIndexReq req;
-    size_t taskSize = sizeof(CreateIndexReq);
     req.base = (Task) { .taskType = CREATE_INDEX_REQ };
     req.hashTableId = indexId;
     // append one task for each dpu
