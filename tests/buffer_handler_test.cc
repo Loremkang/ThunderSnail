@@ -5,13 +5,10 @@ extern "C" {
 #include "../protocol/cpu/requests_handler.h"
 }
 
-#define TEST_BATCH 1
+#define TEST_BATCH 4
 
 TEST (BufferHandler, DecodeBuffer) {
-  //while (0 != getNextTask(handler, task)) {
-  //  execute(task);
-  //}
-  uint64_t tupleAddrs[TEST_BATCH] = {0x1234};//, 0x2341, 0x3412, 0x4123};
+  uint64_t tupleAddrs[TEST_BATCH] = {0x1234, 0x2341, 0x3412, 0x4123};
   Key keys[TEST_BATCH];
   for (int i=0; i < TEST_BATCH; i++) {
     keys[i].data = (uint8_t *)malloc(8);
