@@ -112,8 +112,8 @@ static int Slave() {
                     req = (GetOrInsertReq *)task;
                     primary_index_dpu *pid = IndexCheck(req->hashTableId);
                     IndexGetOrInsertReq(pid, (char *)(req->ptr), req->len, req->tid, &reply_buffer);
-                    printf("reply_buffer type: %d, %d, %p\n", reply_buffer.type, reply_buffer.value.hashAddr.rPtr.dpuId,
-                    reply_buffer.value.hashAddr.rPtr.dpuAddr);
+                    // printf("reply_buffer type: %d, %d, %p\n", reply_buffer.type, reply_buffer.value.hashAddr.rPtr.dpuId,
+                    // reply_buffer.value.hashAddr.rPtr.dpuAddr);
                     GetOrInsertResp resp = {
                         .base = {.taskType = GET_OR_INSERT_RESP},
                         .tupleIdOrMaxLinkAddr = reply_buffer};

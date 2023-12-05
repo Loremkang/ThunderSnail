@@ -5,7 +5,7 @@ extern "C" {
 #include "../protocol/cpu/requests_handler.h"
 }
 
-#define TEST_BATCH 128
+#define TEST_BATCH (8 * 1024)
 
 TEST (BufferHandler, SetDpuIdReq) {
   struct dpu_set_t set;
