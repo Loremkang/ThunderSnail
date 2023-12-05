@@ -55,13 +55,28 @@ Offset* GetBlockOffsetsPtr(uint8_t *blockPtr)
   return (Offset*)(blockPtr + totalSize - ROUND_UP_TO_8(taskCount * sizeof(Offset)));
 }
 
+void PrintInsertResp(GetOrInsertResp *resp) {
+  switch(resp->tupleIdOrMaxLinkAddr.type) {
+  case TupleId: {
+    printf("(TupleIdT){.tableId = %d, \t.tupleAddr = 0x%lx}\n", resp->tupleIdOrMaxLinkAddr.value.tupleId.tableId, resp->tupleIdOrMaxLinkAddr.value.tupleId.tupleAddr);
+    break;
+  }
+  case MaxLinkAddr: {
+    printf("(MaxLinkAddrT) {.dpuId = %d,\t.dpuAddr = 0x%x}\n", resp->tupleIdOrMaxLinkAddr.value.maxLinkAddr.rPtr.dpuId, resp->tupleIdOrMaxLinkAddr.value.maxLinkAddr.rPtr.dpuAddr);
+    break;
+  }
+  case HashAddr: {
+    printf("(HashAddrT) {.dpuId = %d, \t.dpuAddr = 0x%x}\n", resp->tupleIdOrMaxLinkAddr.value.hashAddr.rPtr.dpuId, resp->tupleIdOrMaxLinkAddr.value.hashAddr.rPtr.dpuAddr);
+    break;
+  }
+  }
+}
 void* ProcessTask(uint8_t *taskPtr, uint8_t taskType)
 {
   switch(taskType) {
   case GET_OR_INSERT_RESP: {
     GetOrInsertResp *resp = (GetOrInsertResp*)taskPtr;
-    printf("dpu id: %04x\n", (resp->tupleIdOrMaxLinkAddr.value).hashAddr.rPtr.dpuId);
-    printf("dpu addr: %04x\n", (resp->tupleIdOrMaxLinkAddr.value).hashAddr.rPtr.dpuAddr);
+    PrintInsertResp(resp);
     break;
   }
   case GET_POINTER_RESP: {

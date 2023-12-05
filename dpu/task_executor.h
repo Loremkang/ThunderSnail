@@ -36,6 +36,6 @@ typedef struct {
 
 void BufferDecoderInit(BufferDecoder *decoder);
 DecoderStateT InitNextBlock(BufferDecoder *decoder);
-GetTaskStateT GetKthTask(BufferDecoder *decoder, uint32_t kthTask, Task *task);
+DecoderStateT GetKthTask(BufferDecoder *decoder, uint32_t idxK, Task *task);
 void DpuMainLoop();
 #endif

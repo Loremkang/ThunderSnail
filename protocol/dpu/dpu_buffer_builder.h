@@ -10,7 +10,6 @@ typedef struct {
   DpuToCpuBufferDescriptor bufferDesc;
   __mram_ptr uint8_t *curBlockPtr;
   Offset curBlockOffset;
-  uint8_t *curTaskPtr;
   Offset curTaskOffset;
   uint16_t varLenBlockIdx;
   uint16_t fixedLenBlockIdx;

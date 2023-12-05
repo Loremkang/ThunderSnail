@@ -28,7 +28,7 @@ static void KernalReduce() {}
 static int Master() {
     KernalInitial();
     barrier_wait(&barrierPackagePrepare);
-    
+
     for (int i = 0; i < g_decoder.bufHeader.blockCnt; i++) {
         InitNextBlock(&g_decoder);
         barrier_wait(&barrierBlockInit);
@@ -36,6 +36,23 @@ static int Master() {
         BufferBuilderBeginBlock(&g_builder, RespTaskType(taskType));
 
         switch (taskType){
+            case SET_DPU_ID_REQ:
+            {
+                __dma_aligned SetDpuIdReq req;
+                GetKthTask(&g_decoder, 0, (Task *)(&req));
+                g_dpuId = req.dpuId;
+                printf("g_dpuId: %u\n", g_dpuId);
+                barrier_wait(&barrierBlockPrepare);
+                break;
+            }
+            case CREATE_INDEX_REQ:
+            {
+                __dma_aligned CreateIndexReq req;
+                GetKthTask(&g_decoder, 0, (Task *)(&req));
+                IndexCreate(req.hashTableId);
+                barrier_wait(&barrierBlockPrepare);
+                break;
+            }
             case GET_OR_INSERT_REQ:
             {
                 // do some prepare work
@@ -51,6 +68,7 @@ static int Master() {
 
     barrier_wait(&barrierPackageReduce);
     KernalReduce();
+    BufferBuilderFinish(&g_builder);
     return 0;
 }
 
@@ -62,22 +80,40 @@ static int Slave() {
         barrier_wait(&barrierBlockInit);
         uint8_t taskType = g_decoder.blockHeader.taskType;
         uint32_t taskCnt = g_decoder.blockHeader.taskCount;
-        __dma_aligned uint8_t taskBuf[TASK_MAX_LEN];
-        Task *task = (Task *)taskBuf;
 
         switch (taskType){
+            case SET_DPU_ID_REQ:
+            {
+                barrier_wait(&barrierBlockPrepare);
+                // do nothing
+                break;
+            }
+            case CREATE_INDEX_REQ:
+            {
+                barrier_wait(&barrierBlockPrepare);
+                __dma_aligned CreateIndexReq req;
+                GetKthTask(&g_decoder, 0, (Task *)(&req));
+                primary_index_dpu *pid = IndexCheck(req.hashTableId);
+                IndexInitBuckets(pid, slaveTaskletId);
+                break;
+            }
             case GET_OR_INSERT_REQ:
             {
                 barrier_wait(&barrierBlockPrepare);
+                __dma_aligned uint8_t taskBuf[TASK_MAX_LEN];
+                Task *task = (Task *)taskBuf;
                 uint32_t slaveTaskletTaskStart = BLOCK_LOW(slaveTaskletId, NR_SLAVE_TASKLETS, taskCnt);
                 uint32_t slaveTaskletTaskCnt = BLOCK_SIZE(slaveTaskletId, NR_SLAVE_TASKLETS, taskCnt);
+                // printf("slaveTaskletTaskStart: %d, slaveTaskletTaskCnt: %d\n", slaveTaskletTaskStart, slaveTaskletTaskCnt);
                 __dma_aligned HashTableQueryReplyT reply_buffer;
                 GetOrInsertReq *req;
-                for(int j = slaveTaskletTaskStart; j < slaveTaskletTaskCnt; j++) {
+                for(int j = slaveTaskletTaskStart; j < slaveTaskletTaskStart + slaveTaskletTaskCnt; j++) {
                     GetKthTask(&g_decoder, j, task);
                     req = (GetOrInsertReq *)task;
                     primary_index_dpu *pid = IndexCheck(req->hashTableId);
                     IndexGetOrInsertReq(pid, (char *)(req->ptr), req->len, req->tid, &reply_buffer);
+                    // printf("reply_buffer type: %d, %d, %p\n", reply_buffer.type, reply_buffer.value.hashAddr.rPtr.dpuId,
+                    // reply_buffer.value.hashAddr.rPtr.dpuAddr);
                     GetOrInsertResp resp = {
                         .base = {.taskType = GET_OR_INSERT_RESP},
                         .tupleIdOrMaxLinkAddr = reply_buffer};
