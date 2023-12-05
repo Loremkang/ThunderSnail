@@ -1,9 +1,4 @@
 #include "requests.h"
-#include "dpu.h"
-
-#ifndef DPU_BINARY
-#define DPU_BINARY "dpu_task"
-#endif
 
 int cmpfunc (const void * a, const void * b)
 {
@@ -18,7 +13,7 @@ static void ReadDpuSetLog(struct dpu_set_t set) {
     }
 }
 
-void SendSetDpuIdReq() {
+void SendSetDpuIdReq(struct dpu_set_t set) {
   // prepare dpu buffers
   uint8_t *buffers[NUM_DPU];
   size_t sizes[NUM_DPU];
@@ -51,10 +46,7 @@ void SendSetDpuIdReq() {
   // get max sizes
   qsort(sizes, NUM_DPU, sizeof(size_t), cmpfunc);
   // send
-  struct dpu_set_t set, dpu;
-
-  DPU_ASSERT(dpu_alloc(NUM_DPU, NULL, &set));
-  DPU_ASSERT(dpu_load(set, DPU_BINARY, NULL));
+  struct dpu_set_t dpu;
 
   uint32_t idx;
   DPU_FOREACH(set, dpu, idx) {
@@ -64,13 +56,12 @@ void SendSetDpuIdReq() {
   DPU_ASSERT(dpu_launch(set, DPU_SYNCHRONOUS));
   ReadDpuSetLog(set);
   //free
-  DPU_ASSERT(dpu_free(set));
   for (int i = 0; i < NUM_DPU; i++) {
     free(buffers[i]);
   }  
 }
 
-void SendCreateIndexReq(HashTableId indexId){
+void SendCreateIndexReq(struct dpu_set_t set, HashTableId indexId) {
   // prepare dpu buffers
   uint8_t *buffers[NUM_DPU];
   size_t sizes[NUM_DPU];
@@ -103,10 +94,7 @@ void SendCreateIndexReq(HashTableId indexId){
   // get max sizes
   qsort(sizes, NUM_DPU, sizeof(size_t), cmpfunc);
   // send
-  struct dpu_set_t set, dpu;
-
-  DPU_ASSERT(dpu_alloc(NUM_DPU, NULL, &set));
-  DPU_ASSERT(dpu_load(set, DPU_BINARY, NULL));
+  struct dpu_set_t dpu;
 
   uint32_t idx;
   DPU_FOREACH(set, dpu, idx) {
@@ -115,13 +103,13 @@ void SendCreateIndexReq(HashTableId indexId){
   DPU_ASSERT(dpu_push_xfer(set, DPU_XFER_TO_DPU, "receiveBuffer", 0, sizes[0], DPU_XFER_DEFAULT));
   DPU_ASSERT(dpu_launch(set, DPU_SYNCHRONOUS));
   //free
-  DPU_ASSERT(dpu_free(set));
   for (int i = 0; i < NUM_DPU; i++) {
     free(buffers[i]);
   }  
 }
 
-void SendGetOrInsertReq(uint32_t tableId, Key *keys, uint64_t *tupleAddrs, size_t batchSize, uint8_t *recvBuffers[])
+void SendGetOrInsertReq(struct dpu_set_t set, uint32_t tableId, HashTableId hashTableId, Key *keys, uint64_t *tupleAddrs, 
+                        size_t batchSize, uint8_t *recvBuffers[])
 {
   ValidValueCheck(batchSize <= BATCH_SIZE * NUM_DPU);
   // prepare dpu buffers
@@ -148,7 +136,7 @@ void SendGetOrInsertReq(uint32_t tableId, Key *keys, uint64_t *tupleAddrs, size_
     req->base = (Task) { .taskType = GET_OR_INSERT_REQ };
     req->len = keys[i].len;
     req->tid = (TupleIdT) { .tableId = tableId, .tupleAddr = tupleAddrs[i] };
-    req->hashTableId = i % NUM_DPU;
+    req->hashTableId = hashTableId;
     memcpy(req->ptr, keys[i].data, keys[i].len);
   // append one task for each dpu
     BufferBuilderAppendTask(&builders[dpuIdx], (Task*)req);
@@ -161,10 +149,7 @@ void SendGetOrInsertReq(uint32_t tableId, Key *keys, uint64_t *tupleAddrs, size_
   // get max sizes
   qsort(sizes, NUM_DPU, sizeof(size_t), cmpfunc);
   // send
-  struct dpu_set_t set, dpu;
-
-  DPU_ASSERT(dpu_alloc(NUM_DPU, NULL, &set));
-  DPU_ASSERT(dpu_load(set, DPU_BINARY, NULL));
+  struct dpu_set_t dpu;
 
   uint32_t idx;
   DPU_FOREACH(set, dpu, idx) {
@@ -180,7 +165,6 @@ void SendGetOrInsertReq(uint32_t tableId, Key *keys, uint64_t *tupleAddrs, size_
   // how to get the reply buffer size? it seems that the reply buffer size will less then send buffer size
   DPU_ASSERT(dpu_push_xfer(set, DPU_XFER_FROM_DPU, "replyBuffer", 0, sizes[0], DPU_XFER_DEFAULT));
   //free
-  DPU_ASSERT(dpu_free(set));
   for (int i = 0; i < NUM_DPU; i++) {
     free(buffers[i]);
   }  

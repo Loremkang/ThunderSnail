@@ -26,6 +26,7 @@ static void KernalInitial() {
 static void KernalReduce() {}
 
 static int Master() {
+    return 0;
     KernalInitial();
     barrier_wait(&barrierPackagePrepare);
     
@@ -72,6 +73,7 @@ static int Master() {
 }
 
 static int Slave() {
+    return 0;
     barrier_wait(&barrierPackagePrepare);
     uint32_t slaveTaskletId = me() - 1; // slaveTaskletId: 0-16
 
