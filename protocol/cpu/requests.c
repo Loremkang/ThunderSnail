@@ -20,6 +20,7 @@ void SendSetDpuIdReq(struct dpu_set_t set) {
   BufferBuilder builders[NUM_DPU];
   CpuToDpuBufferDescriptor bufferDescs[NUM_DPU];
   for (int i = 0; i < NUM_DPU; i++) {
+    memset(&bufferDescs[i], 0, sizeof(CpuToDpuBufferDescriptor));
     bufferDescs[i] = (CpuToDpuBufferDescriptor) {
       .header = {
 	.epochNumber = GetEpochNumber(),
@@ -58,7 +59,7 @@ void SendSetDpuIdReq(struct dpu_set_t set) {
   //free
   for (int i = 0; i < NUM_DPU; i++) {
     free(buffers[i]);
-  }  
+  }
 }
 
 void SendCreateIndexReq(struct dpu_set_t set, HashTableId indexId) {
@@ -68,6 +69,7 @@ void SendCreateIndexReq(struct dpu_set_t set, HashTableId indexId) {
   BufferBuilder builders[NUM_DPU];
   CpuToDpuBufferDescriptor bufferDescs[NUM_DPU];
   for (int i = 0; i < NUM_DPU; i++) {
+    memset(&bufferDescs[i], 0, sizeof(CpuToDpuBufferDescriptor));
     bufferDescs[i] = (CpuToDpuBufferDescriptor) {
       .header = {
 	.epochNumber = GetEpochNumber(),
@@ -105,10 +107,10 @@ void SendCreateIndexReq(struct dpu_set_t set, HashTableId indexId) {
   //free
   for (int i = 0; i < NUM_DPU; i++) {
     free(buffers[i]);
-  }  
+  }
 }
 
-void SendGetOrInsertReq(struct dpu_set_t set, uint32_t tableId, HashTableId hashTableId, Key *keys, uint64_t *tupleAddrs, 
+void SendGetOrInsertReq(struct dpu_set_t set, uint32_t tableId, HashTableId hashTableId, Key *keys, uint64_t *tupleAddrs,
                         size_t batchSize, uint8_t *recvBuffers[])
 {
   ValidValueCheck(batchSize <= BATCH_SIZE * NUM_DPU);
@@ -118,6 +120,7 @@ void SendGetOrInsertReq(struct dpu_set_t set, uint32_t tableId, HashTableId hash
   BufferBuilder builders[NUM_DPU];
   CpuToDpuBufferDescriptor bufferDescs[NUM_DPU];
   for (int i = 0; i < NUM_DPU; i++) {
+    memset(&bufferDescs[i], 0, sizeof(CpuToDpuBufferDescriptor));
     bufferDescs[i] = (CpuToDpuBufferDescriptor) {
       .header = {
 	.epochNumber = GetEpochNumber(),
@@ -167,5 +170,5 @@ void SendGetOrInsertReq(struct dpu_set_t set, uint32_t tableId, HashTableId hash
   //free
   for (int i = 0; i < NUM_DPU; i++) {
     free(buffers[i]);
-  }  
+  }
 }

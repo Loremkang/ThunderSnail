@@ -83,6 +83,7 @@ uint16_t GetFixedLenTaskSize(void *task)
     break;
   }
   default:
+    ValidValueCheck(0);
     break;
   }
   return ret;

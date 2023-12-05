@@ -28,6 +28,6 @@ inline static uint8_t GetEpochNumber()
 }
 void SendSetDpuIdReq(struct dpu_set_t set);
 void SendCreateIndexReq(struct dpu_set_t set, HashTableId indexId);
-void SendGetOrInsertReq(struct dpu_set_t set, uint32_t tableId, HashTableId hashTableId, Key *keys, uint64_t *tupleAddrs, 
+void SendGetOrInsertReq(struct dpu_set_t set, uint32_t tableId, HashTableId hashTableId, Key *keys, uint64_t *tupleAddrs,
                         size_t batchSize, uint8_t *recvBuffers[]);
 #endif

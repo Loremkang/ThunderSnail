@@ -9,15 +9,20 @@ void BufferBuilderInit(BufferBuilder *builder, CpuToDpuBufferDescriptor *bufferD
   bufferDesc->header.totalSize = CPU_BUFFER_HEAD_LEN;
   builder->bufferDesc = bufferDesc;
   builder->buffer = (uint8_t*)malloc(BUFFER_LEN);
+  memset(builder->buffer, 0, BUFFER_LEN);
 
   builder->curBlockOffset = CPU_BUFFER_HEAD_LEN;
   builder->curBlockPtr = builder->buffer + builder->curBlockOffset;
 
+  builder->curTaskPtr = NULL;
+  builder->curTaskOffset = 0;
   builder->varLenBlockIdx = 0;
   builder->fixedLenBlockIdx = 0;
+  builder->isCurVarLenBlock = false;
 
   // offsets
   bufferDesc->offsets = malloc(sizeof(Offset) * NUM_BLOCKS);
+  memset(bufferDesc->offsets, 0, sizeof(Offset) * NUM_BLOCKS);
   return;
 }
 
