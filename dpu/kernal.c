@@ -26,7 +26,6 @@ static void KernalInitial() {
 static void KernalReduce() {}
 
 static int Master() {
-    return 0;
     KernalInitial();
     barrier_wait(&barrierPackagePrepare);
     
@@ -73,7 +72,6 @@ static int Master() {
 }
 
 static int Slave() {
-    return 0;
     barrier_wait(&barrierPackagePrepare);
     uint32_t slaveTaskletId = me() - 1; // slaveTaskletId: 0-16
 
@@ -105,13 +103,16 @@ static int Slave() {
                 Task *task = (Task *)taskBuf;
                 uint32_t slaveTaskletTaskStart = BLOCK_LOW(slaveTaskletId, NR_SLAVE_TASKLETS, taskCnt);
                 uint32_t slaveTaskletTaskCnt = BLOCK_SIZE(slaveTaskletId, NR_SLAVE_TASKLETS, taskCnt);
+                // printf("slaveTaskletTaskStart: %d, slaveTaskletTaskCnt: %d\n", slaveTaskletTaskStart, slaveTaskletTaskCnt);
                 __dma_aligned HashTableQueryReplyT reply_buffer;
                 GetOrInsertReq *req;
-                for(int j = slaveTaskletTaskStart; j < slaveTaskletTaskCnt; j++) {
+                for(int j = slaveTaskletTaskStart; j < slaveTaskletTaskStart + slaveTaskletTaskCnt; j++) {
                     GetKthTask(&g_decoder, j, task);
                     req = (GetOrInsertReq *)task;
                     primary_index_dpu *pid = IndexCheck(req->hashTableId);
                     IndexGetOrInsertReq(pid, (char *)(req->ptr), req->len, req->tid, &reply_buffer);
+                    printf("reply_buffer type: %d, %d, %p\n", reply_buffer.type, reply_buffer.value.hashAddr.rPtr.dpuId,
+                    reply_buffer.value.hashAddr.rPtr.dpuAddr);
                     GetOrInsertResp resp = {
                         .base = {.taskType = GET_OR_INSERT_RESP},
                         .tupleIdOrMaxLinkAddr = reply_buffer};

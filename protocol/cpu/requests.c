@@ -138,7 +138,7 @@ void SendGetOrInsertReq(struct dpu_set_t set, uint32_t tableId, HashTableId hash
     memset(req, 0, taskSize);
     req->base = (Task) { .taskType = GET_OR_INSERT_REQ };
     req->len = keys[i].len;
-    req->tid = (TupleIdT) { .tableId = tableId, .tupleAddr = tupleAddrs[i] };
+    req->tid = (TupleIdT) { .tableId = tableId, .tupleAddr = tupleAddrs[0] };
     req->hashTableId = hashTableId;
     memcpy(req->ptr, keys[i].data, keys[i].len);
   // append one task for each dpu
@@ -160,7 +160,7 @@ void SendGetOrInsertReq(struct dpu_set_t set, uint32_t tableId, HashTableId hash
   }
   DPU_ASSERT(dpu_push_xfer(set, DPU_XFER_TO_DPU, "receiveBuffer", 0, sizes[0], DPU_XFER_DEFAULT));
   DPU_ASSERT(dpu_launch(set, DPU_SYNCHRONOUS));
-
+  ReadDpuSetLog(set);
   // receive
   DPU_FOREACH(set, dpu, idx) {
     DPU_ASSERT(dpu_prepare_xfer(dpu, recvBuffers[idx]));

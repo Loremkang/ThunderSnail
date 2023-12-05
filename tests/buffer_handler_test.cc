@@ -5,14 +5,32 @@ extern "C" {
 #include "../protocol/cpu/requests_handler.h"
 }
 
-#define TEST_BATCH 64
+#define TEST_BATCH 128
+
+TEST (BufferHandler, SetDpuIdReq) {
+  struct dpu_set_t set;
+  DPU_ASSERT(dpu_alloc(NUM_DPU, NULL, &set));
+  DPU_ASSERT(dpu_load(set, DPU_BINARY, NULL));
+  SendSetDpuIdReq(set);
+  DPU_ASSERT(dpu_free(set));
+}
+
+TEST (BufferHandler, CreateIndex) {
+  struct dpu_set_t set;
+  HashTableId hashTableId = 0;
+  DPU_ASSERT(dpu_alloc(NUM_DPU, NULL, &set));
+  DPU_ASSERT(dpu_load(set, DPU_BINARY, NULL));
+  SendCreateIndexReq(set, hashTableId);
+  DPU_ASSERT(dpu_free(set));
+}
 
 TEST (BufferHandler, DecodeBuffer) {
   struct dpu_set_t set;
   HashTableId hashTableId = 0;
   DPU_ASSERT(dpu_alloc(NUM_DPU, NULL, &set));
   DPU_ASSERT(dpu_load(set, DPU_BINARY, NULL));
-
+  SendSetDpuIdReq(set);
+  SendCreateIndexReq(set, hashTableId);
   uint64_t tupleAddrs[TEST_BATCH] =
     {0x1234, 0x2341, 0x3412, 0x4123, 0x1234, 0x2341, 0x3412, 0x4123,
      0x1234, 0x2341, 0x3412, 0x4123, 0x1234, 0x2341, 0x3412, 0x4123,
@@ -39,25 +57,7 @@ TEST (BufferHandler, DecodeBuffer) {
     recvBufs[i] = (uint8_t *)malloc(65535);
   }
   printf("Now calling SendGetOrInsertReq\n");
-
   SendGetOrInsertReq(set, 3, hashTableId, keys, tupleAddrs, TEST_BATCH, recvBufs);
   TraverseReceiveBuffer(recvBufs[0]);
-  DPU_ASSERT(dpu_free(set));
-}
-
-TEST (BufferHandler, SetDpuIdReq) {
-  struct dpu_set_t set;
-  DPU_ASSERT(dpu_alloc(NUM_DPU, NULL, &set));
-  DPU_ASSERT(dpu_load(set, DPU_BINARY, NULL));
-  SendSetDpuIdReq(set);
-  DPU_ASSERT(dpu_free(set));
-}
-
-TEST (BufferHandler, CreateIndex) {
-  struct dpu_set_t set;
-  HashTableId hashTableId = 0;
-  DPU_ASSERT(dpu_alloc(NUM_DPU, NULL, &set));
-  DPU_ASSERT(dpu_load(set, DPU_BINARY, NULL));
-  SendCreateIndexReq(set, hashTableId);
   DPU_ASSERT(dpu_free(set));
 }
