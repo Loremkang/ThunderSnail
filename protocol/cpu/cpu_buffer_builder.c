@@ -105,7 +105,10 @@ uint8_t* BufferBuilderFinish(BufferBuilder *builder, size_t *size)
 void BufferBuilderAppendTask(BufferBuilder *builder, Task *task)
 {
   switch(task->taskType) {
-  case GET_OR_INSERT_REQ: {
+  case GET_OR_INSERT_REQ:
+  case GET_POINTER_REQ:
+  case MERGE_MAX_LINK_REQ:
+    {
     // record the offset and task count++
     VarLenBlockDescriptor* varLenBlockDesc = &builder->bufferDesc->varLenBlockDescs[builder->varLenBlockIdx];
     varLenBlockDesc->offsets[varLenBlockDesc->blockDescBase.taskCount++] = builder->curTaskOffset;
@@ -120,6 +123,9 @@ void BufferBuilderAppendTask(BufferBuilder *builder, Task *task)
   }
   case SET_DPU_ID_REQ:
   case CREATE_INDEX_REQ:
+  case UPDATE_POINTER_REQ:
+  case GET_MAX_LINK_SIZE_REQ:
+  case FETCH_MAX_LINK_REQ:
     {
     // record the offset and task count++
     FixedLenBlockDescriptor* fixedLenBlockDesc = &builder->bufferDesc->fixedLenBlockDescs[builder->fixedLenBlockIdx];
@@ -135,7 +141,6 @@ void BufferBuilderAppendTask(BufferBuilder *builder, Task *task)
   }
 
   default:
-    // TODO impl other tasks
     Unimplemented("other tasks to be impl!\n");
     break;
   }
