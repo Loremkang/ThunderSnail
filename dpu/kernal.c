@@ -28,7 +28,7 @@ static void KernalReduce() {}
 static int Master() {
     KernalInitial();
     barrier_wait(&barrierPackagePrepare);
-    
+
     for (int i = 0; i < g_decoder.bufHeader.blockCnt; i++) {
         InitNextBlock(&g_decoder);
         barrier_wait(&barrierBlockInit);
@@ -68,6 +68,7 @@ static int Master() {
 
     barrier_wait(&barrierPackageReduce);
     KernalReduce();
+    BufferBuilderFinish(&g_builder);
     return 0;
 }
 
