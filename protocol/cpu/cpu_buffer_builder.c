@@ -1,14 +1,22 @@
 #include "cpu_buffer_builder.h"
 #include <string.h>
 #include <stdlib.h>
+#include "requests.h"
 
-void BufferBuilderInit(BufferBuilder *builder, CpuToDpuBufferDescriptor *bufferDesc, uint8_t *buffer, uint8_t* offsetsBuffer, uint8_t* varlenBlockOffsetsBuffer)
+uint8_t GlobalIOBuffers[NUM_DPU][BUFFER_LEN];
+uint8_t GlobalOffsetsBuffer[NUM_DPU][sizeof(Offset) * NUM_BLOCKS];
+uint8_t GlobalVarlenBlockOffsetBuffer[NUM_DPU][sizeof(Offset) * BATCH_SIZE];
+
+void BufferBuilderInit(BufferBuilder *builder, CpuToDpuBufferDescriptor *bufferDesc, int dpuId)
 {
+  builder->dpuId = dpuId;
+  builder->state = DPU_STATE_INITIALIZED;
+
   // alloc the whole buffer
   bufferDesc->header.blockCnt = 0;
   bufferDesc->header.totalSize = CPU_BUFFER_HEAD_LEN;
   builder->bufferDesc = bufferDesc;
-  builder->buffer = buffer;
+  builder->buffer = GlobalIOBuffers[dpuId];
 
   builder->curBlockOffset = CPU_BUFFER_HEAD_LEN;
   builder->curBlockPtr = builder->buffer + builder->curBlockOffset;
@@ -20,13 +28,16 @@ void BufferBuilderInit(BufferBuilder *builder, CpuToDpuBufferDescriptor *bufferD
   builder->isCurVarLenBlock = false;
 
   // offsets
-  bufferDesc->offsets = offsetsBuffer;
-  builder->varlenBlockOffsetsBuffer = varlenBlockOffsetsBuffer;
+  bufferDesc->offsets = GlobalOffsetsBuffer[dpuId];
+  builder->varlenBlockOffsetsBuffer = GlobalVarlenBlockOffsetBuffer[dpuId];
   return;
 }
 
 void BufferBuilderBeginBlock(BufferBuilder *builder, uint8_t taskType)
 {
+  ValidValueCheck(builder->state == DPU_STATE_INITIALIZED || builder->state == DPU_STATE_BLOCK_CLOSED);
+  builder->state = DPU_STATE_BLOCK_OPEN;
+
   builder->bufferDesc->offsets[builder->bufferDesc->header.blockCnt++] = builder->curBlockOffset;
   builder->bufferDesc->header.totalSize += sizeof(Offset);
   // fill block header
@@ -60,6 +71,8 @@ void BufferBuilderBeginBlock(BufferBuilder *builder, uint8_t taskType)
 
 void BufferBuilderEndBlock(BufferBuilder *builder)
 {
+  ValidValueCheck(builder->state == DPU_STATE_BLOCK_OPEN);
+  builder->state = DPU_STATE_BLOCK_CLOSED;
   // flush offsets of block
   if (builder->isCurVarLenBlock) {
     VarLenBlockDescriptor* varLenBlockDesc = &builder->bufferDesc->varLenBlockDescs[builder->varLenBlockIdx++];
@@ -87,6 +100,8 @@ void BufferBuilderEndBlock(BufferBuilder *builder)
 
 uint8_t* BufferBuilderFinish(BufferBuilder *builder, size_t *size)
 {
+  ValidValueCheck(builder->state == DPU_STATE_BLOCK_CLOSED);
+  builder->state = DPU_STATE_CLOSED;
   // flush offsets of buffer
   *size = builder->bufferDesc->header.totalSize;
   uint32_t offsetsLen = builder->bufferDesc->header.blockCnt * sizeof(Offset);
@@ -103,6 +118,7 @@ uint8_t* BufferBuilderFinish(BufferBuilder *builder, size_t *size)
 
 void BufferBuilderAppendTask(BufferBuilder *builder, Task *task)
 {
+  ValidValueCheck(builder->state == DPU_STATE_BLOCK_OPEN);
   switch(task->taskType) {
   case GET_OR_INSERT_REQ:
   case GET_POINTER_REQ:

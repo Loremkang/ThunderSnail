@@ -28,7 +28,7 @@ void CreateCpuToDpuBufferForEachDPU()
       .epochNumber = 1,
     }
   };
-  BufferBuilderInit(B, &bufferDesc);
+  BufferBuilderInit(B, &bufferDesc, 0);
   // suppose we have only one block
   BufferBuilderBeginBlock(B, GET_OR_INSERT_REQ);
   // input stream to get task

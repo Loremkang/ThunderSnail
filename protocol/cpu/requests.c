@@ -28,7 +28,7 @@ void SendSetDpuIdReq(struct dpu_set_t set) {
     };
   }
   for (int i = 0; i < NUM_DPU; i++) {
-    BufferBuilderInit(&builders[i], &bufferDescs[i]);
+    BufferBuilderInit(&builders[i], &bufferDescs[i], i);
     BufferBuilderBeginBlock(&builders[i], SET_DPU_ID_REQ);
   }
   for (int i = 0; i < NUM_DPU; i++){
@@ -78,7 +78,7 @@ void SendCreateIndexReq(struct dpu_set_t set, HashTableId indexId) {
     };
   }
   for (int i = 0; i < NUM_DPU; i++) {
-    BufferBuilderInit(&builders[i], &bufferDescs[i]);
+    BufferBuilderInit(&builders[i], &bufferDescs[i], i);
     BufferBuilderBeginBlock(&builders[i], CREATE_INDEX_REQ);
   }
   for (int i = 0; i < NUM_DPU; i++){
@@ -129,7 +129,7 @@ void SendGetOrInsertReq(struct dpu_set_t set, uint32_t tableId, HashTableId hash
     };
   }
   for (int i = 0; i < NUM_DPU; i++) {
-    BufferBuilderInit(&builders[i], &bufferDescs[i]);
+    BufferBuilderInit(&builders[i], &bufferDescs[i], i);
     BufferBuilderBeginBlock(&builders[i], GET_OR_INSERT_REQ);
   }
   for (int i = 0; i < batchSize; i++){
