@@ -25,7 +25,7 @@ OffsetT ExpendableBufferAppendPlaceholder(ExpendableBufferT *buf, OffsetT length
 
 typedef struct VariableLengthStructBufferT {
     // number of variable length structs in the buffer
-    OffsetT count; 
+    OffsetT count;
     ExpendableBufferT *offset, *data;
 } VariableLengthStructBufferT;
 
