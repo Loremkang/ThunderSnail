@@ -35,10 +35,10 @@ set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
 
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/common_base_struct SRC_COMMON_BASE_STRUCT)
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/newlink SRC_NEWLINK)
-
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/driver SRC_DRIVER)
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/protocol SRC_PROTOCOL)
 
-add_executable(host testdriver.c ${SRC_COMMON_BASE_STRUCT} ${SRC_PROTOCOL} ${SRC_NEWLINK})
+add_executable(host testdriver.c ${SRC_COMMON_BASE_STRUCT} ${SRC_PROTOCOL} ${SRC_NEWLINK} ${SRC_DRIVER})
 target_include_directories(host PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/common_base_struct)
 target_include_directories(host PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/protocol)
 target_include_directories(host PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/newlink)
@@ -89,10 +89,11 @@ target_link_libraries(protocol dpu)
 
 # Build tests:
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/tests SRC_TEST)
-add_executable(test ${SRC_TEST} ${SRC_COMMON_BASE_STRUCT} ${SRC_NEWLINK})
+add_executable(test ${SRC_TEST} ${SRC_COMMON_BASE_STRUCT} ${SRC_NEWLINK} ${SRC_DRIVER})
 target_include_directories(test PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/common_base_struct)
 target_include_directories(test PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/protocol)
 target_include_directories(test PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/newlink)
+target_include_directories(test PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/driver)
 target_link_directories(test PRIVATE ${UPMEM_SDK_DIR}/lib)
 target_link_libraries(test gtest_main protocol)
 add_test(NAME example_test COMMAND test)
