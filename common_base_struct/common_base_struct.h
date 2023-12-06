@@ -5,9 +5,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "../safety_check_macro.h"
-
 // Pointers
-typedef struct {
+typedef  __attribute__((aligned(8))) struct {
     uint32_t dpuId;
     uint32_t dpuAddr;
 } RemotePtrT;
@@ -57,7 +56,7 @@ static inline bool MaxLinkAddrEqual(MaxLinkAddrT a, MaxLinkAddrT b) {
 void MaxLinkAddrPrint(MaxLinkAddrT maxLinkAddr);
 
 // Base Elements
-typedef struct {
+typedef __attribute__((aligned(8))) struct {
     int tableId;
     uint64_t tupleAddr;
 } TupleIdT;

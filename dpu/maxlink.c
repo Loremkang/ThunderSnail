@@ -1,12 +1,13 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
-
+#include <mram.h>
 #include "mram_space.h"
 #include "mutex.h"
 #include "protocol.h"
 #include "path_config.h"
 #include "maxlink.h"
+
 
 
 // A entry is something like 
@@ -62,13 +63,13 @@ __mram_ptr MaxLinkEntryT* NewMaxLinkEntry(MaxLinkT* ml) {
     TupleIdT* tuple_buf = ml->buffer;
     for (int i = 0; i < ml->tupleIDCount; i++) {
         int idx = GetIdIndex(tuple_buf[i].tableId);
-        max_link_entry->tupleIds[idx] = tuple_buf[i];
+        mram_write(tuple_buf + i, max_link_entry->tupleIds + idx, sizeof(TupleIdT));
     }
     // write hash
     HashAddrT* hash_buf = ml->buffer + (TABLE_INDEX_LEN * TUPLE_ID_SIZE);
     for (int i = 0; i < ml->hashAddrCount; i++) {
         int idx = GetIdIndex(hash_buf[i].rPtr.dpuId);
-        max_link_entry->hashAddrs[idx] = hash_buf[i];
+        mram_write(hash_buf + i, max_link_entry->hashAddrs + idx, sizeof(HashAddrT));
         hash_buf++;
     }
     max_link_entry->tableIDCount = ml->tupleIDCount;
@@ -78,13 +79,13 @@ __mram_ptr MaxLinkEntryT* NewMaxLinkEntry(MaxLinkT* ml) {
 }
 
 // check error
-void MergeMaxLink(MaxLinkEntryT* target, MaxLinkT* source) {
+void MergeMaxLink(__mram_ptr MaxLinkEntryT* target, MaxLinkT* source) {
     TupleIdT* tuple_buf = source->buffer;
     // merge table id
     for (int i = 0; i < source->tupleIDCount; i++) {
         int idx = GetIdIndex(tuple_buf[i].tableId);
         assert(IsNullTuple(target->tupleIds + idx) && !IsNullTuple(tuple_buf + i));
-        target->tupleIds[idx] = tuple_buf[i];
+        mram_write(tuple_buf + i, target->tupleIds + idx, sizeof(TupleIdT));
     }
     // no duplicated table id, add directly
     target->tableIDCount+=source->tupleIDCount;
@@ -100,7 +101,7 @@ void MergeMaxLink(MaxLinkEntryT* target, MaxLinkT* source) {
                 target->hashAddrs[idx].rPtr.dpuId == hash_buf[i].rPtr.dpuId
                 : true);
         if(IsNullHash(&target->hashAddrs[idx])) {
-            target->hashAddrs[idx] = hash_buf[i];
+            mram_write(hash_buf + i, target->hashAddrs + idx, sizeof(HashAddrT));
             target->hashAddrCount++;
         }
     }
