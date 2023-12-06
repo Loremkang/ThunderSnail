@@ -17,13 +17,14 @@ void BufferBuilderInit(BufferBuilder *builder)
   builder->bufferDesc.header.blockCnt = 0;
   builder->bufferDesc.header.totalSize = DPU_BUFFER_HEAD_LEN;
   // need clear the reply buffer?
-  //memset(replyBuffer, 0, BUFFER_LEN);
+  memset(replyBuffer, 0, BUFFER_LEN);
 
   builder->curBlockPtr = replyBuffer + DPU_BUFFER_HEAD_LEN;
   builder->curBlockOffset = DPU_BUFFER_HEAD_LEN;
 
   builder->varLenBlockIdx = 0;
   builder->fixedLenBlockIdx = 0;
+  builder->curTaskOffset = 0;
 
   // offsets reset
   memset(builder->bufferDesc.offsets, 0, sizeof(builder->bufferDesc.offsets));
@@ -106,13 +107,28 @@ size_t BufferBuilderFinish(BufferBuilder *builder)
 void BufferBuilderAppendTask(BufferBuilder *builder, Task *task)
 {
   switch(task->taskType) {
-  case GET_OR_INSERT_RESP: {
-    GetOrInsertResp *resp = (GetOrInsertResp*)task;
+  case FETCH_MAX_LINK_RESP:
+    {
+      // record the offset and task count++
+      VarLenBlockDescriptor* varLenBlockDesc = &builder->bufferDesc.varLenBlockDescs[builder->varLenBlockIdx];
+      varLenBlockDesc->offsets[varLenBlockDesc->blockDescBase.taskCount++] = builder->curTaskOffset;
+      uint32_t taskSize = GetFixedLenTaskSize(task);
+      mram_write_unaligned(task, builder->curBlockPtr + builder->curTaskOffset, taskSize);
+      builder->curTaskOffset += taskSize;
+      // updata total size
+      varLenBlockDesc->blockDescBase.totalSize += taskSize + sizeof(Offset);
+      builder->bufferDesc.header.totalSize += taskSize + sizeof(Offset);
+      break;
+    }
+  case GET_OR_INSERT_RESP:
+  case GET_POINTER_RESP:
+  case GET_MAX_LINK_SIZE_RESP:
+    {
     // record the offset and task count++
     FixedLenBlockDescriptor* fixedLenBlockDesc = &builder->bufferDesc.fixedLenBlockDescs[builder->fixedLenBlockIdx];
     fixedLenBlockDesc->blockDescBase.taskCount++;
     uint32_t taskSize = GetFixedLenTaskSize(task);
-    mram_write_unaligned(resp, builder->curBlockPtr + builder->curTaskOffset, taskSize);
+    mram_write_unaligned(task, builder->curBlockPtr + builder->curTaskOffset, taskSize);
     builder->curTaskOffset += taskSize;
     // update total size
     fixedLenBlockDesc->blockDescBase.totalSize += taskSize;

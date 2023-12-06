@@ -9,18 +9,20 @@ typedef uint32_t HashTableId;
 typedef uint32_t Offset; // The buffer offset
 
 // define task names, request and response
-#define GET_OR_INSERT_REQ 0
-#define GET_POINTER_REQ 1
-#define UPDATE_POINTER_REQ 2
-#define GET_MAX_LINK_SIZE_REQ 3
-#define FETCH_MAX_LINK_REQ 4
-#define MERGE_MAX_LINK_REQ 5
-#define GET_OR_INSERT_RESP 6
-#define GET_POINTER_RESP 7
-#define UPDATE_POINTER_RESP 8
-#define GET_MAX_LINK_SIZE_RESP 9
-#define FETCH_MAX_LINK_RESP 10
-#define MERGE_MAX_LINK_RESP 11
+#define SET_DPU_ID_REQ 0
+#define CREATE_INDEX_REQ 1
+#define GET_OR_INSERT_REQ 2
+#define GET_POINTER_REQ 3
+#define UPDATE_POINTER_REQ 4
+#define GET_MAX_LINK_SIZE_REQ 5
+#define FETCH_MAX_LINK_REQ 6
+#define MERGE_MAX_LINK_REQ 7
+#define GET_OR_INSERT_RESP 8
+#define GET_POINTER_RESP 9
+#define UPDATE_POINTER_RESP 10
+#define GET_MAX_LINK_SIZE_RESP 11
+#define FETCH_MAX_LINK_RESP 12
+#define MERGE_MAX_LINK_RESP 13
 
 // align to 8
 #define NUM_FIXED_LEN_BLOCK_INPUT 4
@@ -86,6 +88,16 @@ typedef struct {
 typedef struct {
   uint8_t taskType;
 } Task;
+
+typedef ALIGN8 struct {
+  Task base;
+  uint32_t dpuId;
+} SetDpuIdReq;
+
+typedef ALIGN8 struct {
+  Task base;
+  HashTableId hashTableId;
+} CreateIndexReq;
 
 typedef ALIGN8 struct {
   Task base;

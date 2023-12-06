@@ -5,10 +5,41 @@ extern "C" {
 #include "../protocol/cpu/requests_handler.h"
 }
 
-#define TEST_BATCH 4
+#define TEST_BATCH (8 * 1024)
+
+TEST (BufferHandler, SetDpuIdReq) {
+  struct dpu_set_t set;
+  DPU_ASSERT(dpu_alloc(NUM_DPU, NULL, &set));
+  DPU_ASSERT(dpu_load(set, DPU_BINARY, NULL));
+  SendSetDpuIdReq(set);
+  DPU_ASSERT(dpu_free(set));
+}
+
+TEST (BufferHandler, CreateIndex) {
+  struct dpu_set_t set;
+  HashTableId hashTableId = 0;
+  DPU_ASSERT(dpu_alloc(NUM_DPU, NULL, &set));
+  DPU_ASSERT(dpu_load(set, DPU_BINARY, NULL));
+  SendCreateIndexReq(set, hashTableId);
+  DPU_ASSERT(dpu_free(set));
+}
 
 TEST (BufferHandler, DecodeBuffer) {
-  uint64_t tupleAddrs[TEST_BATCH] = {0x1234, 0x2341, 0x3412, 0x4123};
+  struct dpu_set_t set;
+  HashTableId hashTableId = 0;
+  DPU_ASSERT(dpu_alloc(NUM_DPU, NULL, &set));
+  DPU_ASSERT(dpu_load(set, DPU_BINARY, NULL));
+  SendSetDpuIdReq(set);
+  SendCreateIndexReq(set, hashTableId);
+  uint64_t tupleAddrs[TEST_BATCH] =
+    {0x1234, 0x2341, 0x3412, 0x4123, 0x1234, 0x2341, 0x3412, 0x4123,
+     0x1234, 0x2341, 0x3412, 0x4123, 0x1234, 0x2341, 0x3412, 0x4123,
+     0x1234, 0x2341, 0x3412, 0x4123, 0x1234, 0x2341, 0x3412, 0x4123,
+     0x1234, 0x2341, 0x3412, 0x4123, 0x1234, 0x2341, 0x3412, 0x4123,
+     0x1234, 0x2341, 0x3412, 0x4123, 0x1234, 0x2341, 0x3412, 0x4123,
+     0x1234, 0x2341, 0x3412, 0x4123, 0x1234, 0x2341, 0x3412, 0x4123,
+     0x1234, 0x2341, 0x3412, 0x4123, 0x1234, 0x2341, 0x3412, 0x4123,
+     0x1234, 0x2341, 0x3412, 0x4123, 0x1234, 0x2341, 0x3412, 0x4123,};
   Key keys[TEST_BATCH];
   for (int i=0; i < TEST_BATCH; i++) {
     keys[i].data = (uint8_t *)malloc(8);
@@ -21,10 +52,12 @@ TEST (BufferHandler, DecodeBuffer) {
   }
 
   uint8_t** recvBufs;
-  recvBufs = (uint8_t **)malloc(sizeof(uint8_t*));
-  recvBufs[0] = (uint8_t *)malloc(65535);
+  recvBufs = (uint8_t **)malloc(NUM_DPU * sizeof(uint8_t*));
+  for (int i=0; i < NUM_DPU; i++) {
+    recvBufs[i] = (uint8_t *)malloc(65535);
+  }
   printf("Now calling SendGetOrInsertReq\n");
-
-  SendGetOrInsertReq(/*tableId*/3, keys, tupleAddrs, TEST_BATCH, recvBufs);
+  SendGetOrInsertReq(set, 3, hashTableId, keys, tupleAddrs, TEST_BATCH, recvBufs);
   TraverseReceiveBuffer(recvBufs[0]);
+  DPU_ASSERT(dpu_free(set));
 }
