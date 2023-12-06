@@ -47,6 +47,7 @@ OffsetT ExpendableBufferAppend(ExpendableBufferT *buf, uint8_t* data, OffsetT le
 }
 
 void VariableLengthStructBufferInit(VariableLengthStructBufferT *buf) {
+    buf->count = 0;
     buf->data = malloc(sizeof(ExpendableBufferT));
     buf->offset = malloc(sizeof(ExpendableBufferT));
     ExpendableBufferInit(buf->offset);

@@ -33,12 +33,6 @@ static inline int NewLinkGetSize(int tupleIdCount, int maxLinkAddrCount, int has
            sizeof(HashAddrT) * hashAddrCount;
 }
 
-static inline void NewLinkToMaxLink(NewLinkT* newLink, MaxLinkT* maxLink) {
-    maxLink->tupleIDCount = newLink->tupleIDCount;
-    maxLink->hashAddrCount = newLink->hashAddrCount;
-    Unimplemented(false);
-}
-
 void NewLinkPrint(NewLinkT* newLink);
 
 #endif
