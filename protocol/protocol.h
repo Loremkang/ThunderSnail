@@ -23,6 +23,8 @@ typedef uint32_t Offset; // The buffer offset
 #define GET_MAX_LINK_SIZE_RESP 11
 #define FETCH_MAX_LINK_RESP 12
 #define MERGE_MAX_LINK_RESP 13
+#define NEW_MAX_LINK_REQ 14
+#define NEW_MAX_LINK_RESP 15
 
 // align to 8
 #define NUM_FIXED_LEN_BLOCK_INPUT 4
@@ -132,8 +134,19 @@ typedef ALIGN8 struct {
 
 typedef ALIGN8 struct {
   Task base;
+  RemotePtrT ptr;
   MaxLinkT maxLink;
 } MergeMaxLinkReq;
+
+typedef ALIGN8 struct {
+  Task base;
+  MaxLinkT maxLink;
+} NewMaxLinkReq;
+
+typedef ALIGN8 struct {
+  Task base;
+  RemotePtrT ptr;
+} NewMaxLinkResp;
 
 typedef ALIGN8 struct {
   Task base;
