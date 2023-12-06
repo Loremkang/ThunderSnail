@@ -6,14 +6,12 @@
 #include "mutex.h"
 #include "protocol.h"
 #include "path_config.h"
-#include "vmutex.h"
 #include "maxlink.h"
 
 
 // A entry is something like 
 // [tid_coaunt, hash_count, T(1,1), NULL, NULL, NULL, H(1,1), NULL, NULL]
 // their sizes are the following
-VMUTEX_INIT(mutexes, 64, 32)
 __mram_ptr void* mram_stack_ptr = (__mram_ptr void*)STACK_BOTTOM_ADDR;
 
 // a global pointer for memory management
