@@ -1,4 +1,5 @@
 #include "requests.h"
+#include "cpu_buffer_builder.h"
 
 int cmpfunc (const void * a, const void * b)
 {
@@ -58,9 +59,9 @@ void SendSetDpuIdReq(struct dpu_set_t set) {
   DPU_ASSERT(dpu_launch(set, DPU_SYNCHRONOUS));
   // ReadDpuSetLog(set);
   //free
-  for (int i = 0; i < NUM_DPU; i++) {
-    free(buffers[i]);
-  }
+  // for (int i = 0; i < NUM_DPU; i++) {
+  //   free(buffers[i]);
+  // }
 }
 
 void SendCreateIndexReq(struct dpu_set_t set, HashTableId indexId) {
@@ -106,9 +107,9 @@ void SendCreateIndexReq(struct dpu_set_t set, HashTableId indexId) {
   DPU_ASSERT(dpu_push_xfer(set, DPU_XFER_TO_DPU, "receiveBuffer", 0, sizes[0], DPU_XFER_DEFAULT));
   DPU_ASSERT(dpu_launch(set, DPU_SYNCHRONOUS));
   //free
-  for (int i = 0; i < NUM_DPU; i++) {
-    free(buffers[i]);
-  }
+  // for (int i = 0; i < NUM_DPU; i++) {
+  //   free(buffers[i]);
+  // }
 }
 
 void SendGetOrInsertReq(struct dpu_set_t set, uint32_t tableId, HashTableId hashTableId, Key *keys, uint64_t *tupleAddrs,
@@ -169,7 +170,7 @@ void SendGetOrInsertReq(struct dpu_set_t set, uint32_t tableId, HashTableId hash
   // how to get the reply buffer size? it seems that the reply buffer size will less then send buffer size
   DPU_ASSERT(dpu_push_xfer(set, DPU_XFER_FROM_DPU, "replyBuffer", 0, sizes[0], DPU_XFER_DEFAULT));
   //free
-  for (int i = 0; i < NUM_DPU; i++) {
-    free(buffers[i]);
-  }
+  // for (int i = 0; i < NUM_DPU; i++) {
+  //   free(buffers[i]);
+  // }
 }

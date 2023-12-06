@@ -2,7 +2,6 @@
 #define REQUESTS_H
 
 #include "../protocol.h"
-#include "cpu_buffer_builder.h"
 #include "dpu.h"
 
 #ifndef DPU_BINARY

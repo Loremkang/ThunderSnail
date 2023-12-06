@@ -63,7 +63,7 @@ Iterator* OffsetsIteratorInit(OffsetsIterator* iterator, uint8_t* basePtr, Offse
   return &(iterator->iterator);
 }
 
-void OffsetIteratorJumpToKth(OffsetsIterator *iterator, uint8_t k)
+void OffsetsIteratorJumpToKth(OffsetsIterator *iterator, uint8_t k)
 {
   iterator->index = k;
 }
@@ -71,7 +71,7 @@ void OffsetIteratorJumpToKth(OffsetsIterator *iterator, uint8_t k)
 uint8_t* OffsetIteratorGetKthData(OffsetsIterator *iterator, uint8_t k)
 {
   OffsetsIteratorJumpToKth(iterator, k);
-  OffsetsIteratorGetData(iterator);
+  return OffsetsIteratorGetData(iterator);
 }
 
 #endif
