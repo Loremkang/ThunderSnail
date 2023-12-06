@@ -15,5 +15,7 @@
 
 #define HEAP_SPACE_ADDR ((__mram_ptr void *)(0x3000000))
 #define HEAP_SPACE_SIZE (0x1000000)
+#define INDEX_ALLOCATOR_ADDR ((__mram_ptr void *)(0x3000000))
+#define INDEX_ALLOCATOR_SIZE (0x800000)
 
 #endif

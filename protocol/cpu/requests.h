@@ -3,6 +3,11 @@
 
 #include "../protocol.h"
 #include "cpu_buffer_builder.h"
+#include "dpu.h"
+
+#ifndef DPU_BINARY
+#define DPU_BINARY "dpu_task"
+#endif
 
 #define NUM_DPU 64
 
@@ -14,14 +19,15 @@ typedef struct {
 static uint8_t epochNumber = 0;
 
 inline static uint8_t GetEpochNumber()
-{  
+{
   if (epochNumber == 255) {
     epochNumber = 0;
     return 255;
-  } 
+  }
   return epochNumber++;
 }
-
-void SendGetOrInsertReq(uint32_t tableId, Key *keys, uint64_t *tupleAddr, size_t batchSize);
-
+void SendSetDpuIdReq(struct dpu_set_t set);
+void SendCreateIndexReq(struct dpu_set_t set, HashTableId indexId);
+void SendGetOrInsertReq(struct dpu_set_t set, uint32_t tableId, HashTableId hashTableId, Key *keys, uint64_t *tupleAddrs,
+                        size_t batchSize, uint8_t *recvBuffers[]);
 #endif

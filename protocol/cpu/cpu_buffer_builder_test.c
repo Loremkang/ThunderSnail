@@ -13,14 +13,14 @@ void CreateCpuToDpuBufferForEachDPU()
   GetOrInsertReq *reqs[BATCH_SIZE];
   for (int i = 0; i < BATCH_SIZE; i++) {
     char key = (char)('a' + i);
-    reqs[i] = (GetOrInsertReq*)malloc(sizeof(GetOrInsertReq) + 8);
+    reqs[i] = (GetOrInsertReq*)malloc(ROUND_UP_TO_8(1) + sizeof(GetOrInsertReq));
     memcpy(reqs[i], &(GetOrInsertReq) {
       .base = { .taskType = GET_OR_INSERT_REQ },
-      .len = 8,
+      .len = 1,
       .tid = { .tableId = i, .tupleAddr = i },
       .hashTableId = i % 64
       }, sizeof(GetOrInsertReq));
-    memcpy(reqs[i] + sizeof(GetOrInsertReq), &key, 1);
+    memcpy(reqs[i]->ptr, &key, 1);
     tasks[i] = (Task*)reqs[i];
   }
   CpuToDpuBufferDescriptor bufferDesc = {
