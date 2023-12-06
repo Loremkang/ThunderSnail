@@ -5,6 +5,7 @@ pushd . 2>&1 > /dev/null
 
 if [[ $1 == "clean" ]]; then
     rm ${SOURCE_DIR}/build -rf
+    popd 2>&1 > /dev/null
     exit
 fi
 
@@ -37,7 +38,7 @@ fi
 if [[ $FLAG == "debug" ]]; then
     cd ${SOURCE_DIR} && cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
     cd ${SOURCE_DIR}/build && make -j
-else if [[ $FLAG == "release"]]
+elif [[ $FLAG == "release" ]]; then 
     cd ${SOURCE_DIR} && cmake -S . -B build
     cd ${SOURCE_DIR}/build && make -j
 fi

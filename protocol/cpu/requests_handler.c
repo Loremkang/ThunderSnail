@@ -43,36 +43,52 @@ uint16_t GetBlockTotalSize(uint8_t *blockPtr)
 
 Offset* GetBufferOffsetsPtr(uint8_t *buffer)
 {
-  uint8_t blockCnt = GetBlockCnt(buffer);
+  uint16_t blockCnt = GetBlockCnt(buffer);
   uint32_t totalSize = GetBufferTotalSize(buffer);
-  return (Offset*)(buffer + totalSize - blockCnt * sizeof(Offset));
+  return (Offset*)(buffer + totalSize - ROUND_UP_TO_8(blockCnt * sizeof(Offset)));
 }
 
 Offset* GetBlockOffsetsPtr(uint8_t *blockPtr)
 {
-  uint8_t taskCount = GetTaskCount(blockPtr);
+  uint16_t taskCount = GetTaskCount(blockPtr);
   uint32_t totalSize = GetBlockTotalSize(blockPtr);
-  return (Offset*)(blockPtr + totalSize - taskCount * sizeof(Offset));
+  return (Offset*)(blockPtr + totalSize - ROUND_UP_TO_8(taskCount * sizeof(Offset)));
 }
 
+void PrintInsertResp(GetOrInsertResp *resp) {
+  switch(resp->tupleIdOrMaxLinkAddr.type) {
+  case TupleId: {
+    printf("(TupleIdT){.tableId = %d, \t.tupleAddr = 0x%lx}\n", resp->tupleIdOrMaxLinkAddr.value.tupleId.tableId, resp->tupleIdOrMaxLinkAddr.value.tupleId.tupleAddr);
+    break;
+  }
+  case MaxLinkAddr: {
+    printf("(MaxLinkAddrT) {.dpuId = %d,\t.dpuAddr = 0x%x}\n", resp->tupleIdOrMaxLinkAddr.value.maxLinkAddr.rPtr.dpuId, resp->tupleIdOrMaxLinkAddr.value.maxLinkAddr.rPtr.dpuAddr);
+    break;
+  }
+  case HashAddr: {
+    printf("(HashAddrT) {.dpuId = %d, \t.dpuAddr = 0x%x}\n", resp->tupleIdOrMaxLinkAddr.value.hashAddr.rPtr.dpuId, resp->tupleIdOrMaxLinkAddr.value.hashAddr.rPtr.dpuAddr);
+    break;
+  }
+  }
+}
 void* ProcessTask(uint8_t *taskPtr, uint8_t taskType)
 {
-  uint8_t *task = taskPtr - sizeof(Task);
   switch(taskType) {
   case GET_OR_INSERT_RESP: {
-    GetOrInsertResp *resp = (GetOrInsertResp*)task;
+    GetOrInsertResp *resp = (GetOrInsertResp*)taskPtr;
+    PrintInsertResp(resp);
     break;
   }
   case GET_POINTER_RESP: {
-    GetPointerResp *resp= (GetPointerResp*)task;
+    GetPointerResp *resp= (GetPointerResp*)taskPtr;
     break;
   }
   case GET_MAX_LINK_SIZE_RESP: {
-    GetMaxLinkSizeResp *resp = (GetMaxLinkSizeResp*)task;
+    GetMaxLinkSizeResp *resp = (GetMaxLinkSizeResp*)taskPtr;
     break;
   }
   case FETCH_MAX_LINK_RESP: {
-    FetchMaxLinkResp *resp = (FetchMaxLinkResp*)task;
+    FetchMaxLinkResp *resp = (FetchMaxLinkResp*)taskPtr;
     break;
   }
   default:
@@ -98,7 +114,7 @@ void TraverseBlock(uint8_t *blockPtr)
   } else {
     uint32_t eachTaskSize = (GetBlockTotalSize(blockPtr) - DPU_BUFFER_HEAD_LEN) / taskCount;
     for(int i = 0; i < taskCount; i++){
-      uint8_t *taskPtr = blockPtr + eachTaskSize * i;
+      uint8_t *taskPtr = blockPtr + sizeof(BlockDescriptorBase) + eachTaskSize * i;
       ProcessTask(taskPtr, taskType);
     }
   }

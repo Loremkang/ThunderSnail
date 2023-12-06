@@ -1,3 +1,4 @@
 [submodule "deps/pim-index"]
 	path = deps/pim-index
 	url = https://github.com/mryvae/pim-index.git
+	branch = main
