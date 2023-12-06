@@ -2,6 +2,7 @@
 
 extern "C" {
 #include "fake_interface.h"
+#include "safety_check_macro.h"
 }
 
 TEST(FakeInterfaceTest, FakeInterfaceTest) {
