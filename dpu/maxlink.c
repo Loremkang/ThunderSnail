@@ -2,13 +2,12 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <mram.h>
+#include <alloc.h>
 #include "mram_space.h"
 #include "mutex.h"
 #include "protocol.h"
 #include "path_config.h"
 #include "maxlink.h"
-
-
 
 // A entry is something like 
 // [tid_coaunt, hash_count, T(1,1), NULL, NULL, NULL, H(1,1), NULL, NULL]
@@ -32,13 +31,13 @@ bool IsNullHash(HashAddrT* ha) {
     return ha->rPtr.dpuAddr == UINT32_MAX;
 } 
 
-// 
 uint32_t GetIdIndex(int tid) {
     for (int i = 0; i < TABLE_INDEX_LEN; i++) {
         if (tableIndexArr[i] == tid) {
             return i;
         }
     }
+    printf("assert filed in file: %s, line: %d, input: %d\n", __FILE__, __LINE__, tid);
     assert(false);
     // for error case
     return UINT32_MAX;
@@ -55,40 +54,48 @@ uint32_t EncodeMaxLink(MaxLinkT* link) {
 }
 
 __mram_ptr MaxLinkEntryT* NewMaxLinkEntry(MaxLinkT* ml) {
-    __mram_ptr MaxLinkEntryT* max_link_entry = (__mram_ptr MaxLinkEntryT*)new_max_link_entry_ptr;
-    // add new_max_link_entry_ptr for new allocation
-    new_max_link_entry_ptr += MAX_LINK_ENTRY_SIZE;
-
+    // allocate memory on wram
+    MaxLinkEntryT* res = buddy_alloc(MAX_LINK_ENTRY_SIZE);
+    // expand MaxLinkT to MaxLinkEntryT
     // write Tuple
     TupleIdT* tuple_buf = ml->buffer;
     for (int i = 0; i < ml->tupleIDCount; i++) {
         int idx = GetIdIndex(tuple_buf[i].tableId);
-        mram_write(tuple_buf + i, max_link_entry->tupleIds + idx, sizeof(TupleIdT));
+        res->tupleIds[idx] = tuple_buf[i];
     }
     // write hash
     HashAddrT* hash_buf = ml->buffer + (TABLE_INDEX_LEN * TUPLE_ID_SIZE);
     for (int i = 0; i < ml->hashAddrCount; i++) {
         int idx = GetIdIndex(hash_buf[i].rPtr.dpuId);
-        mram_write(hash_buf + i, max_link_entry->hashAddrs + idx, sizeof(HashAddrT));
+        res->hashAddrs[idx] = hash_buf[i];
         hash_buf++;
     }
-    max_link_entry->tableIDCount = ml->tupleIDCount;
-    max_link_entry->hashAddrCount = ml->hashAddrCount;
-
-    return max_link_entry;
+    res->tupleIDCount = ml->tupleIDCount;
+    res->hashAddrCount = ml->hashAddrCount;
+    // copy it to mram
+    __mram_ptr MaxLinkEntryT* maxLinkEntryPtr = (__mram_ptr MaxLinkEntryT*)new_max_link_entry_ptr;
+    mram_write(res, maxLinkEntryPtr, MAX_LINK_ENTRY_SIZE);
+    // add new_max_link_entry_ptr for new allocation
+    new_max_link_entry_ptr += MAX_LINK_ENTRY_SIZE;
+    buddy_free(res);
+    return maxLinkEntryPtr;
 }
 
-// check error
 void MergeMaxLink(__mram_ptr MaxLinkEntryT* target, MaxLinkT* source) {
+    // allocate wram
+    MaxLinkEntryT* res = buddy_alloc(MAX_LINK_ENTRY_SIZE);
+    // copy target to wram
+    mram_read(target, res, MAX_LINK_ENTRY_SIZE);
+
     TupleIdT* tuple_buf = source->buffer;
     // merge table id
     for (int i = 0; i < source->tupleIDCount; i++) {
         int idx = GetIdIndex(tuple_buf[i].tableId);
-        assert(IsNullTuple(target->tupleIds + idx) && !IsNullTuple(tuple_buf + i));
-        mram_write(tuple_buf + i, target->tupleIds + idx, sizeof(TupleIdT));
+        assert(IsNullTuple(res->tupleIds + idx) && !IsNullTuple(tuple_buf + i));
+        res->tupleIds[idx] = tuple_buf[i];
     }
     // no duplicated table id, add directly
-    target->tableIDCount+=source->tupleIDCount;
+    res->tupleIDCount+=source->tupleIDCount;
 
     // merge hash id
     // hash id can be the same, so hash address count should be added if 
@@ -96,19 +103,22 @@ void MergeMaxLink(__mram_ptr MaxLinkEntryT* target, MaxLinkT* source) {
     HashAddrT* hash_buf = source->buffer + (source->tupleIDCount * TUPLE_ID_SIZE);
     for (int i = 0; i < source->hashAddrCount; i++) {
         int idx = GetIdIndex(hash_buf[i].rPtr.dpuId);
-        assert(!IsNullHash(&target->hashAddrs[idx]) && !IsNullHash(&hash_buf[i]) ? 
-                target->hashAddrs[idx].rPtr.dpuAddr == hash_buf[i].rPtr.dpuAddr &&
-                target->hashAddrs[idx].rPtr.dpuId == hash_buf[i].rPtr.dpuId
+        assert(!IsNullHash(&res->hashAddrs[idx]) && !IsNullHash(&hash_buf[i]) ?
+                res->hashAddrs[idx].rPtr.dpuAddr == hash_buf[i].rPtr.dpuAddr &&
+                res->hashAddrs[idx].rPtr.dpuId == hash_buf[i].rPtr.dpuId
                 : true);
-        if(IsNullHash(&target->hashAddrs[idx])) {
-            mram_write(hash_buf + i, target->hashAddrs + idx, sizeof(HashAddrT));
-            target->hashAddrCount++;
+        if(IsNullHash(&res->hashAddrs[idx])) {
+            res->hashAddrs[idx] = hash_buf[i];
+            res->hashAddrCount++;
         }
     }
+    // write res to target mram
+    mram_write(res, target, MAX_LINK_ENTRY_SIZE);
+    buddy_free(res);
 }
 
 void MergeMaxLinkEntry(MaxLinkEntryT* target, MaxLinkEntryT* source) {
-    for(int i = 0; i < target->tableIDCount; i++) {
+    for(int i = 0; i < target->tupleIDCount; i++) {
         target->tupleIds[i] = source->tupleIds[i];
     }
     for (int i = 0; i< target->hashAddrCount; i++) {
@@ -116,35 +126,32 @@ void MergeMaxLinkEntry(MaxLinkEntryT* target, MaxLinkEntryT* source) {
     }
 }
 
-// will return at the end of mram of space
-__mram_ptr MaxLinkT* RetriveMaxLink(MaxLinkEntryT* e) {
+void RetriveMaxLink(__mram_ptr MaxLinkEntryT* src, MaxLinkT* res) {
     // allocate stack memory
-    uint32_t size = e->tableIDCount*TUPLE_ID_SIZE 
-                  + e->hashAddrCount*HASH_ADDR_SIZE
-                  + 2*sizeof(int);
+    MaxLinkEntryT* cpy = buddy_alloc(MAX_LINK_ENTRY_SIZE);
+    // move src to cpy
+    mram_read(src, cpy, MAX_LINK_ENTRY_SIZE);
+    
+    res->tupleIDCount = cpy->tupleIDCount;
+    res->hashAddrCount = cpy->hashAddrCount;
 
-    // alloc stack space
-    __mram_ptr MaxLinkT* res = (__mram_ptr MaxLinkT*)(STACK_BOTTOM_ADDR - MAX_LINK_ENTRY_SIZE);
-    res->tupleIDCount = e->tableIDCount;
-    res->hashAddrCount = e->hashAddrCount;
-    __mram_ptr TupleIdT* tids = res->buffer;
     // write Tuple
+    TupleIdT* tids = res->buffer;
     for(int i = 0; i < TABLE_INDEX_LEN; i++) {
-        if(!IsNullTuple(e->tupleIds + i)) {
-            *tids = e->tupleIds[i];
+        if(!IsNullTuple(&cpy->tupleIds[i])) {
+            *tids = cpy->tupleIds[i];
             tids++;
         }
     }
 
     // write hash. Here tids should be equal to hids
-    __mram_ptr HashAddrT* hids = res->buffer + (res->tupleIDCount * TUPLE_ID_SIZE);
+    HashAddrT* hids = res->buffer + (res->tupleIDCount * TUPLE_ID_SIZE);
     for (int i = 0; i < EDGE_INDEX_LEN; i++) {
-        if(!IsNullHash(e->hashAddrs+i)) {
-            *hids = e->hashAddrs[i];
+        if(!IsNullHash(cpy->hashAddrs+i)) {
+            *hids = cpy->hashAddrs[i];
             hids++;
         }
     }
-    return res;
 }
 
 bool Check(MaxLinkT* link) {

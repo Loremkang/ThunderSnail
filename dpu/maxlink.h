@@ -8,7 +8,7 @@
 #define TUPLE_ID_SIZE sizeof(TupleIdT)
 
 typedef struct {
-    int tableIDCount;
+    int tupleIDCount;
     int hashAddrCount;
     TupleIdT  tupleIds[TABLE_INDEX_LEN];
     HashAddrT hashAddrs[EDGE_INDEX_LEN];
