@@ -7,7 +7,7 @@
 #define HASH_ADDR_SIZE sizeof(HashAddrT)
 #define TUPLE_ID_SIZE sizeof(TupleIdT)
 
-typedef struct {
+typedef   __attribute__((aligned(8))) struct {
     int tupleIDCount;
     int hashAddrCount;
     TupleIdT  tupleIds[TABLE_INDEX_LEN];
