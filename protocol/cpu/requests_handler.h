@@ -2,6 +2,7 @@
 #define REQUESTS_HANDLER_H
 
 #include "../protocol.h"
+#include "iterators.h"
 
 void GetBufferHeader(uint8_t *buffer, DpuBufferHeader *header);
 
@@ -23,10 +24,14 @@ Offset* GetBufferOffsetsPtr(uint8_t *buffer);
 
 Offset* GetBlockOffsetsPtr(uint8_t *blockPtr);
 
-void* ProcessTask(uint8_t *taskPtr, uint8_t taskType);
+void ProcessTask(uint8_t *taskPtr, uint8_t taskType);
 
 void TraverseBlock(uint8_t *blockPtr);
 
 void TraverseReceiveBuffer(uint8_t *buffer);
+
+OffsetsIterator BlockIteratorInit(uint8_t *buffer);
+
+OffsetsIterator TaskIteratorInit(OffsetsIterator *blockIterator);
 
 #endif

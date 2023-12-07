@@ -4,8 +4,8 @@
 #include "requests.h"
 
 uint8_t GlobalIOBuffers[NUM_DPU][BUFFER_LEN];
-uint8_t GlobalOffsetsBuffer[NUM_DPU][sizeof(Offset) * NUM_BLOCKS];
-uint8_t GlobalVarlenBlockOffsetBuffer[NUM_DPU][sizeof(Offset) * BATCH_SIZE];
+Offset GlobalOffsetsBuffer[NUM_DPU][NUM_BLOCKS];
+Offset GlobalVarlenBlockOffsetBuffer[NUM_DPU][BATCH_SIZE];
 
 void BufferBuilderInit(BufferBuilder *builder, CpuToDpuBufferDescriptor *bufferDesc, int dpuId)
 {

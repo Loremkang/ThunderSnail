@@ -6,14 +6,6 @@ int cmpfunc (const void * a, const void * b)
    return ( *(int*)b - *(int*)a );
 }
 
-static void ReadDpuSetLog(struct dpu_set_t set) {
-    struct dpu_set_t dpu;
-    DPU_FOREACH(set, dpu)
-    {
-        DPU_ASSERT(dpu_log_read(dpu, stdout));
-    }
-}
-
 void SendSetDpuIdReq(struct dpu_set_t set) {
   // prepare dpu buffers
   uint8_t *buffers[NUM_DPU];
@@ -54,7 +46,7 @@ void SendSetDpuIdReq(struct dpu_set_t set) {
   DPU_FOREACH(set, dpu, idx) {
     DPU_ASSERT(dpu_prepare_xfer(dpu, buffers[idx]));
   }
-  printf("size :%d\n", sizes[0]);
+  printf("SendSetDpuIdReq Size :%zu\n", sizes[0]);
   DPU_ASSERT(dpu_push_xfer(set, DPU_XFER_TO_DPU, "receiveBuffer", 0, sizes[0], DPU_XFER_DEFAULT));
   DPU_ASSERT(dpu_launch(set, DPU_SYNCHRONOUS));
   // ReadDpuSetLog(set);
@@ -97,6 +89,7 @@ void SendCreateIndexReq(struct dpu_set_t set, HashTableId indexId) {
   }
   // get max sizes
   qsort(sizes, NUM_DPU, sizeof(size_t), cmpfunc);
+  printf("SendCreateIndexReq Size :%zu\n", sizes[0]);
   // send
   struct dpu_set_t dpu;
 
@@ -125,7 +118,7 @@ void SendGetOrInsertReq(struct dpu_set_t set, uint32_t tableId, HashTableId hash
     memset(&bufferDescs[i], 0, sizeof(CpuToDpuBufferDescriptor));
     bufferDescs[i] = (CpuToDpuBufferDescriptor) {
       .header = {
-	.epochNumber = GetEpochNumber(),
+	      .epochNumber = GetEpochNumber(),
       }
     };
   }
@@ -153,6 +146,7 @@ void SendGetOrInsertReq(struct dpu_set_t set, uint32_t tableId, HashTableId hash
   }
   // get max sizes
   qsort(sizes, NUM_DPU, sizeof(size_t), cmpfunc);
+  printf("SendGetOrInsertReq Size :%zu\n", sizes[0]);
   // send
   struct dpu_set_t dpu;
 
@@ -169,6 +163,7 @@ void SendGetOrInsertReq(struct dpu_set_t set, uint32_t tableId, HashTableId hash
   }
   // how to get the reply buffer size? it seems that the reply buffer size will less then send buffer size
   DPU_ASSERT(dpu_push_xfer(set, DPU_XFER_FROM_DPU, "replyBuffer", 0, sizes[0], DPU_XFER_DEFAULT));
+
   //free
   // for (int i = 0; i < NUM_DPU; i++) {
   //   free(buffers[i]);

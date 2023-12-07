@@ -18,7 +18,7 @@ typedef struct {
   CpuToDpuBufferDescriptor *bufferDesc;
   uint8_t *buffer;
   uint8_t *curBlockPtr;
-  uint8_t *varlenBlockOffsetsBuffer;
+  Offset *varlenBlockOffsetsBuffer;
   Offset curBlockOffset;
   uint8_t *curTaskPtr;
   Offset curTaskOffset;
@@ -40,7 +40,7 @@ uint8_t* BufferBuilderFinish(BufferBuilder *builder, size_t *size);
 void BufferBuilderAppendTask(BufferBuilder *builder, Task *task);
 
 extern uint8_t GlobalIOBuffers[NUM_DPU][BUFFER_LEN];
-extern uint8_t GlobalOffsetsBuffer[NUM_DPU][sizeof(Offset) * NUM_BLOCKS];
-extern uint8_t GlobalVarlenBlockOffsetBuffer[NUM_DPU][sizeof(Offset) * BATCH_SIZE];
+extern Offset GlobalOffsetsBuffer[NUM_DPU][NUM_BLOCKS];
+extern Offset GlobalVarlenBlockOffsetBuffer[NUM_DPU][BATCH_SIZE];
 
 #endif
