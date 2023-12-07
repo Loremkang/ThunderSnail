@@ -87,7 +87,7 @@ TEST (BufferHandler, BlockIteratorAndTaskIterator) {
   uint32_t keys[TEST_BATCH];
   for (uint32_t i = 0; i < TEST_BATCH; i ++) {
     tupleIdT1[i] = (TupleIdT){.tableId = 1, .tupleAddr = i};
-    // tupleIdT2[i] = (TupleIdT){.tableId = 2, .tupleAddr = i};
+    tupleIdT2[i] = (TupleIdT){.tableId = 2, .tupleAddr = i};
     keys[i] = i;
   }
 
@@ -123,21 +123,22 @@ TEST (BufferHandler, BlockIteratorAndTaskIterator) {
     BufferBuilderAppendTask(&builders[dpuIdx], (Task*)req);
   }
 
-  // for (int i = 0; i < TEST_BATCH; i ++) {
-  //   uint32_t key = keys[i];
-  //   uint32_t keysize = sizeof(uint32_t);
-  //   int dpuIdx = hash32(key) % NUM_DPU;
-  //   size_t taskSize = ROUND_UP_TO_8(keysize + sizeof(GetOrInsertReq));
-  //   GetOrInsertReq *req = (GetOrInsertReq*)malloc(taskSize);
-  //   memset(req, 0, taskSize);
-  //   req->base = (Task) { .taskType = GET_OR_INSERT_REQ };
-  //   req->len = keysize;
-  //   req->tid = {.tableId = tupleIdT2[i].tableId, .tupleAddr = tupleIdT2[i].tupleAddr};
-  //   req->hashTableId = hashTableId;
-  //   req->taskidx = i;
-  //   memcpy(req->ptr, &key, sizeof(uint32_t));
-  //   BufferBuilderAppendTask(&builders[dpuIdx], (Task*)req);
-  // }
+  for (int i = 0; i < TEST_BATCH; i ++) {
+    uint32_t key = keys[i];
+    uint32_t keysize = sizeof(uint32_t);
+    // int dpuIdx = hash32(key) % NUM_DPU;
+    int dpuIdx = key % NUM_DPU;
+    size_t taskSize = ROUND_UP_TO_8(keysize + sizeof(GetOrInsertReq));
+    GetOrInsertReq *req = (GetOrInsertReq*)malloc(taskSize);
+    memset(req, 0, taskSize);
+    req->base = (Task) { .taskType = GET_OR_INSERT_REQ };
+    req->len = keysize;
+    req->tid = {.tableId = tupleIdT2[i].tableId, .tupleAddr = tupleIdT2[i].tupleAddr};
+    req->hashTableId = hashTableId;
+    // req->taskidx = i;
+    memcpy(req->ptr, &key, sizeof(uint32_t));
+    BufferBuilderAppendTask(&builders[dpuIdx], (Task*)req);
+  }
 
   // end block
   for (int i = 0; i < NUM_DPU; i++) {
@@ -173,30 +174,30 @@ TEST (BufferHandler, BlockIteratorAndTaskIterator) {
   // how to get the reply buffer size? it seems that the reply buffer size will less then send buffer size
   DPU_ASSERT(dpu_push_xfer(set, DPU_XFER_FROM_DPU, "replyBuffer", 0, sizes[0], DPU_XFER_DEFAULT));
 
-  // {
-  //   printf("%p\n", recvBufs[63]);
-  //   uint64_t *val = (uint64_t*)recvBufs[63];
-  //   for (int i = 0; i < 10; i ++) {
-  //     printf("%016llx\n", val[i]);
-  //   }
-  //   GetOrInsertResp a;
-  //   sizeof(a.base);
-  //   sizeof(a.tupleIdOrMaxLinkAddr);
-  //   sizeof(GetOrInsertResp);
-  //   OffsetsIterator blockIterator = BlockIteratorInit(recvBufs[63]);
-  //   for (; OffsetsIteratorHasNext(&blockIterator); OffsetsIteratorNext(&blockIterator)) {
-  //     printf("%p\n", blockIterator.baseAddr);
-  //     OffsetsIterator taskIterator = TaskIteratorInit(&blockIterator);
-  //     printf("%d\t%d\n", blockIterator.size, taskIterator.index);
-  //     printf("%d\t%d\n", taskIterator.size, taskIterator.taskSize);
-  //     printf("%d\n", taskIterator.type);
-  //     printf("%p\t%p\n", taskIterator.offsets, taskIterator.baseAddr);
-  //     for (; OffsetsIteratorHasNext(&taskIterator); OffsetsIteratorNext(&taskIterator)) {
-  //       uint8_t* task = OffsetsIteratorGetData(&taskIterator);
-  //       ProcessTask(task, GET_OR_INSERT_RESP);
-  //     }
-  //   }
-  // }
+  {
+    printf("%p\n", recvBufs[63]);
+    uint64_t *val = (uint64_t*)recvBufs[63];
+    for (int i = 0; i < 10; i ++) {
+      printf("%016llx\n", val[i]);
+    }
+    GetOrInsertResp a;
+    sizeof(a.base);
+    sizeof(a.tupleIdOrMaxLinkAddr);
+    sizeof(GetOrInsertResp);
+    OffsetsIterator blockIterator = BlockIteratorInit(recvBufs[63]);
+    for (; OffsetsIteratorHasNext(&blockIterator); OffsetsIteratorNext(&blockIterator)) {
+      printf("%p\n", blockIterator.baseAddr);
+      OffsetsIterator taskIterator = TaskIteratorInit(&blockIterator);
+      printf("%d\t%d\n", blockIterator.size, taskIterator.index);
+      printf("%d\t%d\n", taskIterator.size, taskIterator.taskSize);
+      printf("%d\n", taskIterator.type);
+      printf("%p\t%p\n", taskIterator.offsets, taskIterator.baseAddr);
+      for (; OffsetsIteratorHasNext(&taskIterator); OffsetsIteratorNext(&taskIterator)) {
+        uint8_t* task = OffsetsIteratorGetData(&taskIterator);
+        ProcessTask(task, GET_OR_INSERT_RESP);
+      }
+    }
+  }
   
   DPU_ASSERT(dpu_free(set));
 }
