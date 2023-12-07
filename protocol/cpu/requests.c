@@ -1,16 +1,9 @@
 #include "requests.h"
+#include "cpu_buffer_builder.h"
 
 int cmpfunc (const void * a, const void * b)
 {
    return ( *(int*)b - *(int*)a );
-}
-
-static void ReadDpuSetLog(struct dpu_set_t set) {
-    struct dpu_set_t dpu;
-    DPU_FOREACH(set, dpu)
-    {
-        DPU_ASSERT(dpu_log_read(dpu, stdout));
-    }
 }
 
 void SendSetDpuIdReq(struct dpu_set_t set) {
@@ -28,7 +21,7 @@ void SendSetDpuIdReq(struct dpu_set_t set) {
     };
   }
   for (int i = 0; i < NUM_DPU; i++) {
-    BufferBuilderInit(&builders[i], &bufferDescs[i]);
+    BufferBuilderInit(&builders[i], &bufferDescs[i], i);
     BufferBuilderBeginBlock(&builders[i], SET_DPU_ID_REQ);
   }
   for (int i = 0; i < NUM_DPU; i++){
@@ -53,14 +46,14 @@ void SendSetDpuIdReq(struct dpu_set_t set) {
   DPU_FOREACH(set, dpu, idx) {
     DPU_ASSERT(dpu_prepare_xfer(dpu, buffers[idx]));
   }
-  printf("size :%d\n", sizes[0]);
+  printf("SendSetDpuIdReq Size :%zu\n", sizes[0]);
   DPU_ASSERT(dpu_push_xfer(set, DPU_XFER_TO_DPU, "receiveBuffer", 0, sizes[0], DPU_XFER_DEFAULT));
   DPU_ASSERT(dpu_launch(set, DPU_SYNCHRONOUS));
   // ReadDpuSetLog(set);
   //free
-  for (int i = 0; i < NUM_DPU; i++) {
-    free(buffers[i]);
-  }
+  // for (int i = 0; i < NUM_DPU; i++) {
+  //   free(buffers[i]);
+  // }
 }
 
 void SendCreateIndexReq(struct dpu_set_t set, HashTableId indexId) {
@@ -78,7 +71,7 @@ void SendCreateIndexReq(struct dpu_set_t set, HashTableId indexId) {
     };
   }
   for (int i = 0; i < NUM_DPU; i++) {
-    BufferBuilderInit(&builders[i], &bufferDescs[i]);
+    BufferBuilderInit(&builders[i], &bufferDescs[i], i);
     BufferBuilderBeginBlock(&builders[i], CREATE_INDEX_REQ);
   }
   for (int i = 0; i < NUM_DPU; i++){
@@ -96,6 +89,7 @@ void SendCreateIndexReq(struct dpu_set_t set, HashTableId indexId) {
   }
   // get max sizes
   qsort(sizes, NUM_DPU, sizeof(size_t), cmpfunc);
+  printf("SendCreateIndexReq Size :%zu\n", sizes[0]);
   // send
   struct dpu_set_t dpu;
 
@@ -106,9 +100,9 @@ void SendCreateIndexReq(struct dpu_set_t set, HashTableId indexId) {
   DPU_ASSERT(dpu_push_xfer(set, DPU_XFER_TO_DPU, "receiveBuffer", 0, sizes[0], DPU_XFER_DEFAULT));
   DPU_ASSERT(dpu_launch(set, DPU_SYNCHRONOUS));
   //free
-  for (int i = 0; i < NUM_DPU; i++) {
-    free(buffers[i]);
-  }
+  // for (int i = 0; i < NUM_DPU; i++) {
+  //   free(buffers[i]);
+  // }
 }
 
 void SendGetOrInsertReq(struct dpu_set_t set, uint32_t tableId, HashTableId hashTableId, Key *keys, uint64_t *tupleAddrs,
@@ -124,12 +118,12 @@ void SendGetOrInsertReq(struct dpu_set_t set, uint32_t tableId, HashTableId hash
     memset(&bufferDescs[i], 0, sizeof(CpuToDpuBufferDescriptor));
     bufferDescs[i] = (CpuToDpuBufferDescriptor) {
       .header = {
-	.epochNumber = GetEpochNumber(),
+	      .epochNumber = GetEpochNumber(),
       }
     };
   }
   for (int i = 0; i < NUM_DPU; i++) {
-    BufferBuilderInit(&builders[i], &bufferDescs[i]);
+    BufferBuilderInit(&builders[i], &bufferDescs[i], i);
     BufferBuilderBeginBlock(&builders[i], GET_OR_INSERT_REQ);
   }
   for (int i = 0; i < batchSize; i++){
@@ -152,6 +146,7 @@ void SendGetOrInsertReq(struct dpu_set_t set, uint32_t tableId, HashTableId hash
   }
   // get max sizes
   qsort(sizes, NUM_DPU, sizeof(size_t), cmpfunc);
+  printf("SendGetOrInsertReq Size :%zu\n", sizes[0]);
   // send
   struct dpu_set_t dpu;
 
@@ -168,8 +163,9 @@ void SendGetOrInsertReq(struct dpu_set_t set, uint32_t tableId, HashTableId hash
   }
   // how to get the reply buffer size? it seems that the reply buffer size will less then send buffer size
   DPU_ASSERT(dpu_push_xfer(set, DPU_XFER_FROM_DPU, "replyBuffer", 0, sizes[0], DPU_XFER_DEFAULT));
+
   //free
-  for (int i = 0; i < NUM_DPU; i++) {
-    free(buffers[i]);
-  }
+  // for (int i = 0; i < NUM_DPU; i++) {
+  //   free(buffers[i]);
+  // }
 }
