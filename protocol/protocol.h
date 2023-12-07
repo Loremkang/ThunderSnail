@@ -26,6 +26,14 @@ typedef uint32_t Offset; // The buffer offset
 #define NEW_MAX_LINK_REQ 14
 #define NEW_MAX_LINK_RESP 15
 
+#define EMPTY_RESP 128
+#define GET_OR_INSERT_RESP 129
+#define GET_POINTER_RESP 130
+#define UPDATE_POINTER_RESP 131
+#define GET_MAX_LINK_SIZE_RESP 132
+#define FETCH_MAX_LINK_RESP 133
+#define MERGE_MAX_LINK_RESP 134
+
 // align to 8
 #define NUM_FIXED_LEN_BLOCK_INPUT 4
 #define NUM_VAR_LEN_BLOCK_INPUT 4

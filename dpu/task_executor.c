@@ -174,6 +174,13 @@ uint8_t RespTaskType(uint8_t taskType) {
     return UPDATE_POINTER_RESP;
   case GET_MAX_LINK_SIZE_REQ:
     return GET_MAX_LINK_SIZE_RESP;
+  case FETCH_MAX_LINK_REQ:
+    return FETCH_MAX_LINK_RESP;
+  case MERGE_MAX_LINK_REQ:
+    return MERGE_MAX_LINK_RESP;
+  case SET_DPU_ID_REQ:
+  case CREATE_INDEX_REQ:
+    return EMPTY_RESP;
   default:
     ValidValueCheck(0);
     return -1;
