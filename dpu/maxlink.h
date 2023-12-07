@@ -13,3 +13,13 @@ typedef   __attribute__((aligned(8))) struct {
     TupleIdT  tupleIds[TABLE_INDEX_LEN];
     HashAddrT hashAddrs[EDGE_INDEX_LEN];
 } MaxLinkEntryT;
+
+bool IsNullTuple(TupleIdT* tid);
+bool IsNullHash(HashAddrT* ha) ;
+uint32_t GetIdIndex(int tid);
+uint32_t EncodeMaxLink(MaxLinkT* link);
+__mram_ptr MaxLinkEntryT* NewMaxLinkEntry(MaxLinkT* ml);
+void MergeMaxLink(__mram_ptr MaxLinkEntryT* target, MaxLinkT* source);
+void MergeMaxLinkEntry(MaxLinkEntryT* target, MaxLinkEntryT* source);
+void RetriveMaxLink(__mram_ptr MaxLinkEntryT* src, MaxLinkT* res);
+bool Check(MaxLinkT* link);
