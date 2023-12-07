@@ -116,6 +116,7 @@ static int Slave() {
                     // reply_buffer.value.hashAddr.rPtr.dpuAddr);
                     GetOrInsertResp resp = {
                         .base = {.taskType = GET_OR_INSERT_RESP},
+                        .taskIdx = req->taskIdx,
                         .tupleIdOrMaxLinkAddr = reply_buffer};
                     mutex_lock(builderMutex);
                     BufferBuilderAppendTask(&g_builder, (Task *)&resp);

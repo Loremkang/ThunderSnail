@@ -4,7 +4,7 @@
 #include <assert.h>
 #include <stdio.h>
 
-#define DEBUG
+// #define DEBUG
 
 #ifdef DEBUG
 #define ArrayOverflowCheck(x) assert((x))

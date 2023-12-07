@@ -101,6 +101,7 @@ typedef ALIGN8 struct {
 
 typedef ALIGN8 struct {
   Task base;
+  uint16_t taskIdx;
   uint8_t len;  // key len
   TupleIdT tid; // value
   HashTableId hashTableId;
@@ -137,6 +138,7 @@ typedef ALIGN8 struct {
 
 typedef ALIGN8 struct {
   Task base;
+  uint16_t taskIdx;
   HashTableQueryReplyT tupleIdOrMaxLinkAddr;
 } GetOrInsertResp;
 
