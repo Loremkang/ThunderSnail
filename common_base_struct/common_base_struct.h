@@ -5,7 +5,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "../safety_check_macro.h"
-
 // Pointers
 typedef struct {
     uint32_t dpuId;
@@ -59,6 +58,7 @@ void MaxLinkAddrPrint(MaxLinkAddrT maxLinkAddr);
 // Base Elements
 typedef struct {
     int tableId;
+    uint32_t padding;
     uint64_t tupleAddr;
 } TupleIdT;
 

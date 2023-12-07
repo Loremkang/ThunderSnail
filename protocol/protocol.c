@@ -19,12 +19,10 @@ uint16_t GetFixedLenTaskSize(void *task)
 
   switch(taskType) {
   case SET_DPU_ID_REQ: {
-    SetDpuIdReq *req = (SetDpuIdReq*)task;
     ret += sizeof(SetDpuIdReq);
     break;
   }
   case CREATE_INDEX_REQ: {
-    CreateIndexReq *req = (CreateIndexReq*)task;
     ret += sizeof(CreateIndexReq);
     break;
   }
@@ -35,7 +33,6 @@ uint16_t GetFixedLenTaskSize(void *task)
     break;
   }
   case GET_OR_INSERT_RESP: {
-    GetOrInsertResp *resp = (GetOrInsertResp*)task;
     ret += sizeof(GetOrInsertResp);
     break;
   }
@@ -46,27 +43,22 @@ uint16_t GetFixedLenTaskSize(void *task)
     break;
   }
   case GET_POINTER_RESP: {
-    GetPointerResp *resp= (GetPointerResp*)task;
     ret += sizeof(GetPointerResp);
     break;
   }
   case UPDATE_POINTER_REQ: {
-    UpdatePointerReq *req = (UpdatePointerReq*)task;
     ret += sizeof(UpdatePointerReq);
     break;
   }
   case GET_MAX_LINK_SIZE_REQ: {
-    GetMaxLinkSizeReq *req = (GetMaxLinkSizeReq*)task;
     ret += sizeof(GetMaxLinkSizeReq);
     break;
   }
   case GET_MAX_LINK_SIZE_RESP: {
-    GetMaxLinkSizeResp *resp = (GetMaxLinkSizeResp*)task;
     ret += sizeof(GetMaxLinkSizeResp);
     break;
   }
   case FETCH_MAX_LINK_REQ: {
-    FetchMaxLinkReq *req = (FetchMaxLinkReq*)task;
     ret += sizeof(FetchMaxLinkReq);
     break;
   }
@@ -79,8 +71,20 @@ uint16_t GetFixedLenTaskSize(void *task)
   case MERGE_MAX_LINK_REQ: {
     MergeMaxLinkReq *req = (MergeMaxLinkReq*)task;
     // add task type in the end, because we always remove it.
-    ret += req->maxLink.tupleIDCount * sizeof(TupleIdT) + req->maxLink.hashAddrCount * sizeof(HashAddrT) + sizeof(MaxLinkT);
+    ret += ROUND_UP_TO_8(req->maxLink.tupleIDCount * sizeof(TupleIdT) +
+                         req->maxLink.hashAddrCount * sizeof(HashAddrT) +
+                         sizeof(MergeMaxLinkReq));
     break;
+  }
+  case NEW_MAX_LINK_REQ: {
+    NewMaxLinkReq *req = (NewMaxLinkReq*)task;
+    ret += ROUND_UP_TO_8(req->maxLink.tupleIDCount * sizeof(TupleIdT) +
+                         req->maxLink.hashAddrCount * sizeof(HashAddrT) +
+                         sizeof(NewMaxLinkReq));
+    break;
+  }
+  case NEW_MAX_LINK_RESP: {
+    ret += sizeof(NewMaxLinkResp);
   }
   default:
     ValidValueCheck(0);
