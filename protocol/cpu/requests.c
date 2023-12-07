@@ -56,7 +56,7 @@ void SendSetDpuIdReq(struct dpu_set_t set) {
   printf("size :%d\n", sizes[0]);
   DPU_ASSERT(dpu_push_xfer(set, DPU_XFER_TO_DPU, "receiveBuffer", 0, sizes[0], DPU_XFER_DEFAULT));
   DPU_ASSERT(dpu_launch(set, DPU_SYNCHRONOUS));
-  // ReadDpuSetLog(set);
+  ReadDpuSetLog(set);
   //free
   for (int i = 0; i < NUM_DPU; i++) {
     free(buffers[i]);
@@ -105,6 +105,7 @@ void SendCreateIndexReq(struct dpu_set_t set, HashTableId indexId) {
   }
   DPU_ASSERT(dpu_push_xfer(set, DPU_XFER_TO_DPU, "receiveBuffer", 0, sizes[0], DPU_XFER_DEFAULT));
   DPU_ASSERT(dpu_launch(set, DPU_SYNCHRONOUS));
+  ReadDpuSetLog(set);
   //free
   for (int i = 0; i < NUM_DPU; i++) {
     free(buffers[i]);
@@ -161,7 +162,7 @@ void SendGetOrInsertReq(struct dpu_set_t set, uint32_t tableId, HashTableId hash
   }
   DPU_ASSERT(dpu_push_xfer(set, DPU_XFER_TO_DPU, "receiveBuffer", 0, sizes[0], DPU_XFER_DEFAULT));
   DPU_ASSERT(dpu_launch(set, DPU_SYNCHRONOUS));
-  // ReadDpuSetLog(set);
+  ReadDpuSetLog(set);
   // receive
   DPU_FOREACH(set, dpu, idx) {
     DPU_ASSERT(dpu_prepare_xfer(dpu, recvBuffers[idx]));
