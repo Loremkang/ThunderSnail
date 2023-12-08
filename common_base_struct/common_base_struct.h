@@ -5,6 +5,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "../safety_check_macro.h"
+
+#define ALIGN8 __attribute__((aligned(8)))
+typedef uint32_t HashTableId;
+typedef uint32_t Offset; // The buffer offset
+
 // Pointers
 typedef struct {
     uint32_t dpuId;

@@ -1,12 +1,10 @@
+#pragma once
 #ifndef PROTOCOL_H
 #define PROTOCOL_H
 
 #include <stdint.h>
 #include <stdlib.h>
 #include "../common_base_struct/common_base_struct.h"
-
-typedef uint32_t HashTableId;
-typedef uint32_t Offset; // The buffer offset
 
 // define task names, request and response
 #define SET_DPU_ID_REQ 0
@@ -41,8 +39,6 @@ typedef uint32_t Offset; // The buffer offset
 #define NUM_BLOCKS 8
 
 #define BUFFER_LEN 65535
-
-#define ALIGN8 __attribute__((aligned(8)))
 #define ROUND_UP_TO_8(x) (((x)+7) &~7) // to align key len to 8
 
 #define ALIGN_TO( sizeToAlign, PowerOfTwo )                         \
@@ -89,86 +85,7 @@ typedef struct {
   Offset offsets[NUM_BLOCKS];
 } DpuToCpuBufferDescriptor;
 
-typedef struct {
-  uint8_t taskType;
-} Task;
-
-typedef ALIGN8 struct {
-  Task base;
-  uint32_t dpuId;
-} SetDpuIdReq;
-
-typedef ALIGN8 struct {
-  Task base;
-  HashTableId hashTableId;
-} CreateIndexReq;
-
-typedef ALIGN8 struct {
-  Task base;
-  uint8_t len;  // key len
-  TupleIdT tid; // value
-  HashTableId hashTableId;
-  uint8_t ptr[]; // key
-} GetOrInsertReq;
-
-typedef ALIGN8 struct {
-  Task base;
-  uint8_t len;
-  HashTableId hashTableId;
-  uint8_t ptr[]; // key
-} GetPointerReq;
-
-typedef ALIGN8 struct {
-  Task base;
-  HashAddrT hashEntry;
-  MaxLinkAddrT maxLinkAddr;
-} UpdatePointerReq;
-
-typedef ALIGN8 struct {
-  Task base;
-  MaxLinkAddrT maxLinkAddr;
-} GetMaxLinkSizeReq;
-
-typedef ALIGN8 struct {
-  Task base;
-  MaxLinkAddrT maxLinkAddr;
-} FetchMaxLinkReq;
-
-typedef ALIGN8 struct {
-  Task base;
-  RemotePtrT ptr;
-  MaxLinkT maxLink;
-} MergeMaxLinkReq;
-
-typedef ALIGN8 struct {
-  Task base;
-  MaxLinkT maxLink;
-} NewMaxLinkReq;
-
-typedef ALIGN8 struct {
-  Task base;
-  RemotePtrT ptr;
-} NewMaxLinkResp;
-
-typedef ALIGN8 struct {
-  Task base;
-  HashTableQueryReplyT tupleIdOrMaxLinkAddr;
-} GetOrInsertResp;
-
-typedef ALIGN8 struct {
-  Task base;
-  MaxLinkAddrT maxLinkAddr;
-} GetPointerResp;
-
-typedef ALIGN8 struct {
-  Task base;
-  uint8_t maxLinkSize;
-} GetMaxLinkSizeResp;
-
-typedef ALIGN8 struct {
-  Task base;
-  MaxLinkT maxLink;
-} FetchMaxLinkResp;
+#include "../dpu/task.h"
 
 bool IsVarLenTask(uint8_t taskType);
 
