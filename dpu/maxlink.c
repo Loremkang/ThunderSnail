@@ -8,7 +8,7 @@
 #include "protocol.h"
 #include "path_config.h"
 #include "maxlink.h"
-
+#include "global_mutex.h"
 // A entry is something like 
 // [tid_coaunt, hash_count, T(1,1), NULL, NULL, NULL, H(1,1), NULL, NULL]
 // their sizes are the following
@@ -20,6 +20,8 @@ __mram_ptr void* new_max_link_entry_ptr = (__mram_ptr void*)MAX_LINK_ENTRY_START
 
 int counter = 0;
 MUTEX_INIT(counter_mutex);
+
+MUTEX_INIT(heap_mutex);
 
 bool IsNullTuple(TupleIdT* tid) {
     // Since the address can be 0, UINT64_MAX is used to denote 
@@ -72,17 +74,21 @@ __mram_ptr MaxLinkEntryT* NewMaxLinkEntry(MaxLinkT* ml) {
     }
     res->tupleIDCount = ml->tupleIDCount;
     res->hashAddrCount = ml->hashAddrCount;
-    // copy it to mram
+
+    mutex_lock(heap_mutex);
     __mram_ptr MaxLinkEntryT* maxLinkEntryPtr = (__mram_ptr MaxLinkEntryT*)new_max_link_entry_ptr;
-    mram_write(res, maxLinkEntryPtr, MAX_LINK_ENTRY_SIZE);
     // add new_max_link_entry_ptr for new allocation
     new_max_link_entry_ptr += MAX_LINK_ENTRY_SIZE;
+    mutex_unlock(heap_mutex);
+    // copy it to mram
+    mram_write(res, maxLinkEntryPtr, MAX_LINK_ENTRY_SIZE);
     buddy_free(res);
     return maxLinkEntryPtr;
 }
 
 void MergeMaxLink(__mram_ptr MaxLinkEntryT* target, MaxLinkT* source) {
     // allocate wram
+    buckets_mutex_lock((int)target >> 3);
     MaxLinkEntryT* res = buddy_alloc(MAX_LINK_ENTRY_SIZE);
     // copy target to wram
     mram_read(target, res, MAX_LINK_ENTRY_SIZE);
@@ -114,6 +120,7 @@ void MergeMaxLink(__mram_ptr MaxLinkEntryT* target, MaxLinkT* source) {
     }
     // write res to target mram
     mram_write(res, target, MAX_LINK_ENTRY_SIZE);
+    buckets_mutex_unlock((int)target >> 3);
     buddy_free(res);
 }
 
