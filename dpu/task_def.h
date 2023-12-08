@@ -1,9 +1,26 @@
 // replace regular expression
 // typedef\s((ALIGN8)\sstruct\s(\{(.|\n)*?\}))\s(.+);
 // TASK($5, 0, FIXED, sizeof($5), \n $3)
-#pragma once
-#ifndef TASK_DEF_H
-#define TASH_DEF_H
+
+// define task names, request and response
+#define SET_DPU_ID_REQ 0
+#define CREATE_INDEX_REQ 1
+#define GET_OR_INSERT_REQ 2
+#define GET_POINTER_REQ 3
+#define UPDATE_POINTER_REQ 4
+#define GET_MAX_LINK_SIZE_REQ 5
+#define FETCH_MAX_LINK_REQ 6
+#define MERGE_MAX_LINK_REQ 7
+#define NEW_MAX_LINK_REQ 14
+
+#define EMPTY_RESP 128
+#define GET_OR_INSERT_RESP 129
+#define GET_POINTER_RESP 130
+#define UPDATE_POINTER_RESP 131
+#define GET_MAX_LINK_SIZE_RESP 132
+#define FETCH_MAX_LINK_RESP 133
+#define MERGE_MAX_LINK_RESP 134
+#define NEW_MAX_LINK_RESP 135
 
 #define FIXED   true
 #define UNFIXED false
@@ -90,4 +107,3 @@ TASK(NewMaxLinkResp, 15, FIXED, sizeof(NewMaxLinkResp), {
   Task base;
   RemotePtrT ptr;
 })
-#endif
