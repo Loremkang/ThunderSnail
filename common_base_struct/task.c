@@ -11,24 +11,11 @@
 
 uint8_t RespTaskType(uint8_t taskType) {
   switch(taskType) {
-  case GET_OR_INSERT_REQ:
-    return GET_OR_INSERT_RESP;
-  case GET_POINTER_REQ:
-    return GET_POINTER_RESP;
-  case UPDATE_POINTER_REQ:
-    return UPDATE_POINTER_RESP;
-  case GET_MAX_LINK_SIZE_REQ:
-    return GET_MAX_LINK_SIZE_RESP;
-  case FETCH_MAX_LINK_REQ:
-    return FETCH_MAX_LINK_RESP;
-  case MERGE_MAX_LINK_REQ:
-    return MERGE_MAX_LINK_RESP;
   case SET_DPU_ID_REQ:
   case CREATE_INDEX_REQ:
     return EMPTY_RESP;
   default:
-    ValidValueCheck(0);
-    return -1;
+    return taskType + 127;
   }
 }
 
