@@ -27,3 +27,11 @@ TEST(TaskTest, RespTaskType) {
     EXPECT_EQ(RespTaskType(TASK_REQ(MERGE_MAX_LINK))   , TASK_RESP(MERGE_MAX_LINK));
     EXPECT_EQ(RespTaskType(TASK_REQ(NEW_MAX_LINK))     , TASK_RESP(NEW_MAX_LINK));
 }
+
+TEST(TaskTest, IsVarLenTask) {
+    EXPECT_EQ(IsVarLenTask(TASK_REQ(GET_OR_INSERT)), true);
+    EXPECT_EQ(IsVarLenTask(TASK_REQ(GET_POINTER)), true);
+    EXPECT_EQ(IsVarLenTask(TASK_RESP(FETCH_MAX_LINK)), true);
+    EXPECT_EQ(IsVarLenTask(TASK_REQ(MERGE_MAX_LINK)), true);
+    EXPECT_EQ(IsVarLenTask(TASK_REQ(NEW_MAX_LINK)), true);
+}
