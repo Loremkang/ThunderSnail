@@ -34,12 +34,15 @@ uint8_t RespTaskType(uint8_t taskType) {
 
 bool IsVarLenTask(uint8_t taskType)
 {
-  if ( taskType == GET_OR_INSERT_REQ ||
-       taskType == GET_POINTER_REQ ||
-       taskType == MERGE_MAX_LINK_REQ) {
-    return true;
-  } else {
-    return false;
+  switch(taskType) {
+    case GET_POINTER_REQ:
+    case GET_OR_INSERT_REQ:
+    case GET_MAX_LINK_SIZE_REQ:
+    case MERGE_MAX_LINK_REQ:
+    case FETCH_MAX_LINK_RESP:
+      return true;
+    default:
+      return false;
   }
 }
 
