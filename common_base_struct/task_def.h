@@ -1,9 +1,3 @@
-// replace regular expression
-// typedef\s((ALIGN8)\sstruct\s(\{(.|\n)*?\}))\s(.+);
-// TASK($5, 0, FIXED, sizeof($5), \n $3)
-#include <stdbool.h>
-#include "common_base_struct.h"
-
 // define task names, request and response
 #ifndef TASK_DEF_H
 #define TASK_DEF_H
@@ -29,10 +23,6 @@
 
 #define FIXED   true
 #define UNFIXED false
-
-uint8_t RespTaskType(uint8_t taskType);
-uint16_t GetFixedLenTaskSize(void *task);
-bool IsVarLenTask(uint8_t taskType);
 
 #endif
 

@@ -3,6 +3,7 @@
 #define TASK_H
 
 #include <stdint.h>
+#include "common_base_struct.h"
 
 typedef struct {
   uint8_t taskType;
@@ -18,5 +19,10 @@ typedef struct {
 #define task_len(NAME) (NAME##_task_len)
 #define task_id(NAME) (NAME##_id)
 
+
 #include "task_def.h"
+
+uint8_t RespTaskType(uint8_t taskType);
+uint16_t GetFixedLenTaskSize(void *task);
+bool IsVarLenTask(uint8_t taskType);
 #endif

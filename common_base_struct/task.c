@@ -1,5 +1,6 @@
 
 #include "task.h"
+#include "common_base_struct.h"
 
 #define TASK(NAME, ID, FIXED, LEN, CONTENT) \
   const int NAME##_id = (ID); \
