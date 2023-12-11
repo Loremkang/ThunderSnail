@@ -44,7 +44,7 @@ DecoderStateT InitNextBlock(BufferDecoder *decoder) {
     __dma_aligned uint8_t taskBuf[TASK_HEADER_LEN];
     Task *task = (Task*)taskBuf;
     mram_read_unaligned(decoder->curBlockPtr + BLOCK_HEAD_LEN, task, TASK_HEADER_LEN);
-    decoder->taskLen = GetFixedLenTaskSize(task);
+    decoder->taskLen = GetTaskLen(task);
   }
   InitTaskOffsets(decoder);
   return NEW_BLOCK;
@@ -74,7 +74,7 @@ void BufferDecoderInit(BufferDecoder *decoder) {
 
 void ReadTask(__mram_ptr uint8_t* tskPtr, Task *task) {
   mram_read_unaligned(tskPtr, task, TASK_HEADER_LEN);
-  uint32_t taskLen = ROUND_UP_TO_8(GetFixedLenTaskSize(task));
+  uint32_t taskLen = ROUND_UP_TO_8(GetTaskLen(task));
   assert(taskLen < TASK_MAX_LEN && "Task size overflow");
   if (taskLen > TASK_HEADER_LEN) {
     mram_read_unaligned(tskPtr, task, taskLen);

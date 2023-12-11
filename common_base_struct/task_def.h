@@ -74,7 +74,7 @@ TASK(MergeMaxLinkReq, MERGE_MAX_LINK_REQ, UNFIXED, sizeof(MergeMaxLinkReq), {
   MaxLinkT maxLink;
 })
 
-TASK(NewMaxLinkReq, NEW_MAX_LINK_REQ, FIXED, sizeof(NewMaxLinkReq), {
+TASK(NewMaxLinkReq, NEW_MAX_LINK_REQ, UNFIXED, sizeof(NewMaxLinkReq), {
   Task base;
   MaxLinkT maxLink;
 })

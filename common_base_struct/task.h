@@ -23,6 +23,6 @@ typedef struct {
 #include "task_def.h"
 
 uint8_t RespTaskType(uint8_t taskType);
-uint16_t GetFixedLenTaskSize(void *task);
+uint16_t GetTaskLen(void *task);
 bool IsVarLenTask(uint8_t taskType);
 #endif
