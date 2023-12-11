@@ -100,5 +100,6 @@ uint16_t GetTaskLen(void *task)
     ValidValueCheck(0);
     break;
   }
+  return ret;
 }
 
