@@ -6,6 +6,24 @@
 #include <stdbool.h>
 #include "../safety_check_macro.h"
 
+// align to 8
+#define NUM_FIXED_LEN_BLOCK_INPUT 4
+#define NUM_VAR_LEN_BLOCK_INPUT 4
+#define NUM_FIXED_LEN_BLOCK_OUTPUT 4
+#define NUM_VAR_LEN_BLOCK_OUTPUT 4
+
+#define CPU_BUFFER_HEAD_LEN 8 // |epochNumber blockCnt totalSize|
+#define DPU_BUFFER_HEAD_LEN 8 // |bufferState blockCnt totalSize|
+#define BLOCK_HEAD_LEN sizeof(BlockDescriptorBase)
+#define BATCH_SIZE 320
+#define NUM_BLOCKS 8
+
+#define BUFFER_LEN 65535
+#define ROUND_UP_TO_8(x) (((x)+7) &~7) // to align key len to 8
+
+#define ALIGN_TO( sizeToAlign, PowerOfTwo )                         \
+        (((sizeToAlign) + (PowerOfTwo) - 1) & ~((PowerOfTwo) - 1))
+
 #define ALIGN8 __attribute__((aligned(8)))
 typedef uint32_t HashTableId;
 typedef uint32_t Offset; // The buffer offset
