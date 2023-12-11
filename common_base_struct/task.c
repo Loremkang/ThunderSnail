@@ -77,7 +77,9 @@ uint16_t GetTaskLen(void *task)
   case FETCH_MAX_LINK_RESP: {
     FetchMaxLinkResp *resp = (FetchMaxLinkResp*)task;
     // add task type in the end, because we always remove it.
-    return ROUND_UP_TO_8(resp->maxLink.tupleIDCount * sizeof(TupleIdT) + resp->maxLink.hashAddrCount * sizeof(HashAddrT)) + sizeof(FetchMaxLinkResp);
+    return ROUND_UP_TO_8(resp->maxLink.tupleIDCount * sizeof(TupleIdT) + 
+                         resp->maxLink.hashAddrCount * sizeof(HashAddrT)) + 
+                         sizeof(FetchMaxLinkResp);
   }
   case MERGE_MAX_LINK_REQ: {
     MergeMaxLinkReq *req = (MergeMaxLinkReq*)task;
