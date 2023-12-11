@@ -24,7 +24,6 @@ bool IsVarLenTask(uint8_t taskType)
   switch(taskType) {
     case GET_POINTER_REQ:
     case GET_OR_INSERT_REQ:
-    case GET_MAX_LINK_SIZE_REQ:
     case FETCH_MAX_LINK_RESP:
     case MERGE_MAX_LINK_REQ:
     case NEW_MAX_LINK_REQ:
