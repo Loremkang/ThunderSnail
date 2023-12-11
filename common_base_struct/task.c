@@ -11,39 +11,29 @@
 
 uint8_t RespTaskType(uint8_t taskType) {
   switch(taskType) {
-  case GET_OR_INSERT_REQ:
-    return GET_OR_INSERT_RESP;
-  case GET_POINTER_REQ:
-    return GET_POINTER_RESP;
-  case UPDATE_POINTER_REQ:
-    return UPDATE_POINTER_RESP;
-  case GET_MAX_LINK_SIZE_REQ:
-    return GET_MAX_LINK_SIZE_RESP;
-  case FETCH_MAX_LINK_REQ:
-    return FETCH_MAX_LINK_RESP;
-  case MERGE_MAX_LINK_REQ:
-    return MERGE_MAX_LINK_RESP;
   case SET_DPU_ID_REQ:
   case CREATE_INDEX_REQ:
     return EMPTY_RESP;
   default:
-    ValidValueCheck(0);
-    return -1;
+    return taskType + 127;
   }
 }
 
 bool IsVarLenTask(uint8_t taskType)
 {
-  if ( taskType == GET_OR_INSERT_REQ ||
-       taskType == GET_POINTER_REQ ||
-       taskType == MERGE_MAX_LINK_REQ) {
-    return true;
-  } else {
-    return false;
+  switch(taskType) {
+    case GET_POINTER_REQ:
+    case GET_OR_INSERT_REQ:
+    case FETCH_MAX_LINK_RESP:
+    case MERGE_MAX_LINK_REQ:
+    case NEW_MAX_LINK_REQ:
+      return true;
+    default:
+      return false;
   }
 }
 
-uint16_t GetFixedLenTaskSize(void *task)
+uint16_t GetTaskLen(void *task)
 {
   // FIXME: complete other tasks
   uint8_t taskType = ((Task*)task)->taskType;
@@ -51,72 +41,62 @@ uint16_t GetFixedLenTaskSize(void *task)
 
   switch(taskType) {
   case SET_DPU_ID_REQ: {
-    ret += sizeof(SetDpuIdReq);
-    break;
+    return sizeof(SetDpuIdReq);
   }
   case CREATE_INDEX_REQ: {
-    ret += sizeof(CreateIndexReq);
-    break;
+    return sizeof(CreateIndexReq);
   }
   case GET_OR_INSERT_REQ: {
     GetOrInsertReq *req = (GetOrInsertReq*)task;
     // |key + value + hash_id|
-    ret += ROUND_UP_TO_8(req->len) + sizeof(GetOrInsertReq);
-    break;
+    return ROUND_UP_TO_8(req->len) + sizeof(GetOrInsertReq);
   }
   case GET_OR_INSERT_RESP: {
-    ret += sizeof(GetOrInsertResp);
-    break;
+    return sizeof(GetOrInsertResp);
   }
   case GET_POINTER_REQ: {
     GetPointerReq *req = (GetPointerReq*)task;
     // |key + hash_id|
-    ret += ROUND_UP_TO_8(req->len) + sizeof(GetPointerReq);
-    break;
+    return ROUND_UP_TO_8(req->len) + sizeof(GetPointerReq);
   }
   case GET_POINTER_RESP: {
-    ret += sizeof(GetPointerResp);
-    break;
+    return sizeof(GetPointerResp);
   }
   case UPDATE_POINTER_REQ: {
-    ret += sizeof(UpdatePointerReq);
-    break;
+    return sizeof(UpdatePointerReq);
   }
   case GET_MAX_LINK_SIZE_REQ: {
-    ret += sizeof(GetMaxLinkSizeReq);
-    break;
+    return sizeof(GetMaxLinkSizeReq);
   }
   case GET_MAX_LINK_SIZE_RESP: {
-    ret += sizeof(GetMaxLinkSizeResp);
-    break;
+    return sizeof(GetMaxLinkSizeResp);
   }
   case FETCH_MAX_LINK_REQ: {
-    ret += sizeof(FetchMaxLinkReq);
-    break;
+    return sizeof(FetchMaxLinkReq);
   }
   case FETCH_MAX_LINK_RESP: {
     FetchMaxLinkResp *resp = (FetchMaxLinkResp*)task;
     // add task type in the end, because we always remove it.
-    ret += ROUND_UP_TO_8(resp->maxLink.tupleIDCount * sizeof(TupleIdT) + resp->maxLink.hashAddrCount * sizeof(HashAddrT)) + sizeof(FetchMaxLinkResp);
-    break;
+    return ROUND_UP_TO_8(resp->maxLink.tupleIDCount * sizeof(TupleIdT) + 
+                         resp->maxLink.hashAddrCount * sizeof(HashAddrT)) + 
+                         sizeof(FetchMaxLinkResp);
   }
   case MERGE_MAX_LINK_REQ: {
     MergeMaxLinkReq *req = (MergeMaxLinkReq*)task;
     // add task type in the end, because we always remove it.
-    ret += ROUND_UP_TO_8(req->maxLink.tupleIDCount * sizeof(TupleIdT) +
+    return ROUND_UP_TO_8(req->maxLink.tupleIDCount * sizeof(TupleIdT) +
                          req->maxLink.hashAddrCount * sizeof(HashAddrT) +
                          sizeof(MergeMaxLinkReq));
-    break;
   }
   case NEW_MAX_LINK_REQ: {
     NewMaxLinkReq *req = (NewMaxLinkReq*)task;
-    ret += ROUND_UP_TO_8(req->maxLink.tupleIDCount * sizeof(TupleIdT) +
+    return ROUND_UP_TO_8(req->maxLink.tupleIDCount * sizeof(TupleIdT) +
                          req->maxLink.hashAddrCount * sizeof(HashAddrT) +
                          sizeof(NewMaxLinkReq));
     break;
   }
   case NEW_MAX_LINK_RESP: {
-    ret += sizeof(NewMaxLinkResp);
+    return sizeof(NewMaxLinkResp);
   }
   default:
     ValidValueCheck(0);
