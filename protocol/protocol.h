@@ -49,9 +49,4 @@ typedef struct {
 } DpuToCpuBufferDescriptor;
 
 #include "../common_base_struct/task.h"
-
-bool IsVarLenTask(uint8_t taskType);
-
-uint16_t GetFixedLenTaskSize(void *task);
-
 #endif
