@@ -48,7 +48,7 @@ typedef struct {
   Offset offsets[NUM_BLOCKS];
 } DpuToCpuBufferDescriptor;
 
-#include "../dpu/task.h"
+#include "../common_base_struct/task.h"
 
 bool IsVarLenTask(uint8_t taskType);
 

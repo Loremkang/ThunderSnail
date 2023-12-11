@@ -2,7 +2,7 @@
 // typedef\s((ALIGN8)\sstruct\s(\{(.|\n)*?\}))\s(.+);
 // TASK($5, 0, FIXED, sizeof($5), \n $3)
 #include <stdbool.h>
-#include "../common_base_struct/common_base_struct.h"
+#include "common_base_struct.h"
 
 // define task names, request and response
 #ifndef TASK_DEF_H

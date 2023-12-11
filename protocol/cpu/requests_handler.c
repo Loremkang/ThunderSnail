@@ -1,6 +1,6 @@
 #include "requests_handler.h"
 #include "iterators.h"
-#include "../dpu/task_def.h"
+#include "../common_base_struct/task_def.h"
 
 void GetBufferHeader(uint8_t *buffer, DpuBufferHeader *header)
 {
