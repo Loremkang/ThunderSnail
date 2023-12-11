@@ -47,14 +47,14 @@ TASK(CreateIndexReq, CREATE_INDEX_REQ, FIXED, sizeof(CreateIndexReq), {
   HashTableId hashTableId;
 })
 
-TASK(GetPointerReq, GET_OR_INSERT_REQ, UNFIXED, sizeof(GetPointerReq), {
+TASK(GetPointerReq, GET_POINTER_REQ, UNFIXED, sizeof(GetPointerReq), {
   Task base;
   uint8_t len;
   HashTableId hashTableId;
   uint8_t ptr[]; // key
 })
 
-TASK(GetOrInsertReq, GET_POINTER_REQ, UNFIXED, sizeof(GetOrInsertReq), {
+TASK(GetOrInsertReq, GET_OR_INSERT_REQ, UNFIXED, sizeof(GetOrInsertReq), {
   Task base;
   uint8_t len;  // key len
   TupleIdT tid; // value
