@@ -92,7 +92,7 @@ target_include_directories(protocol PUBLIC
                               ${CMAKE_CURRENT_SOURCE_DIR}/common_base_struct
                               ${UPMEM_SDK_DIR}/include/dpu)
 target_link_directories(protocol PRIVATE ${UPMEM_SDK_DIR}/lib)
-target_link_libraries(protocol dpu)
+target_link_libraries(protocol dpu dpuverbose)
 
 # Build tests:
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/tests SRC_TEST)
