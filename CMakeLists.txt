@@ -1,7 +1,14 @@
 cmake_minimum_required(VERSION 3.16.0)
 
 project(ThunderSnail)
-
+set(WARN_OPTIONS "-Werror" "-Wfloat-equal")
+function(remove_compile_options TARGET OPTIONS)
+  get_target_property(C_FLAGS ${TARGET} COMPILE_OPTIONS)
+  message(WARNING ${C_FLAGS})
+  if(C_FLAGS)
+    set_target_properties(${TARGET} PROPERTIES COMPILE_OPTIONS "${C_FLAGS}")
+  endif()
+endfunction()
 # Avoid warning about DOWNLOAD_EXTRACT_TIMESTAMP in CMake 3.24:
 if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
   cmake_policy(SET CMP0135 NEW)
@@ -42,6 +49,7 @@ add_executable(host testdriver.c ${SRC_COMMON_BASE_STRUCT} ${SRC_PROTOCOL} ${SRC
 target_include_directories(host PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/common_base_struct)
 target_include_directories(host PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/protocol)
 target_include_directories(host PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/newlink)
+remove_compile_options(host ${WARN_OPTIONS})
 
 set(UPMEM_SDK_DIR "$ENV{UPMEM_SDK_DIR}")
 if(NOT UPMEM_SDK_DIR)
@@ -93,6 +101,7 @@ target_include_directories(protocol PUBLIC
                               ${UPMEM_SDK_DIR}/include/dpu)
 target_link_directories(protocol PRIVATE ${UPMEM_SDK_DIR}/lib)
 target_link_libraries(protocol dpu dpuverbose)
+remove_compile_options(protocol ${WARN_OPTIONS})
 
 # Build tests:
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/tests SRC_TEST)
@@ -103,3 +112,4 @@ target_include_directories(test PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/newlink)
 target_link_directories(test PRIVATE ${UPMEM_SDK_DIR}/lib)
 target_link_libraries(test gtest_main protocol)
 add_test(NAME example_test COMMAND test)
+remove_compile_options(test ${WARN_OPTIONS})
