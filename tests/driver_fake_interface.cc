@@ -6,8 +6,8 @@ extern "C" {
 }
 
 TEST(FakeInterfaceTest, FakeInterfaceTest) {
-    EXPECT_EQ(CatalogHashTableIdGet(3, 1), 3);
-    EXPECT_EQ(CatalogHashTableIdGet(3, 0), 2);
+    EXPECT_EQ(CatalogEdgeIdGet(3, 1), 3);
+    EXPECT_EQ(CatalogEdgeIdGet(3, 0), 2);
 
     uint64_t value;
     TupleIdT tupleId = {.tableId = 3, .tupleAddr = 5};

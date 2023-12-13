@@ -20,7 +20,7 @@ static inline int CatalogHashTableCountGet(int tableId) {
     }
 }
 
-static inline int CatalogHashTableIdGet(int tableId, int hashTableIndex) {
+static inline int CatalogEdgeIdGet(int tableId, int hashTableIndex) {
     ValidValueCheck(hashTableIndex >= 0 && hashTableIndex < CatalogHashTableCountGet(tableId));
     if (tableId == 1) {
         return 1;
