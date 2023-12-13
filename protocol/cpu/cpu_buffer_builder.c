@@ -123,11 +123,12 @@ void BufferBuilderAppendTask(BufferBuilder *builder, Task *task)
   case GET_OR_INSERT_REQ:
   case GET_POINTER_REQ:
   case MERGE_MAX_LINK_REQ:
+  case NEW_MAX_LINK_REQ:
     {
     // record the offset and task count++
     VarLenBlockDescriptor* varLenBlockDesc = &builder->bufferDesc->varLenBlockDescs[builder->varLenBlockIdx];
     varLenBlockDesc->offsets[varLenBlockDesc->blockDescBase.taskCount++] = builder->curTaskOffset;
-    uint32_t taskSize = GetFixedLenTaskSize(task);
+    uint32_t taskSize = GetTaskLen(task);
     memcpy(builder->curTaskPtr, task, taskSize);
     builder->curTaskPtr += taskSize;
     builder->curTaskOffset += taskSize;
@@ -145,7 +146,7 @@ void BufferBuilderAppendTask(BufferBuilder *builder, Task *task)
     // record the offset and task count++
     FixedLenBlockDescriptor* fixedLenBlockDesc = &builder->bufferDesc->fixedLenBlockDescs[builder->fixedLenBlockIdx];
     fixedLenBlockDesc->blockDescBase.taskCount++;
-    uint32_t taskSize = GetFixedLenTaskSize(task);
+    uint32_t taskSize = GetTaskLen(task);
     memcpy(builder->curTaskPtr, task, taskSize);
     builder->curTaskPtr += taskSize;
     builder->curTaskOffset += taskSize;

@@ -1,3 +1,4 @@
+#pragma once
 #ifndef PROTOCOL_H
 #define PROTOCOL_H
 
@@ -5,44 +6,6 @@
 #include <stdlib.h>
 #include "../common_base_struct/common_base_struct.h"
 
-typedef uint32_t HashTableId;
-typedef uint32_t Offset; // The buffer offset
-
-// define task names, request and response
-#define SET_DPU_ID_REQ 0
-#define CREATE_INDEX_REQ 1
-#define GET_OR_INSERT_REQ 2
-#define GET_POINTER_REQ 3
-#define UPDATE_POINTER_REQ 4
-#define GET_MAX_LINK_SIZE_REQ 5
-#define FETCH_MAX_LINK_REQ 6
-#define MERGE_MAX_LINK_REQ 7
-#define GET_OR_INSERT_RESP 8
-#define GET_POINTER_RESP 9
-#define UPDATE_POINTER_RESP 10
-#define GET_MAX_LINK_SIZE_RESP 11
-#define FETCH_MAX_LINK_RESP 12
-#define MERGE_MAX_LINK_RESP 13
-
-// align to 8
-#define NUM_FIXED_LEN_BLOCK_INPUT 4
-#define NUM_VAR_LEN_BLOCK_INPUT 4
-#define NUM_FIXED_LEN_BLOCK_OUTPUT 4
-#define NUM_VAR_LEN_BLOCK_OUTPUT 4
-
-#define CPU_BUFFER_HEAD_LEN 8 // |epochNumber blockCnt totalSize|
-#define DPU_BUFFER_HEAD_LEN 8 // |bufferState blockCnt totalSize|
-#define BLOCK_HEAD_LEN sizeof(BlockDescriptorBase)
-#define BATCH_SIZE 320
-#define NUM_BLOCKS 8
-
-#define BUFFER_LEN 65535
-
-#define ALIGN8 __attribute__((aligned(8)))
-#define ROUND_UP_TO_8(x) (((x)+7) &~7) // to align key len to 8
-
-#define ALIGN_TO( sizeToAlign, PowerOfTwo )                         \
-        (((sizeToAlign) + (PowerOfTwo) - 1) & ~((PowerOfTwo) - 1))
 
 typedef ALIGN8 struct {
   uint8_t taskType;
@@ -85,80 +48,6 @@ typedef struct {
   Offset offsets[NUM_BLOCKS];
 } DpuToCpuBufferDescriptor;
 
-typedef struct {
-  uint8_t taskType;
-} Task;
-
-typedef ALIGN8 struct {
-  Task base;
-  uint32_t dpuId;
-} SetDpuIdReq;
-
-typedef ALIGN8 struct {
-  Task base;
-  HashTableId hashTableId;
-} CreateIndexReq;
-
-typedef ALIGN8 struct {
-  Task base;
-  uint16_t taskIdx;
-  uint8_t len;  // key len
-  TupleIdT tid; // value
-  HashTableId hashTableId;
-  uint8_t ptr[]; // key
-} GetOrInsertReq;
-
-typedef ALIGN8 struct {
-  Task base;
-  uint8_t len;
-  HashTableId hashTableId;
-  uint8_t ptr[]; // key
-} GetPointerReq;
-
-typedef ALIGN8 struct {
-  Task base;
-  HashAddrT hashEntry;
-  MaxLinkAddrT maxLinkAddr;
-} UpdatePointerReq;
-
-typedef ALIGN8 struct {
-  Task base;
-  MaxLinkAddrT maxLinkAddr;
-} GetMaxLinkSizeReq;
-
-typedef ALIGN8 struct {
-  Task base;
-  MaxLinkAddrT maxLinkAddr;
-} FetchMaxLinkReq;
-
-typedef ALIGN8 struct {
-  Task base;
-  MaxLinkT maxLink;
-} MergeMaxLinkReq;
-
-typedef ALIGN8 struct {
-  Task base;
-  uint16_t taskIdx;
-  HashTableQueryReplyT tupleIdOrMaxLinkAddr;
-} GetOrInsertResp;
-
-typedef ALIGN8 struct {
-  Task base;
-  MaxLinkAddrT maxLinkAddr;
-} GetPointerResp;
-
-typedef ALIGN8 struct {
-  Task base;
-  uint8_t maxLinkSize;
-} GetMaxLinkSizeResp;
-
-typedef ALIGN8 struct {
-  Task base;
-  MaxLinkT maxLink;
-} FetchMaxLinkResp;
-
-bool IsVarLenTask(uint8_t taskType);
-
-uint16_t GetFixedLenTaskSize(void *task);
+#include "../common_base_struct/task.h"
 
 #endif

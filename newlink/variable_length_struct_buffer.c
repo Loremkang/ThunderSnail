@@ -100,5 +100,7 @@ void VariableLengthStructBufferFree(VariableLengthStructBufferT *buf) {
     ExpendableBufferFree(buf->offset);
     ExpendableBufferFree(buf->data);
     free(buf->data);
+    buf->data = NULL;
     free(buf->offset);
+    buf->offset = NULL;
 }

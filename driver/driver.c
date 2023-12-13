@@ -67,10 +67,6 @@ void BuildGetOrInsertReqOnHashTableIndex(int batchSize, int TableId,
             CatalogHashTableKeyGet(tupleIds[i], hashTableIdx, key);
             int dpuIdx = _hash_function(key, keyLength) % NUM_DPU;
             
-            
-            
-            
-            
             req->tid = tupleIds[i];
             
             memcpy(req->ptr, keys[i].data, keys[i].len);
