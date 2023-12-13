@@ -8,8 +8,9 @@ Offset GlobalVarlenBlockOffsetBuffer[NUM_DPU][BATCH_SIZE];
 void IOManagerSend(IOManagerT *manager) {
     struct dpu_set_t dpu;
     uint32_t idx;
+
     DPU_FOREACH(*manager->dpu_set, dpu, idx) {
-        DPU_ASSERT(dpu_prepare_xfer(dpu, buffers[idx]));
+        DPU_ASSERT(dpu_prepare_xfer(dpu, manager->sendIOBuffers[idx]));
     }
     DPU_ASSERT(dpu_push_xfer(*manager->dpu_set, DPU_XFER_TO_DPU, "receiveBuffer", 0, manager->maxSendSize,
                              DPU_XFER_DEFAULT));
@@ -21,7 +22,9 @@ void IOManagerExec(IOManagerT *manager) {
 }
 
 void IOManagerReceive(IOManagerT *manager) {
-    // receive
+    struct dpu_set_t dpu;
+    uint32_t idx;
+
     DPU_FOREACH(*manager->dpu_set, dpu, idx) {
         DPU_ASSERT(dpu_prepare_xfer(dpu, manager->recvIOBuffers[idx]));
     }
@@ -31,12 +34,12 @@ void IOManagerReceive(IOManagerT *manager) {
 
     for (int i = 0; i < NUM_DPU; i++) {
         DpuBufferHeader* header = (DpuBufferHeader*)manager->recvIOBuffers[i];
-        manager->recvSizes[i] = header->totalSize
+        manager->recvSizes[i] = header->totalSize;
     }
     manager->maxReceiveSize = max_in_array(NUM_DPU, manager->recvSizes);
 
     DPU_FOREACH(*manager->dpu_set, dpu, idx) {
-        DPU_ASSERT(dpu_prepare_xfer(dpu, recvIOBuffers[idx]));
+        DPU_ASSERT(dpu_prepare_xfer(dpu, manager->recvIOBuffers[idx]));
     }
     
     DPU_ASSERT(dpu_push_xfer(*manager->dpu_set, DPU_XFER_FROM_DPU, "replyBuffer", 0, manager->maxReceiveSize,

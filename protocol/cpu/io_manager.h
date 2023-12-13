@@ -94,7 +94,7 @@ static inline void IOManagerEndBlock(IOManagerT *manager) {
 
 static inline void IOManagerFinish(IOManagerT *manager) {
     for (int i = 0; i < NUM_DPU; i++) {
-        manager->sendSizes[i] = BufferBuilderFinish(&manager->builders[i]);
+        BufferBuilderFinish(&manager->builders[i], &manager->sendSizes[i]);
     }
     manager->maxSendSize = max_in_array(NUM_DPU, manager->sendSizes);
 }

@@ -40,6 +40,7 @@ TASK(CreateIndexReq, CREATE_INDEX_REQ, FIXED, sizeof(CreateIndexReq), {
 TASK(GetOrInsertReq, GET_OR_INSERT_REQ, UNFIXED, sizeof(GetOrInsertReq), {
   Task base;
   uint8_t len;  // key len
+  uint32_t taskIdx;
   TupleIdT tid; // value
   HashTableId hashTableId;
   uint8_t ptr[]; // key
@@ -82,6 +83,7 @@ TASK(NewMaxLinkReq, NEW_MAX_LINK_REQ, UNFIXED, sizeof(NewMaxLinkReq), {
 
 TASK(GetOrInsertResp, GET_OR_INSERT_RESP, FIXED, sizeof(GetOrInsertResp), {
   Task base;
+  uint32_t taskIdx;
   HashTableQueryReplyT tupleIdOrMaxLinkAddr;
 })
 
