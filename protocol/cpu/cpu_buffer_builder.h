@@ -26,10 +26,10 @@ typedef struct {
   uint8_t fixedLenBlockIdx;
   bool isCurVarLenBlock;
   dpu_state state;
-  int dpuId;
+  // int dpuId;
 } BufferBuilder;
 
-void BufferBuilderInit(BufferBuilder *builder, CpuToDpuBufferDescriptor *bufferDesc, int dpuId);
+void BufferBuilderInit(BufferBuilder *builder, CpuToDpuBufferDescriptor *bufferDesc, uint8_t* ioBuffer, uint8_t* offsetBuffer, uint8_t* varlenBlockOffsetBuffer);
 
 void BufferBuilderBeginBlock(BufferBuilder *builder, uint8_t taskType);
 
@@ -38,9 +38,5 @@ void BufferBuilderEndBlock(BufferBuilder *builder);
 uint8_t* BufferBuilderFinish(BufferBuilder *builder, size_t *size);
 
 void BufferBuilderAppendTask(BufferBuilder *builder, Task *task);
-
-extern uint8_t GlobalIOBuffers[NUM_DPU][BUFFER_LEN];
-extern Offset GlobalOffsetsBuffer[NUM_DPU][NUM_BLOCKS];
-extern Offset GlobalVarlenBlockOffsetBuffer[NUM_DPU][BATCH_SIZE];
 
 #endif

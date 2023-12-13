@@ -3,20 +3,16 @@
 #include <stdlib.h>
 #include "requests.h"
 
-uint8_t GlobalIOBuffers[NUM_DPU][BUFFER_LEN];
-Offset GlobalOffsetsBuffer[NUM_DPU][NUM_BLOCKS];
-Offset GlobalVarlenBlockOffsetBuffer[NUM_DPU][BATCH_SIZE];
-
-void BufferBuilderInit(BufferBuilder *builder, CpuToDpuBufferDescriptor *bufferDesc, int dpuId)
+void BufferBuilderInit(BufferBuilder *builder, CpuToDpuBufferDescriptor *bufferDesc, uint8_t* ioBuffer, uint8_t* offsetBuffer, uint8_t* varlenBlockOffsetBuffer)
 {
-  builder->dpuId = dpuId;
+  // builder->dpuId = dpuId;
   builder->state = DPU_STATE_INITIALIZED;
 
   // alloc the whole buffer
   bufferDesc->header.blockCnt = 0;
   bufferDesc->header.totalSize = CPU_BUFFER_HEAD_LEN;
   builder->bufferDesc = bufferDesc;
-  builder->buffer = GlobalIOBuffers[dpuId];
+  builder->buffer = ioBuffer;
 
   builder->curBlockOffset = CPU_BUFFER_HEAD_LEN;
   builder->curBlockPtr = builder->buffer + builder->curBlockOffset;
@@ -28,8 +24,8 @@ void BufferBuilderInit(BufferBuilder *builder, CpuToDpuBufferDescriptor *bufferD
   builder->isCurVarLenBlock = false;
 
   // offsets
-  bufferDesc->offsets = GlobalOffsetsBuffer[dpuId];
-  builder->varlenBlockOffsetsBuffer = GlobalVarlenBlockOffsetBuffer[dpuId];
+  bufferDesc->offsets = offsetBuffer;
+  builder->varlenBlockOffsetsBuffer = varlenBlockOffsetBuffer;
   return;
 }
 
