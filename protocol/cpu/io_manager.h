@@ -22,8 +22,8 @@ typedef struct IOManagerT {
     size_t sendSizes[NUM_DPU];
     size_t maxSendSize;
     uint8_t *sendIOBuffers[NUM_DPU];
-    uint8_t *sendOffsetBuffers[NUM_DPU];
-    uint8_t *sendVarlenBlockOffsetBuffers[NUM_DPU];
+    Offset *sendOffsetBuffers[NUM_DPU];
+    Offset *sendVarlenBlockOffsetBuffers[NUM_DPU];
 
     size_t recvSizes[NUM_DPU];
     size_t maxReceiveSize;
@@ -45,10 +45,10 @@ static inline uint32_t max_in_array(int num, size_t *sizes) {
 
 static inline void IOManagerInit(IOManagerT *manager,
                                  struct dpu_set_t* dpu_set,
-                                 uint8_t *sendIOBuffers[NUM_DPU],
-                                 uint8_t *sendOffsetBuffers[NUM_DPU],
-                                 uint8_t *sendVarlenBlockOffsetBuffers[NUM_DPU],
-                                 uint8_t *recvIOBuffers[NUM_DPU]) {
+                                 uint8_t sendIOBuffers[NUM_DPU][BUFFER_LEN],
+                                 Offset sendOffsetBuffers[NUM_DPU][NUM_BLOCKS],
+                                 Offset sendVarlenBlockOffsetBuffers[NUM_DPU][BATCH_SIZE],
+                                 uint8_t recvIOBuffers[NUM_DPU][BUFFER_LEN]) {
     manager->dpu_set = dpu_set;
     for (int i = 0; i < NUM_DPU; i++) {
         manager->sendSizes[i] = 0;
@@ -62,16 +62,17 @@ static inline void IOManagerInit(IOManagerT *manager,
 }
 
 static inline void IOManagerStartBufferBuild(IOManagerT *manager) {
+    uint8_t epochNumber = GetEpochNumber();
     for (int i = 0; i < NUM_DPU; i++) {
+        memset(&manager->bufferDescs[i], 0, sizeof(CpuToDpuBufferDescriptor));
+        manager->bufferDescs[i] =
+            (CpuToDpuBufferDescriptor){.header = {
+                                           .epochNumber = epochNumber,
+                                       }};
         BufferBuilderInit(&manager->builders[i], &manager->bufferDescs[i],
                           manager->sendIOBuffers[i],
                           manager->sendOffsetBuffers[i],
                           manager->sendVarlenBlockOffsetBuffers[i]);
-        memset(&manager->bufferDescs[i], 0, sizeof(CpuToDpuBufferDescriptor));
-        manager->bufferDescs[i] =
-            (CpuToDpuBufferDescriptor){.header = {
-                                           .epochNumber = GetEpochNumber(),
-                                       }};
     }
 }
 
@@ -114,13 +115,14 @@ static inline void IOManagerSendExecReceive(IOManagerT *manager) {
 //         manager->blockIterators[i] =
 //             BlockIteratorInit(manager->recvBuffers[i]);
 //     }
-    
+
 // }
 
 // static inline bool IOManagerHasBlock(IOManagerT *manager) {
 //     bool hasNext = OffsetsIteratorHasNext(&manager->blockIterators[0]);
 //     for (int i = 0; i < NUM_DPU; i++) {
-//         bool dpuHasNext = OffsetsIteratorHasNext(&manager->blockIterators[i]);
+//         bool dpuHasNext =
+//         OffsetsIteratorHasNext(&manager->blockIterators[i]);
 //         ValidValueCheck(hasNext == dpuHasNext);
 //     }
 //     return hasNext;
@@ -134,7 +136,8 @@ static inline void IOManagerSendExecReceive(IOManagerT *manager) {
 //     return hasNext;
 // }
 
-// static inline bool IOManagerNextTask(IOManagerT *manager, int dpuId, Task* task) {
+// static inline bool IOManagerNextTask(IOManagerT *manager, int dpuId, Task*
+// task) {
 //     task = OffsetsIteratorGetData(&manager->taskIterators[dpuId]);
 //     bool hasNext = OffsetsIteratorHasNext(&manager->blockIterators[dpuId]);
 //     if (hasNext) {

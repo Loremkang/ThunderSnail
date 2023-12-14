@@ -29,13 +29,15 @@ typedef struct {
   // int dpuId;
 } BufferBuilder;
 
-void BufferBuilderInit(BufferBuilder *builder, CpuToDpuBufferDescriptor *bufferDesc, uint8_t* ioBuffer, uint8_t* offsetBuffer, uint8_t* varlenBlockOffsetBuffer);
+void BufferBuilderInit(BufferBuilder *builder,
+                       CpuToDpuBufferDescriptor *bufferDesc, uint8_t *ioBuffer,
+                       Offset *offsetBuffer, Offset *varlenBlockOffsetBuffer);
 
 void BufferBuilderBeginBlock(BufferBuilder *builder, uint8_t taskType);
 
 void BufferBuilderEndBlock(BufferBuilder *builder);
 
-uint8_t* BufferBuilderFinish(BufferBuilder *builder, size_t *size);
+uint8_t *BufferBuilderFinish(BufferBuilder *builder, size_t *size);
 
 void BufferBuilderAppendTask(BufferBuilder *builder, Task *task);
 

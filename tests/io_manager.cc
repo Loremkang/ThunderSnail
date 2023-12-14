@@ -35,6 +35,7 @@ TEST(IOManager, IOManager) {
     IOManagerT ioManager;
     IOManagerInit(&ioManager, &set, GlobalIOBuffers, GlobalOffsetsBuffer,
                   GlobalVarlenBlockOffsetBuffer, GlobalIOBuffers);
+    IOManagerStartBufferBuild(&ioManager);
     IOManagerBeginBlock(&ioManager, GET_OR_INSERT_REQ);
 
     for (int i = 0; i < TEST_BATCH; i++) {
@@ -82,7 +83,7 @@ TEST(IOManager, IOManager) {
     memset(used, 0, sizeof(used));
 
     for (int dpuId = 0; dpuId < NUM_DPU; dpuId++) {
-        OffsetsIterator blockIterator = BlockIteratorInit(ioManager->recvBufs[dpuId]);
+        OffsetsIterator blockIterator = BlockIteratorInit(ioManager.recvIOBuffers[dpuId]);
         for (; OffsetsIteratorHasNext(&blockIterator);
              OffsetsIteratorNext(&blockIterator)) {
             OffsetsIterator taskIterator = TaskIteratorInit(&blockIterator);

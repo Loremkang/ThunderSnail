@@ -4,7 +4,6 @@
 #include "cpu_buffer_builder.h"
 #include "protocol.h"
 #include "shared_constants.h"
-#include "io_manager.h"
 
 #define PRIMARY_INDEX_MAX_NUM 16
 
@@ -17,7 +16,7 @@ static inline uint32_t _hash_function(uint8_t *buf, uint32_t len)
     return hash;
 }
 
-void RunGetOrInsert(IOManagerT ioManager, struct dpu_set_t* set, int batchSize, int TableId, TupleIdT *tupleIds,
+void RunGetOrInsert(IOManagerT *ioManager, struct dpu_set_t* set, int batchSize, int TableId, TupleIdT *tupleIds,
                          TupleIdT *resultTupleIds,
                          HashTableQueryReplyT *resultCounterpart) {
     static bool hashTableInitialized[PRIMARY_INDEX_MAX_NUM] = {false};
@@ -27,13 +26,13 @@ void RunGetOrInsert(IOManagerT ioManager, struct dpu_set_t* set, int batchSize, 
         ArrayOverflowCheck(hashTableId < PRIMARY_INDEX_MAX_NUM);
         if (!hashTableInitialized[hashTableId]) {
             hashTableInitialized[hashTableId] = true;
-            SendCreateIndexReq(hashTableId);
+            SendCreateIndexReq(*set, hashTableId);
         }
     }
 
-    IOManagerInit(&ioManager, &set, GlobalIOBuffers, GlobalOffsetsBuffer,
+    IOManagerInit(ioManager, &set, GlobalIOBuffers, GlobalOffsetsBuffer,
                   GlobalVarlenBlockOffsetBuffer, GlobalIOBuffers);
-    IOManagerBeginBlock(&ioManager, GET_OR_INSERT_REQ);
+    IOManagerBeginBlock(ioManager, GET_OR_INSERT_REQ);
 
     for (int hashTableIdx = 0; hashTableIdx < hashTableCount; hashTableIdx++) {
         ValidValueCheck(batchSize > 0);
@@ -52,18 +51,18 @@ void RunGetOrInsert(IOManagerT ioManager, struct dpu_set_t* set, int batchSize, 
             CatalogHashTableKeyGet(tupleIds[i], hashTableIdx, key);
             int dpuIdx = _hash_function(key, keyLength) % NUM_DPU;
             req->tid = tupleIds[i];
-            memcpy(req->ptr, keys[i].data, keys[i].len);
+            memcpy(req->ptr, key, keyLength);
             // append one task for each dpu
-            IOManagerAppendTask(&ioManager, dpuIdx, (Task *)req);
+            IOManagerAppendTask(ioManager, dpuIdx, (Task *)req);
         }
         free(key);
         free(req);
     }
 
-    IOManagerEndBlock(&ioManager);
-    IOManagerFinish(&ioManager);
+    IOManagerEndBlock(ioManager);
+    IOManagerFinish(ioManager);
 
-    IOManagerSendExecReceive(&ioManager);
+    IOManagerSendExecReceive(ioManager);
 
 }
 

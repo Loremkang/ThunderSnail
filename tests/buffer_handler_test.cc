@@ -7,6 +7,7 @@ extern "C" {
 #include "hash_function.h"
 #include "requests_handler.h"
 #include "requests.h"
+#include "io_manager.h"
 // #include "iterators.h"
 }
 
@@ -104,7 +105,7 @@ TEST (BufferHandler, BlockIteratorAndTaskIterator) {
     };
   }
   for (int i = 0; i < NUM_DPU; i++) {
-    BufferBuilderInit(&builders[i], &bufferDescs[i], i);
+    BufferBuilderInit(&builders[i], &bufferDescs[i], GlobalIOBuffers[i], GlobalOffsetsBuffer[i], GlobalVarlenBlockOffsetBuffer[i]);
     BufferBuilderBeginBlock(&builders[i], GET_OR_INSERT_REQ);
   }
   for (int i = 0; i < TEST_BATCH; i ++) {
