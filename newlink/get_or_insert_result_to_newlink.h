@@ -8,5 +8,8 @@
 
 
 void BuildNewLinkFromHashTableGetOrInsertResultPerformanceTest();
-
+void GetOrInsertResultToNewlink(int length, TupleIdT* tupleIds,
+                                HashTableQueryReplyT* counterpart,
+                                HashTableForNewLinkT* ht,
+                                VariableLengthStructBufferT* buf);
 #endif

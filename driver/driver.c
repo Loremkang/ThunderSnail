@@ -4,6 +4,9 @@
 #include "cpu_buffer_builder.h"
 #include "protocol.h"
 #include "shared_constants.h"
+#include "disjoint_set.h"
+#include "hash_table_for_newlink.h"
+#include "variable_length_struct_buffer.h"
 
 #define PRIMARY_INDEX_MAX_NUM 16
 
@@ -16,7 +19,7 @@ static inline uint32_t _hash_function(uint8_t *buf, uint32_t len)
     return hash;
 }
 
-void RunGetOrInsert(IOManagerT *ioManager, struct dpu_set_t* set, int batchSize, int TableId, TupleIdT *tupleIds,
+size_t RunGetOrInsert(IOManagerT *ioManager, struct dpu_set_t* set, int batchSize, int TableId, TupleIdT *tupleIds,
                          TupleIdT *resultTupleIds,
                          HashTableQueryReplyT *resultCounterpart) {
     static bool hashTableInitialized[PRIMARY_INDEX_MAX_NUM] = {false};
@@ -30,8 +33,9 @@ void RunGetOrInsert(IOManagerT *ioManager, struct dpu_set_t* set, int batchSize,
         }
     }
 
-    IOManagerInit(ioManager, &set, GlobalIOBuffers, GlobalOffsetsBuffer,
-                  GlobalVarlenBlockOffsetBuffer, GlobalIOBuffers);
+    size_t resultCount = 0;
+
+    IOManagerStartBufferBuilder(ioManager);
     IOManagerBeginBlock(ioManager, GET_OR_INSERT_REQ);
 
     for (int hashTableIdx = 0; hashTableIdx < hashTableCount; hashTableIdx++) {
@@ -54,6 +58,8 @@ void RunGetOrInsert(IOManagerT *ioManager, struct dpu_set_t* set, int batchSize,
             memcpy(req->ptr, key, keyLength);
             // append one task for each dpu
             IOManagerAppendTask(ioManager, dpuIdx, (Task *)req);
+            req->taskIdx = resultCount;
+            resultTupleIds[resultCount] = tupleIds[i];
         }
         free(key);
         free(req);
@@ -64,6 +70,36 @@ void RunGetOrInsert(IOManagerT *ioManager, struct dpu_set_t* set, int batchSize,
 
     IOManagerSendExecReceive(ioManager);
 
+#ifdef DEBUG
+    bool used[MAXSIZE_HASH_TABLE_QUERY_BATCH] = {false};
+#endif
+
+    for (int dpuId = 0; dpuId < NUM_DPU; dpuId++) {
+        OffsetsIterator blockIterator = BlockIteratorInit(ioManager->recvIOBuffers[dpuId]);
+        for (; OffsetsIteratorHasNext(&blockIterator);
+             OffsetsIteratorNext(&blockIterator)) {
+            OffsetsIterator taskIterator = TaskIteratorInit(&blockIterator);
+            for (; OffsetsIteratorHasNext(&taskIterator);
+                 OffsetsIteratorNext(&taskIterator)) {
+                uint8_t *task = OffsetsIteratorGetData(&taskIterator);
+                GetOrInsertResp *resp = (GetOrInsertResp *)task;
+                resultCounterpart[resp->taskIdx] = resp->tupleIdOrMaxLinkAddr;
+
+                ValidValueCheck(resp->base.taskType == GET_OR_INSERT_RESP);
+                #ifdef DEBUG
+                used[resp->taskIdx] = true;
+                #endif
+            }
+        }
+    }
+
+#ifdef DEBUG
+    for (int i = 0; i < resultCount; i++) {
+        ValidValueCheck(used[i]);
+    }
+#endif
+
+    return resultCount;
 }
 
 void BatchInsertValidCheck(int batchSize, TupleIdT *tupleIds) {
@@ -77,7 +113,15 @@ void BatchInsertValidCheck(int batchSize, TupleIdT *tupleIds) {
     }
 }
 
-void BatchInsertTuple(int batchSize, TupleIdT *tupleIds, struct dpu_set_t* set, IOManagerT *ioManager) {
+// called in system startup
+void DriverInit(IOManagerT *ioManager, struct dpu_set_t* set) {
+    IOManagerInit(ioManager, &set, GlobalIOBuffers, GlobalOffsetsBuffer,
+                GlobalVarlenBlockOffsetBuffer, GlobalIOBuffers);
+}
+
+void BatchInsertTuple(int batchSize, TupleIdT *tupleIds, struct dpu_set_t *set,
+                      IOManagerT *ioManager, HashTableForNewLinkT *ht,
+                      VariableLengthStructBufferT *buf) {
     BatchInsertValidCheck(batchSize, tupleIds);
 
     TupleIdT resultTupleIds[MAXSIZE_HASH_TABLE_QUERY_BATCH];
@@ -86,6 +130,23 @@ void BatchInsertTuple(int batchSize, TupleIdT *tupleIds, struct dpu_set_t* set, 
     int tableId = tupleIds[0].tableId;
     int HashTableCount = CatalogHashTableCountGet(tableId);
 
-    RunGetOrInsert(ioManager, set, batchSize, tableId, tupleIds, resultTupleIds,
-                        resultCounterpart);
+    size_t resultCount =
+        RunGetOrInsert(ioManager, set, batchSize, tableId, tupleIds,
+                       resultTupleIds, resultCounterpart);
+
+    GetOrInsertResultToNewlink(resultCount, resultTupleIds, resultCounterpart,
+                               ht, buf);
+    
+}
+
+void End2EndPerformanceTest() {
+    // used in "get_or_insert_result_to_newlink"
+    static HashTableForNewLinkT ht;
+    HashTableForNewLinkInit(&ht);
+    static VariableLengthStructBufferT buf;
+    VariableLengthStructBufferInit(&buf);
+
+    IOManagerT ioManager;
+    struct dpu_set_t dpu_set;
+    DriverInit(&ioManager, &dpu_set);
 }

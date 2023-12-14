@@ -152,13 +152,23 @@ static inline double get_timestamp() {
     return ts.tv_sec + ts.tv_nsec / 1e9;
 }
 
-// TODO: careful consideration on memory management
-void BuildNewLinkFromHashTableGetOrInsertResultPerformanceTest() {
+void GetOrInsertResultToNewlink(int length, TupleIdT* tupleIds,
+                                HashTableQueryReplyT* counterpart,
+                                HashTableForNewLinkT* ht,
+                                VariableLengthStructBufferT* buf) {
     static DisjointSetNodeT dsNode[MAXSIZE_HASH_TABLE_QUERY_BATCH];
     static int idxPos[MAXSIZE_HASH_TABLE_QUERY_BATCH];
     static bool processed[MAXSIZE_HASH_TABLE_QUERY_BATCH];
     static int leftIds[MAXSIZE_HASH_TABLE_QUERY_BATCH];
     static int rightIds[MAXSIZE_HASH_TABLE_QUERY_BATCH];
+    BuildIds(length, ht, leftIds, rightIds, tupleIds, counterpart);
+    BuildNewLinkFromHashTableGetOrInsertResult(length, idxPos, processed,
+                                               dsNode, leftIds, rightIds,
+                                               tupleIds, counterpart, buf);
+}
+
+// TODO: careful consideration on memory management
+void BuildNewLinkFromHashTableGetOrInsertResultPerformanceTest() {
     static HashTableForNewLinkT ht;
     HashTableForNewLinkInit(&ht);
     static VariableLengthStructBufferT buf;
@@ -176,7 +186,7 @@ void BuildNewLinkFromHashTableGetOrInsertResultPerformanceTest() {
     const int NR_TABLES = 9;
     for (int T = 1; T <= NR_TABLES; T++) {
         int offset = testbatchsize * (T - 1) * 2;
-        for (int i = 0; i < testbatchsize; i ++) { // T to T-1
+        for (int i = 0; i < testbatchsize; i++) {  // T to T-1
             int pos = i + offset;
             tupleIds[pos] = (TupleIdT){.tableId = T, .tupleAddr = i + 1};
             if (T == 1) {
@@ -190,7 +200,7 @@ void BuildNewLinkFromHashTableGetOrInsertResultPerformanceTest() {
             }
         }
         offset += testbatchsize;
-        for (int i = 0; i < testbatchsize; i++) { // T to T+1
+        for (int i = 0; i < testbatchsize; i++) {  // T to T+1
             int pos = i + offset;
             tupleIds[pos] = (TupleIdT){.tableId = T, .tupleAddr = i + 1};
             if (T == 9) {
@@ -214,10 +224,7 @@ void BuildNewLinkFromHashTableGetOrInsertResultPerformanceTest() {
     int testRound = 1000;
     double timeStart = get_timestamp();
     for (int i = 0; i < testRound; i++) {
-        BuildIds(length, &ht, leftIds, rightIds, tupleIds, counterpart);
-        BuildNewLinkFromHashTableGetOrInsertResult(
-            length, idxPos, processed, dsNode, leftIds, rightIds,
-            tupleIds, counterpart, &buf);
+        GetOrInsertResultToNewlink(length, tupleIds, counterpart, &ht, &buf);
     }
     double timeSpent = get_timestamp() - timeStart;
     printf("Number of Rounds: %d\n", testRound);
