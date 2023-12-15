@@ -65,7 +65,7 @@ static inline void OffsetsIteratorJumpToKth(OffsetsIterator *iterator, uint8_t k
   iterator->index = k;
 }
 
-static inline uint8_t* OffsetIteratorGetKthData(OffsetsIterator *iterator, uint8_t k)
+static inline uint8_t* OffsetsIteratorGetKthData(OffsetsIterator *iterator, uint8_t k)
 {
   OffsetsIteratorJumpToKth(iterator, k);
   return OffsetsIteratorGetData(iterator);

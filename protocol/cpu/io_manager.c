@@ -38,6 +38,8 @@ void IOManagerReceive(IOManagerT *manager) {
     }
     manager->maxReceiveSize = max_in_array(NUM_DPU, manager->recvSizes);
 
+    ArrayOverflowCheck(manager->maxReceiveSize <= BUFFER_LEN);
+
     DPU_FOREACH(*manager->dpu_set, dpu, idx) {
         DPU_ASSERT(dpu_prepare_xfer(dpu, manager->recvIOBuffers[idx]));
     }

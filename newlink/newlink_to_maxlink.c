@@ -52,6 +52,9 @@ void BuildPreMaxLinkFromNewLink(VariableLengthStructBufferT* newLinkBuffer, Vari
         }
     }
 
+
+
+
     for (OffsetT i = 0; i < newLinkBuffer->count; i ++) {
         NewLinkT* newLink = (NewLinkT*)VariableLengthStructBufferGet(newLinkBuffer, i);
         for (int j = 0; j < newLink->maxLinkAddrCount; j ++) {
@@ -65,7 +68,6 @@ void BuildPreMaxLinkFromNewLink(VariableLengthStructBufferT* newLinkBuffer, Vari
     // run tasks : 1 IO Round
 
     Unimplemented("Fix Error");
-    // NewLinkMergerInit(&merger);
     
     taskCount = 0;
     for (OffsetT i = 0; i < newLinkBuffer->count; i ++) {

@@ -124,9 +124,9 @@ uint8_t* BufferBuilderFinish(BufferBuilder* builder, size_t* size) {
     return builder->buffer;
 }
 
-void BufferBuilderAppendTask(BufferBuilder* builder, Task* task) {
+uint8_t* BufferBuilderAppendPlaceHolder(BufferBuilder* builder, uint8_t taskType, size_t size) {
     ValidValueCheck(builder->state == DPU_STATE_BLOCK_OPEN);
-    switch (task->taskType) {
+    switch (taskType) {
         case GET_OR_INSERT_REQ:
         case GET_POINTER_REQ:
         case MERGE_MAX_LINK_REQ:
@@ -137,14 +137,12 @@ void BufferBuilderAppendTask(BufferBuilder* builder, Task* task) {
             varLenBlockDesc
                 ->offsets[varLenBlockDesc->blockDescBase.taskCount++] =
                 builder->curTaskOffset;
-            uint32_t taskSize = GetTaskLen(task);
-            memcpy(builder->curTaskPtr, task, taskSize);
-            builder->curTaskPtr += taskSize;
-            builder->curTaskOffset += taskSize;
+            builder->curTaskPtr += size;
+            builder->curTaskOffset += size;
             // updata total size
             varLenBlockDesc->blockDescBase.totalSize +=
-                taskSize + sizeof(Offset);
-            builder->bufferDesc->header.totalSize += taskSize + sizeof(Offset);
+                size + sizeof(Offset);
+            builder->bufferDesc->header.totalSize += size + sizeof(Offset);
             break;
         }
         case SET_DPU_ID_REQ:
@@ -157,13 +155,11 @@ void BufferBuilderAppendTask(BufferBuilder* builder, Task* task) {
                 &builder->bufferDesc
                      ->fixedLenBlockDescs[builder->fixedLenBlockIdx];
             fixedLenBlockDesc->blockDescBase.taskCount++;
-            uint32_t taskSize = GetTaskLen(task);
-            memcpy(builder->curTaskPtr, task, taskSize);
-            builder->curTaskPtr += taskSize;
-            builder->curTaskOffset += taskSize;
+            builder->curTaskPtr += size;
+            builder->curTaskOffset += size;
             // updata total size
-            fixedLenBlockDesc->blockDescBase.totalSize += taskSize;
-            builder->bufferDesc->header.totalSize += taskSize;
+            fixedLenBlockDesc->blockDescBase.totalSize += size;
+            builder->bufferDesc->header.totalSize += size;
             break;
         }
 
@@ -171,4 +167,58 @@ void BufferBuilderAppendTask(BufferBuilder* builder, Task* task) {
             Unimplemented("other tasks to be impl!\n");
             break;
     }
+    return builder->curTaskPtr - size;
+}
+
+void BufferBuilderAppendTask(BufferBuilder* builder, Task* task) {
+    ValidValueCheck(builder->state == DPU_STATE_BLOCK_OPEN);
+    size_t size = GetTaskLen(task);
+    uint8_t* buffer = BufferBuilderAppendPlaceHolder(builder, task->taskType, size);
+    memcpy(buffer, task, size);
+
+    // switch (task->taskType) {
+    //     case GET_OR_INSERT_REQ:
+    //     case GET_POINTER_REQ:
+    //     case MERGE_MAX_LINK_REQ:
+    //     case NEW_MAX_LINK_REQ: {
+    //         // record the offset and task count++
+    //         VarLenBlockDescriptor* varLenBlockDesc =
+    //             &builder->bufferDesc->varLenBlockDescs[builder->varLenBlockIdx];
+    //         varLenBlockDesc
+    //             ->offsets[varLenBlockDesc->blockDescBase.taskCount++] =
+    //             builder->curTaskOffset;
+    //         uint32_t taskSize = GetTaskLen(task);
+    //         memcpy(builder->curTaskPtr, task, taskSize);
+    //         builder->curTaskPtr += taskSize;
+    //         builder->curTaskOffset += taskSize;
+    //         // updata total size
+    //         varLenBlockDesc->blockDescBase.totalSize +=
+    //             taskSize + sizeof(Offset);
+    //         builder->bufferDesc->header.totalSize += taskSize + sizeof(Offset);
+    //         break;
+    //     }
+    //     case SET_DPU_ID_REQ:
+    //     case CREATE_INDEX_REQ:
+    //     case UPDATE_POINTER_REQ:
+    //     case GET_MAX_LINK_SIZE_REQ:
+    //     case FETCH_MAX_LINK_REQ: {
+    //         // record the offset and task count++
+    //         FixedLenBlockDescriptor* fixedLenBlockDesc =
+    //             &builder->bufferDesc
+    //                  ->fixedLenBlockDescs[builder->fixedLenBlockIdx];
+    //         fixedLenBlockDesc->blockDescBase.taskCount++;
+    //         uint32_t taskSize = GetTaskLen(task);
+    //         memcpy(builder->curTaskPtr, task, taskSize);
+    //         builder->curTaskPtr += taskSize;
+    //         builder->curTaskOffset += taskSize;
+    //         // updata total size
+    //         fixedLenBlockDesc->blockDescBase.totalSize += taskSize;
+    //         builder->bufferDesc->header.totalSize += taskSize;
+    //         break;
+    //     }
+
+    //     default:
+    //         Unimplemented("other tasks to be impl!\n");
+    //         break;
+    // }
 }

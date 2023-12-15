@@ -39,6 +39,7 @@ void BufferBuilderEndBlock(BufferBuilder *builder);
 
 uint8_t *BufferBuilderFinish(BufferBuilder *builder, size_t *size);
 
+uint8_t* BufferBuilderAppendPlaceHolder(BufferBuilder* builder, uint8_t taskType, size_t size);
 void BufferBuilderAppendTask(BufferBuilder *builder, Task *task);
 
 #endif

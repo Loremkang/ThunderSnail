@@ -61,6 +61,7 @@ TASK(UpdatePointerReq, UPDATE_POINTER_REQ, FIXED, sizeof(UpdatePointerReq), {
 
 TASK(GetMaxLinkSizeReq, GET_MAX_LINK_SIZE_REQ, FIXED, sizeof(GetMaxLinkSizeReq), {
   Task base;
+  uint32_t taskIdx;
   MaxLinkAddrT maxLinkAddr;
 })
 
@@ -77,6 +78,7 @@ TASK(MergeMaxLinkReq, MERGE_MAX_LINK_REQ, UNFIXED, sizeof(MergeMaxLinkReq), {
 
 TASK(NewMaxLinkReq, NEW_MAX_LINK_REQ, UNFIXED, sizeof(NewMaxLinkReq), {
   Task base;
+  uint32_t taskIdx;
   MaxLinkT maxLink;
 })
 
@@ -95,6 +97,7 @@ TASK(GetPointerResp, GET_POINTER_RESP, FIXED, sizeof(GetPointerResp), {
 
 TASK(GetMaxLinkSizeResp, GET_MAX_LINK_SIZE_RESP, FIXED, sizeof(GetMaxLinkSizeResp), {
   Task base;
+  uint32_t taskIdx;
   uint8_t maxLinkSize;
 })
 
@@ -106,6 +109,7 @@ TASK(FetchMaxLinkResp, FETCH_MAX_LINK_RESP, UNFIXED, sizeof(FetchMaxLinkResp), {
 
 TASK(NewMaxLinkResp, NEW_MAX_LINK_RESP, FIXED, sizeof(NewMaxLinkResp), {
   Task base;
+  uint32_t taskIdx;
   RemotePtrT ptr;
 })
 #undef TASK
