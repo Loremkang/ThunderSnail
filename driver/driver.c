@@ -5,8 +5,7 @@
 #include "protocol.h"
 #include "shared_constants.h"
 #include "disjoint_set.h"
-#include "hash_table_for_newlink.h"
-#include "variable_length_struct_buffer.h"
+
 
 #define PRIMARY_INDEX_MAX_NUM 16
 
@@ -114,39 +113,36 @@ void BatchInsertValidCheck(int batchSize, TupleIdT *tupleIds) {
 }
 
 // called in system startup
-void DriverInit(IOManagerT *ioManager, struct dpu_set_t* set) {
-    IOManagerInit(ioManager, &set, GlobalIOBuffers, GlobalOffsetsBuffer,
+void DriverInit(DriverT *driver) {
+
+    DPU_ASSERT(dpu_alloc(NUM_DPU, NULL, &driver->dpu_set));
+    DPU_ASSERT(dpu_load(&driver->dpu_set, DPU_BINARY, NULL));
+    SendSetDpuIdReq(driver->set);
+
+    HashTableForNewLinkInit(&driver->ht);
+    VariableLengthStructBufferInit(&driver->buf);
+
+    IOManagerInit(driver->ioManager, &driver->set, GlobalIOBuffers, GlobalOffsetsBuffer,
                 GlobalVarlenBlockOffsetBuffer, GlobalIOBuffers);
 }
 
-void BatchInsertTuple(int batchSize, TupleIdT *tupleIds, struct dpu_set_t *set,
-                      IOManagerT *ioManager, HashTableForNewLinkT *ht,
-                      VariableLengthStructBufferT *buf) {
+void DriverBatchInsertTuple(DriverT *driver, int batchSize, TupleIdT *tupleIds) {
+    
     BatchInsertValidCheck(batchSize, tupleIds);
-
-    TupleIdT resultTupleIds[MAXSIZE_HASH_TABLE_QUERY_BATCH];
-    HashTableQueryReplyT resultCounterpart[MAXSIZE_HASH_TABLE_QUERY_BATCH];
 
     int tableId = tupleIds[0].tableId;
     int HashTableCount = CatalogHashTableCountGet(tableId);
 
     size_t resultCount =
-        RunGetOrInsert(ioManager, set, batchSize, tableId, tupleIds,
-                       resultTupleIds, resultCounterpart);
+        RunGetOrInsert(&driver->ioManager, &driver->dpu_set, batchSize, tableId, tupleIds,
+                       driver->resultTupleIds, driver->resultCounterpart);
 
-    GetOrInsertResultToNewlink(resultCount, resultTupleIds, resultCounterpart,
-                               ht, buf);
-    
+    GetOrInsertResultToNewlink(resultCount, driver->resultTupleIds, driver->resultCounterpart,
+                               &driver->ht, &driver->buf);
 }
 
-void End2EndPerformanceTest() {
-    // used in "get_or_insert_result_to_newlink"
-    static HashTableForNewLinkT ht;
-    HashTableForNewLinkInit(&ht);
-    static VariableLengthStructBufferT buf;
-    VariableLengthStructBufferInit(&buf);
-
-    IOManagerT ioManager;
-    struct dpu_set_t dpu_set;
-    DriverInit(&ioManager, &dpu_set);
+void DriverFree(DriverT *driver) {
+    HashTableForNewLinkFree(&driver->ht);
+    VariableLengthStructBufferFree(&driver->buf);
+    DPU_ASSERT(dpu_free(driver->dpu_set));
 }
