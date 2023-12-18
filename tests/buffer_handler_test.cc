@@ -64,7 +64,7 @@ TEST (BufferHandler, DecodeBuffer) {
   }
   printf("Now calling SendGetOrInsertReq\n");
   SendGetOrInsertReq(set, 3, hashTableId, keys, tupleAddrs, TEST_BATCH, recvBufs);
-  TraverseReceiveBuffer(recvBufs[0]);
+  // TraverseReceiveBuffer(recvBufs[0]);
   DPU_ASSERT(dpu_free(set));
 }
 

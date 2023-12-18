@@ -67,6 +67,7 @@ TASK(GetMaxLinkSizeReq, GET_MAX_LINK_SIZE_REQ, FIXED, sizeof(GetMaxLinkSizeReq),
 
 TASK(FetchMaxLinkReq, FETCH_MAX_LINK_REQ, FIXED, sizeof(FetchMaxLinkReq), {
   Task base;
+  uint32_t taskIdx;
   MaxLinkAddrT maxLinkAddr;
 })
 
@@ -104,6 +105,7 @@ TASK(GetMaxLinkSizeResp, GET_MAX_LINK_SIZE_RESP, FIXED, sizeof(GetMaxLinkSizeRes
 
 TASK(FetchMaxLinkResp, FETCH_MAX_LINK_RESP, UNFIXED, sizeof(FetchMaxLinkResp), {
   Task base;
+  uint32_t taskIdx;
   MaxLinkT maxLink;
 })
 

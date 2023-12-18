@@ -21,7 +21,7 @@ TEST(Driver, Driver) {
 
     // init
     for (int hashTableId = 1; hashTableId < 4; hashTableId++) {
-        SendCreateIndexReq(driver->set, hashTableId);
+        SendCreateIndexReq(driver->dpu_set, hashTableId);
     }
 
     TupleIdT tupleIdT1[TEST_BATCH];

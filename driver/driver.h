@@ -30,6 +30,8 @@ typedef struct DriverT {
 
     // Used In Stage 3: NewLink Result -> MaxLink
     int maxLinkSize[MAXSIZE_HASH_TABLE_QUERY_BATCH];
+    int largestMaxLinkPos[MAXSIZE_HASH_TABLE_QUERY_BATCH];
+    int largestMaxLinkSize[MAXSIZE_HASH_TABLE_QUERY_BATCH];
     int idx[MAXSIZE_HASH_TABLE_QUERY_BATCH];
     MaxLinkAddrT newMaxLinkAddrs[MAXSIZE_HASH_TABLE_QUERY_BATCH];
     NewLinkMergerT merger;

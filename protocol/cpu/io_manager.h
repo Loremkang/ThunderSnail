@@ -82,8 +82,8 @@ static inline void IOManagerBeginBlock(IOManagerT *manager, uint8_t taskType) {
     }
 }
 
-static inline void IOManagerAppendPlaceHolder(IOManagerT *manager, int dpuId, uint8_t taskType, size_t size) {
-    BufferBuilderAppendPlaceHolder(&manager->builders[dpuId], taskType, size);
+static inline uint8_t* IOManagerAppendPlaceHolder(IOManagerT *manager, int dpuId, uint8_t taskType, size_t size) {
+    return BufferBuilderAppendPlaceHolder(&manager->builders[dpuId], taskType, size);
 }
 
 static inline void IOManagerAppendTask(IOManagerT *manager, int dpuId,
