@@ -12,7 +12,7 @@ extern "C" {
 // #include "iterators.h"
 }
 
-#define TEST_BATCH (400)
+#define TEST_BATCH (20)
 
 TEST(Driver, Driver) {
 

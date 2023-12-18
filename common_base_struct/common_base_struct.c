@@ -10,7 +10,3 @@ void MaxLinkAddrPrint(MaxLinkAddrT maxLinkAddr) {
     printf("MaxLinkAddrT.rPtr = ");
     RemotePtrPrint(maxLinkAddr.rPtr);
 }
-
-void TupleIdPrint(TupleIdT tupleId) {
-    printf("(TupleIdT){.tableId = %d\t, .tupleAddr = %" PRIx64 "}\n", tupleId.tableId, tupleId.tupleAddr);
-}

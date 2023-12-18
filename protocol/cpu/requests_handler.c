@@ -151,6 +151,9 @@ OffsetsIterator TaskIteratorInit(OffsetsIterator *blockIterator) {
   uint8_t *blockPtr = OffsetsIteratorGetData(blockIterator);
   uint8_t taskType = GetTaskType(blockPtr);
   uint16_t taskCount = GetTaskCount(blockPtr);
+  if (taskCount == 0) {
+    return OffsetsIteratorInit(FixedLengthTask, NULL, NULL, 0, 1);
+  }
   if(IsVarLenTask(taskType)){
     Offset *offsetsPtr = GetBlockOffsetsPtr(blockPtr);
     return OffsetsIteratorInit(VariableLengthTask, blockPtr, offsetsPtr, taskCount, 0);

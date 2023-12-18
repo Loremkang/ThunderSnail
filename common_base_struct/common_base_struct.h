@@ -89,7 +89,9 @@ static inline bool TupleIdEqual(TupleIdT a, TupleIdT b) {
     return a.tableId == b.tableId && a.tupleAddr == b.tupleAddr;
 }
 
-void TupleIdPrint(TupleIdT tupleId);
+static inline void TupleIdPrint(TupleIdT tupleId) {
+    printf("(TupleIdT){.tableId = %d\t, .tupleAddr = %p}\n", tupleId.tableId, (void*)tupleId.tupleAddr);
+}
 
 // used as reply value of "HashTableGetOrInsert"
 typedef enum {
@@ -133,27 +135,27 @@ typedef struct {
     uint8_t buffer[]; // [[Tuple IDs], [Hash Addrs]]
 } MaxLinkT;
 
-static inline TupleIdT* GetTupleIDsFromMaxLink(MaxLinkT* maxLink) {
+static inline TupleIdT* MaxLinkGetTupleIDs(MaxLinkT* maxLink) {
     return (TupleIdT*)(maxLink->buffer);
 }
-static inline TupleIdT* GetKthTupleIDFromMaxLink(MaxLinkT* maxLink, int i) {
+static inline TupleIdT* MaxLinkGetKthTupleID(MaxLinkT* maxLink, int i) {
     ArrayOverflowCheck(i >= 0 && i < maxLink->tupleIDCount);
-    return GetTupleIDsFromMaxLink(maxLink) + i;
+    return MaxLinkGetTupleIDs(maxLink) + i;
 }
-static inline HashAddrT* GetHashAddrsFromMaxLink(MaxLinkT* maxLink) {
+static inline HashAddrT* MaxLinkGetHashAddrs(MaxLinkT* maxLink) {
     return (HashAddrT*)(maxLink->buffer + sizeof(TupleIdT) * maxLink->tupleIDCount);
 }
-static inline HashAddrT* GetKthHashAddrFromMaxLink(MaxLinkT* maxLink, int i) {
+static inline HashAddrT* MaxLinkGetKthHashAddr(MaxLinkT* maxLink, int i) {
     ArrayOverflowCheck(i >= 0 && i < maxLink->hashAddrCount);
-    return GetHashAddrsFromMaxLink(maxLink) + i;
+    return MaxLinkGetHashAddrs(maxLink) + i;
 }
 
-static inline int GetMaxLinkSize(int tupleIdCount, int hashAddrCount) {
+static inline int MaxLinkGetSize(int tupleIdCount, int hashAddrCount) {
     return sizeof(MaxLinkT) + tupleIdCount * sizeof(TupleIdT) + hashAddrCount * sizeof(HashAddrT);
 }
 
-static inline int BuildMaxLink(int tupleIdCount, int hashAddrCount, TupleIdT* tupleIds, HashAddrT* hashAddrs) {
-    Unimplemented("BuildMaxLink");
+static inline int MaxLinkBuild(int tupleIdCount, int hashAddrCount, TupleIdT* tupleIds, HashAddrT* hashAddrs) {
+    Unimplemented("MaxLinkBuild");
     return 0;
 }
 

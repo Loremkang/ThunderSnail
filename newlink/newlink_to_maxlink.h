@@ -24,7 +24,38 @@ static inline void NewLinkMergerReset(NewLinkMergerT *merger) {
     merger->hashAddrCount = 0;
 }
 
-static inline void NewLinkMerge(NewLinkMergerT *merger, NewLinkT *newLink) {
+static inline void NewLinkMergeMaxLink(NewLinkMergerT *merger, MaxLinkT *maxLink) {
+    for (int i = 0; i < maxLink->tupleIDCount; i ++) {
+        bool duplicate = false;
+        TupleIdT tupleId = MaxLinkGetTupleIDs(maxLink)[i];
+        for (int j = 0; j < merger->tupleIDCount; j ++) {
+            if (TupleIdEqual(merger->tupleIds[j], tupleId)) {
+                duplicate = true;
+                break;
+            }
+        }
+        if (!duplicate) {
+            merger->tupleIds[merger->tupleIDCount ++] = tupleId;
+        }
+        ArrayOverflowCheck(merger->tupleIDCount <= MAXSIZE_MAXLINK);
+    }
+    for (int i = 0; i < maxLink->hashAddrCount; i ++) {
+        bool duplicate = false;
+        HashAddrT hashAddr = MaxLinkGetHashAddrs(maxLink)[i];
+        for (int j = 0; j < merger->hashAddrCount; j ++) {
+            if (HashAddrEqual(merger->hashAddrs[j], hashAddr)) {
+                duplicate = true;
+                break;
+            }
+        }
+        if (!duplicate) {
+            merger->hashAddrs[merger->hashAddrCount ++] = hashAddr;
+        }
+        ArrayOverflowCheck(merger->hashAddrCount <= MAXSIZE_MAXLINK);
+    }
+}
+
+static inline void NewLinkMergeNewLink(NewLinkMergerT *merger, NewLinkT *newLink) {
     for (int i = 0; i < newLink->tupleIDCount; i ++) {
         bool duplicate = false;
         TupleIdT tupleId = NewLinkGetTupleIDs(newLink)[i];
@@ -91,9 +122,9 @@ static inline void NewLinkMergerExport(NewLinkMergerT *merger,
 static inline void NewLinkToMaxLink(NewLinkT *newLink, MaxLinkT *maxLink) {
     maxLink->tupleIDCount = newLink->tupleIDCount;
     maxLink->hashAddrCount = newLink->hashAddrCount;
-    memcpy(GetTupleIDsFromMaxLink(maxLink), NewLinkGetTupleIDs(newLink),
+    memcpy(MaxLinkGetTupleIDs(maxLink), NewLinkGetTupleIDs(newLink),
            sizeof(TupleIdT) * newLink->tupleIDCount);
-    memcpy(GetHashAddrsFromMaxLink(maxLink), NewLinkGetHashAddrs(newLink),
+    memcpy(MaxLinkGetHashAddrs(maxLink), NewLinkGetHashAddrs(newLink),
            sizeof(HashAddrT) * newLink->hashAddrCount);
 }
 

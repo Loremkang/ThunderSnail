@@ -4,7 +4,7 @@ extern "C" {
 #include "common_base_struct.h"
 }
 
-TEST(BaseStructTest, MaxLinkSize) { EXPECT_EQ(GetMaxLinkSize(5, 5), 128); }
+TEST(BaseStructTest, MaxLinkSize) { EXPECT_EQ(MaxLinkGetSize(5, 5), 128); }
 
 TEST(BaseStructTest, RemotePtrConvert) {
     uint32_t id = (uint32_t)rand();
