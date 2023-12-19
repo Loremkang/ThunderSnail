@@ -12,7 +12,12 @@
 // Tuple(T2, j) = [1..j, 2..j]
 // H1(j) = [1..j]
 
+static inline int CatalogGetTableCount() {
+    return 5;
+}
+
 static inline int CatalogHashTableCountGet(int tableId) {
+    ValidValueCheck(tableId >= 1 && tableId <= 5);
     if (tableId == 1 || tableId == 5) {
         return 1;
     } else {
@@ -21,6 +26,7 @@ static inline int CatalogHashTableCountGet(int tableId) {
 }
 
 static inline int CatalogEdgeIdGet(int tableId, int hashTableIndex) {
+    ValidValueCheck(tableId >= 1 && tableId <= 5);
     ValidValueCheck(hashTableIndex >= 0 && hashTableIndex < CatalogHashTableCountGet(tableId));
     if (tableId == 1) {
         return 1;
@@ -33,6 +39,7 @@ static inline int CatalogHashTableKeyLengthGet(int hashTableId) {
 }
 
 static inline void CatalogHashTableKeyGet(TupleIdT tupleId, int hashTableIndex, uint8_t* buffer) {
+    ValidValueCheck(tupleId.tableId >= 1 && tupleId.tableId <= 5);
     ValidValueCheck(hashTableIndex >= 0 && hashTableIndex < CatalogHashTableCountGet(tupleId.tableId));
     if (tupleId.tableId == 1) {
         hashTableIndex = 1;
