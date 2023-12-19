@@ -77,6 +77,13 @@ static int Master() {
 
                 break;
             }
+            case GET_MAX_LINK_SIZE_REQ:
+            {
+                barrier_wait(&barrierBlockPrepare);
+                barrier_wait(&barrierBlockReduce);
+
+                break;
+            }
             default:
                 Unimplemented("Other tasks need to be supported.\n");
         }
@@ -179,6 +186,31 @@ static int Slave() {
                         .base = {.taskType = NEW_MAX_LINK_RESP},
                         .ptr = {.dpuId = g_dpuId, .dpuAddr = entry }};
                         
+                    mutex_lock(builderMutex);
+                    BufferBuilderAppendTask(&g_builder, (Task *)&resp);
+                    mutex_unlock(builderMutex);
+                }
+                break;
+            }
+            case GET_MAX_LINK_SIZE_REQ:
+            {
+                barrier_wait(&barrierBlockPrepare);
+                __dma_aligned uint8_t taskBuf[TASK_MAX_LEN];
+                Task *task = (Task *)taskBuf;
+                uint32_t slaveTaskletTaskStart = BLOCK_LOW(slaveTaskletId, NR_SLAVE_TASKLETS, taskCnt);
+                uint32_t slaveTaskletTaskCnt = BLOCK_SIZE(slaveTaskletId, NR_SLAVE_TASKLETS, taskCnt);
+                GetMaxLinkSizeReq *req;
+                for(int j = slaveTaskletTaskStart; j < slaveTaskletTaskStart + slaveTaskletTaskCnt; j++) {
+                    GetKthTask(&g_decoder, j, task);
+                    req = (GetMaxLinkSizeReq *)task;
+                    // process MergeMaxLinkReq
+                    __mram_ptr MaxLinkEntryT* entry = (__mram_ptr MaxLinkEntryT*)req->maxLinkAddr.rPtr.dpuAddr;
+                    uint32_t size = GetMaxLinkSize(entry);
+                    GetMaxLinkSizeResp resp = {
+                        .base = {.taskType = GET_MAX_LINK_SIZE_RESP},
+                        .taskIdx = req->taskIdx,
+                        .maxLinkSize = size
+                    };
                     mutex_lock(builderMutex);
                     BufferBuilderAppendTask(&g_builder, (Task *)&resp);
                     mutex_unlock(builderMutex);

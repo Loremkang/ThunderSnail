@@ -9,6 +9,8 @@
 #include "path_config.h"
 #include "maxlink.h"
 #include "global_mutex.h"
+#include "common_base_struct.h"
+
 // A entry is something like 
 // [tid_coaunt, hash_count, T(1,1), NULL, NULL, NULL, H(1,1), NULL, NULL]
 // their sizes are the following
@@ -159,6 +161,15 @@ void RetriveMaxLink(__mram_ptr MaxLinkEntryT* src, MaxLinkT* res) {
             hids++;
         }
     }
+}
+
+uint32_t GetMaxLinkSize(__mram_ptr MaxLinkEntryT* src) {
+    MaxLinkEntryT* cpy = buddy_alloc(MAX_LINK_ENTRY_SIZE);
+    uint32_t result = sizeof(MaxLinkT);
+    result += cpy->tupleIDCount * sizeof(TUPLE_ID_SIZE);
+    result += cpy->hashAddrCount * sizeof(HASH_ADDR_SIZE);
+    buddy_free(cpy);
+    return result;
 }
 
 bool Check(MaxLinkT* link) {

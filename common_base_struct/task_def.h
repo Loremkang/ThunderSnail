@@ -99,7 +99,7 @@ TASK(GetPointerResp, GET_POINTER_RESP, FIXED, sizeof(GetPointerResp), {
 TASK(GetMaxLinkSizeResp, GET_MAX_LINK_SIZE_RESP, FIXED, sizeof(GetMaxLinkSizeResp), {
   Task base;
   uint32_t taskIdx;
-  uint8_t maxLinkSize;
+  uint32_t maxLinkSize;
 })
 
 
