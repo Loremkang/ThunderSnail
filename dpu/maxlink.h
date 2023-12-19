@@ -23,4 +23,5 @@ void MergeMaxLink(__mram_ptr MaxLinkEntryT* target, MaxLinkT* source);
 void MergeMaxLinkEntry(MaxLinkEntryT* target, MaxLinkEntryT* source);
 void RetriveMaxLink(__mram_ptr MaxLinkEntryT* src, MaxLinkT* res);
 uint32_t GetMaxLinkSize(__mram_ptr MaxLinkEntryT* src);
+void FetchMaxLink(__mram_ptr MaxLinkEntryT* src, MaxLinkT* dst);
 bool Check(MaxLinkT* link);

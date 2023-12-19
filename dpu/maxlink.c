@@ -172,6 +172,15 @@ uint32_t GetMaxLinkSize(__mram_ptr MaxLinkEntryT* src) {
     return result;
 }
 
+void FetchMaxLink(__mram_ptr MaxLinkEntryT* src, MaxLinkT* dst) {
+    mram_read(src, dst, MAX_LINK_ENTRY_SIZE);
+    MaxLinkEntryT* dst_mirror = (MaxLinkEntryT*)dst;
+    // compaction
+    for (int i = 0; i < dst->hashAddrCount; i ++) {
+        MaxLinkGetHashAddrs(dst)[i] = dst_mirror->hashAddrs[i];
+    }
+}
+
 bool Check(MaxLinkT* link) {
     uint32_t code = EncodeMaxLink(link);
     for (int i = 0; i < PATH_CODES_LEN; i++) {

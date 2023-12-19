@@ -256,6 +256,7 @@ void GetPreMaxLinkFromNewLink(IOManagerT *ioManager,
                               int *largestMaxLinkPos, int *largestMaxLinkSize) {
     ArrayOverflowCheck(newLinkBuffer->count <= MAXSIZE_HASH_TABLE_QUERY_BATCH);
     memset(idx, -1, sizeof(*idx) * newLinkBuffer->count);
+    VariableLengthStructBufferSoftReset(preMaxLinkBuffer);
 
     IOManagerStartBufferBuild(ioManager);
     IOManagerBeginBlock(ioManager, FETCH_MAX_LINK_REQ);
@@ -314,6 +315,8 @@ void GetPreMaxLinkFromNewLink(IOManagerT *ioManager,
             NewLinkT *newLink =
                 (NewLinkT *)VariableLengthStructBufferGet(newLinkBuffer, i);
             NewLinkMergerReset(merger);
+            NewLinkMergeNewLink(merger, newLink);
+            merger->maxLinkAddrCount = 0;
             for (int j = 0; j < newLink->maxLinkAddrCount; j++) {
                 if (j == largestMaxLinkPos[i]) {
                     merger->maxLinkAddrs[merger->maxLinkAddrCount++] =
@@ -336,6 +339,14 @@ void GetPreMaxLinkFromNewLink(IOManagerT *ioManager,
             NewLinkMergerExport(merger, preMaxLink);
         }
         ValidValueCheck(taskIdx == taskCount);
+    }
+}
+
+void PrintPreMaxLinkInfo(VariableLengthStructBufferT* buf) {
+    printf(" ===== PreMaxLink Count = %d ===== \n", buf->count);
+    for (int i = 0; i < buf->count; i ++) {
+        NewLinkPrint(VariableLengthStructBufferGet(buf, i));
+        printf("\n");
     }
 }
 
@@ -491,21 +502,24 @@ void DriverBatchInsertTuple(DriverT *driver, int batchSize,
                                driver->resultCounterpart, &driver->ht,
                                &driver->newLinkBuffer);
 
-    PrintNewLinkResult(&driver->newLinkBuffer);
+    // PrintNewLinkResult(&driver->newLinkBuffer);
 
     GetMaximumMaxLinkInNewLink(&driver->ioManager, &driver->newLinkBuffer,
                                driver->maxLinkSize, driver->largestMaxLinkPos,
                                driver->largestMaxLinkSize);
 
-    PrintMaximumMaxLinkInfo(&driver->newLinkBuffer, driver->maxLinkSize,
-                            driver->largestMaxLinkPos,
-                            driver->largestMaxLinkSize);
-    return;
+    // PrintMaximumMaxLinkInfo(&driver->newLinkBuffer, driver->maxLinkSize,
+    //                         driver->largestMaxLinkPos,
+    //                         driver->largestMaxLinkSize);
+    // return;
 
     GetPreMaxLinkFromNewLink(&driver->ioManager, &driver->newLinkBuffer,
                              &driver->preMaxLinkBuffer, &driver->merger,
                              driver->idx, driver->largestMaxLinkPos,
                              driver->largestMaxLinkSize);
+    
+    PrintPreMaxLinkInfo(&driver->preMaxLinkBuffer);
+    return;
 
     InsertPreMaxLink(&driver->ioManager, &driver->preMaxLinkBuffer,
                      driver->newMaxLinkAddrs, &driver->validResultBuffer);

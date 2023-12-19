@@ -4,7 +4,7 @@
 #include <inttypes.h>
 
 void NewLinkPrint(NewLinkT* newLink) {
-    printf("NewLink: %" PRIu64 "\n", (uint64_t)newLink);
+    printf("NewLink: %p\n", newLink);
     printf("TupleIdCount = %d\n", newLink->tupleIDCount);
     printf("MaxLinkAddrCount = %d\n", newLink->maxLinkAddrCount);
     printf("HashAddrCount = %d\n", newLink->hashAddrCount);

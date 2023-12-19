@@ -27,10 +27,10 @@ TEST(Driver, Driver) {
 
     assert(TABLE_COUNT == 5);
 
-    TupleIdT tupleId[TABLE_COUNT][TEST_BATCH];
-    for (int tableId = 0; tableId < TABLE_COUNT; tableId++) {
+    TupleIdT tupleId[TABLE_COUNT + 1][TEST_BATCH];
+    for (int tableId = 1; tableId <= TABLE_COUNT; tableId++) {
         for (uint32_t i = 0; i < TEST_BATCH; i++) {
-            tupleId[tableId][i] = (TupleIdT){.tableId = tableId + 1, .tupleAddr = i + 1};
+            tupleId[tableId][i] = (TupleIdT){.tableId = tableId, .tupleAddr = i + 1};
         }
         DriverBatchInsertTuple(driver, TEST_BATCH, tupleId[tableId]);
     }

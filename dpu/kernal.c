@@ -1,6 +1,7 @@
 #include <barrier.h>
 #include <defs.h>
 #include <mutex.h>
+#include <alloc.h>
 #include "index_req.h"
 #include "task_executor.h"
 #include "shared_wram.h"
@@ -78,6 +79,13 @@ static int Master() {
                 break;
             }
             case GET_MAX_LINK_SIZE_REQ:
+            {
+                barrier_wait(&barrierBlockPrepare);
+                barrier_wait(&barrierBlockReduce);
+
+                break;
+            }
+            case FETCH_MAX_LINK_REQ:
             {
                 barrier_wait(&barrierBlockPrepare);
                 barrier_wait(&barrierBlockReduce);
@@ -215,6 +223,32 @@ static int Slave() {
                     BufferBuilderAppendTask(&g_builder, (Task *)&resp);
                     mutex_unlock(builderMutex);
                 }
+                break;
+            }
+            case FETCH_MAX_LINK_REQ:
+            {
+                barrier_wait(&barrierBlockPrepare);
+                __dma_aligned uint8_t taskBuf[TASK_MAX_LEN];
+                Task *task = (Task *)taskBuf;
+                uint32_t slaveTaskletTaskStart = BLOCK_LOW(slaveTaskletId, NR_SLAVE_TASKLETS, taskCnt);
+                uint32_t slaveTaskletTaskCnt = BLOCK_SIZE(slaveTaskletId, NR_SLAVE_TASKLETS, taskCnt);
+                FetchMaxLinkReq *req;
+                // slightly larger than what's really needed. but fine
+                int respSize = ROUND_UP_TO_8((sizeof(FetchMaxLinkResp) + MAX_LINK_ENTRY_SIZE));
+                FetchMaxLinkResp* resp = buddy_alloc(respSize);
+                for(int j = slaveTaskletTaskStart; j < slaveTaskletTaskStart + slaveTaskletTaskCnt; j++) {
+                    GetKthTask(&g_decoder, j, task);
+                    req = (FetchMaxLinkReq *)task;
+                    // process MergeMaxLinkReq
+                    __mram_ptr MaxLinkEntryT* entry = (__mram_ptr MaxLinkEntryT*)req->maxLinkAddr.rPtr.dpuAddr;
+                    resp->base.taskType = FETCH_MAX_LINK_RESP;
+                    resp->taskIdx = req->taskIdx;
+                    FetchMaxLink(entry, &resp->maxLink);
+                    mutex_lock(builderMutex);
+                    BufferBuilderAppendTask(&g_builder, (Task *)&resp);
+                    mutex_unlock(builderMutex);
+                }
+                buddy_free(resp);
                 break;
             }
             default:
