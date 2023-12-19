@@ -167,6 +167,13 @@ void GetOrInsertResultToNewlink(int length, TupleIdT* tupleIds,
                                                tupleIds, counterpart, buf);
 }
 
+void PrintNewLinkResult(VariableLengthStructBufferT* buf) {
+    for (int i = 0; i < buf->count; i ++) {
+        NewLinkPrint(VariableLengthStructBufferGet(buf, i));
+        printf("\n");
+    }
+}
+
 // TODO: careful consideration on memory management
 void BuildNewLinkFromHashTableGetOrInsertResultPerformanceTest() {
     static HashTableForNewLinkT ht;

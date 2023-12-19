@@ -6,10 +6,11 @@
 #include "hash_table_for_newlink.h"
 #include "variable_length_struct_buffer.h"
 
-
 void BuildNewLinkFromHashTableGetOrInsertResultPerformanceTest();
 void GetOrInsertResultToNewlink(int length, TupleIdT* tupleIds,
                                 HashTableQueryReplyT* counterpart,
                                 HashTableForNewLinkT* ht,
                                 VariableLengthStructBufferT* buf);
+void PrintNewLinkResult(VariableLengthStructBufferT* buf);
+
 #endif

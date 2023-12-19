@@ -462,12 +462,14 @@ void DriverBatchInsertTuple(DriverT *driver, int batchSize,
     size_t resultCount = RunGetOrInsert(
         &driver->ioManager, &driver->dpu_set, batchSize, tableId, tupleIds,
         driver->resultTupleIds, driver->resultCounterpart);
-    PrintGetOrInsertResult(batchSize, resultCount, tableId, driver->resultTupleIds, driver->resultCounterpart);
-    return;
+    // PrintGetOrInsertResult(batchSize, resultCount, tableId, driver->resultTupleIds, driver->resultCounterpart);
 
     GetOrInsertResultToNewlink(resultCount, driver->resultTupleIds,
                                driver->resultCounterpart, &driver->ht,
                                &driver->newLinkBuffer);
+    
+    PrintNewLinkResult(&driver->newLinkBuffer);
+    return;
 
     GetMaximumMaxLinkInNewLink(&driver->ioManager, &driver->newLinkBuffer,
                                driver->maxLinkSize, driver->largestMaxLinkPos,
