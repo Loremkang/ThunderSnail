@@ -6,6 +6,7 @@ Offset GlobalOffsetsBuffer[NUM_DPU][NUM_BLOCKS];
 Offset GlobalVarlenBlockOffsetBuffer[NUM_DPU][BATCH_SIZE];
 
 void IOManagerSend(IOManagerT *manager) {
+    printf("IOManagerSend\n");
     struct dpu_set_t dpu;
     uint32_t idx;
 
@@ -17,11 +18,13 @@ void IOManagerSend(IOManagerT *manager) {
 }
 
 void IOManagerExec(IOManagerT *manager) {
+    printf("IOManagerExec\n");
     DPU_ASSERT(dpu_launch(*manager->dpu_set, DPU_SYNCHRONOUS));
     // ReadDpuSetLog(set);
 }
 
 void IOManagerReceive(IOManagerT *manager) {
+    printf("IOManagerReceive\n");
     struct dpu_set_t dpu;
     uint32_t idx;
 

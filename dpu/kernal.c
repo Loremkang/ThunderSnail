@@ -127,10 +127,16 @@ static int Slave() {
                 for(int j = slaveTaskletTaskStart; j < slaveTaskletTaskStart + slaveTaskletTaskCnt; j++) {
                     GetKthTask(&g_decoder, j, task);
                     req = (GetOrInsertReq *)task;
+                    // {
+                    //     printf("key = %llx\n", *(uint64_t*)req->ptr);
+                    //     printf("keylen = %llx\n", (uint64_t)req->len);
+                    // }
                     primary_index_dpu *pid = IndexCheck(req->hashTableId);
                     IndexGetOrInsertReq(pid, (char *)(req->ptr), req->len, req->tid, &reply_buffer);
-                    // printf("reply_buffer type: %d, %d, %p\n", reply_buffer.type, reply_buffer.value.hashAddr.rPtr.dpuId,
-                    // reply_buffer.value.hashAddr.rPtr.dpuAddr);
+                    // {
+                    //     printf("reply_buffer type: %d, %d, %p\n", reply_buffer.type, reply_buffer.value.hashAddr.rPtr.dpuId,
+                    //         reply_buffer.value.hashAddr.rPtr.dpuAddr);
+                    // }
                     GetOrInsertResp resp = {
                         .base = {.taskType = GET_OR_INSERT_RESP},
                         .taskIdx = req->taskIdx,

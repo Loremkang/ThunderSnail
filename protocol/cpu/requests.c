@@ -58,6 +58,7 @@ void SendSetDpuIdReq(struct dpu_set_t set) {
 }
 
 void SendCreateIndexReq(struct dpu_set_t set, HashTableId indexId) {
+    printf("Create Index : %u\n", indexId);
     // prepare dpu buffers
     uint8_t *buffers[NUM_DPU];
     size_t sizes[NUM_DPU];
