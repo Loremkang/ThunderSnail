@@ -149,7 +149,8 @@ TEST(IOManager, TwoRounds) {
 
     TupleIdT tupleIdT1[TEST_BATCH];
     TupleIdT tupleIdT2[TEST_BATCH];
-    uint32_t keys[TEST_BATCH];
+    using KeyType = uint64_t;
+    KeyType keys[TEST_BATCH];
     for (uint32_t i = 0; i < TEST_BATCH; i++) {
         tupleIdT1[i] = (TupleIdT){.tableId = 1, .tupleAddr = i};
         tupleIdT2[i] = (TupleIdT){.tableId = 2, .tupleAddr = i};
@@ -163,8 +164,8 @@ TEST(IOManager, TwoRounds) {
     IOManagerBeginBlock(&ioManager, GET_OR_INSERT_REQ);
 
     for (int i = 0; i < TEST_BATCH; i++) {
-        uint32_t key = keys[i];
-        uint32_t keysize = sizeof(uint32_t);
+        KeyType key = keys[i];
+        size_t keysize = sizeof(KeyType);
         int dpuIdx = hash32(key) % NUM_DPU;
         size_t taskSize = ROUND_UP_TO_8(keysize + sizeof(GetOrInsertReq));
         GetOrInsertReq *req = (GetOrInsertReq *)malloc(taskSize);
@@ -175,7 +176,7 @@ TEST(IOManager, TwoRounds) {
                     .tupleAddr = tupleIdT1[i].tupleAddr};
         req->hashTableId = hashTableId;
         req->taskIdx = i;
-        memcpy(req->ptr, &key, sizeof(uint32_t));
+        memcpy(req->ptr, &key, sizeof(KeyType));
         IOManagerAppendTask(&ioManager, dpuIdx, (Task *)req);
     }
 
@@ -216,8 +217,8 @@ TEST(IOManager, TwoRounds) {
     IOManagerBeginBlock(&ioManager, GET_OR_INSERT_REQ);
 
     for (int i = 0; i < TEST_BATCH; i++) {
-        uint32_t key = keys[i];
-        uint32_t keysize = sizeof(uint32_t);
+        KeyType key = keys[i];
+        size_t keysize = sizeof(KeyType);
         // int dpuIdx = hash32(key) % NUM_DPU;
         int dpuIdx = hash32(key) % NUM_DPU;
         size_t taskSize = ROUND_UP_TO_8(keysize + sizeof(GetOrInsertReq));
@@ -229,7 +230,7 @@ TEST(IOManager, TwoRounds) {
                     .tupleAddr = tupleIdT2[i].tupleAddr};
         req->hashTableId = hashTableId;
         req->taskIdx = i;
-        memcpy(req->ptr, &key, sizeof(uint32_t));
+        memcpy(req->ptr, &key, sizeof(KeyType));
         IOManagerAppendTask(&ioManager, dpuIdx, (Task *)req);
     }
 
