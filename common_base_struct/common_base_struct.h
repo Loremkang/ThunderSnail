@@ -58,14 +58,24 @@ static inline bool RemotePtrInvalid(RemotePtrT rPtr) {
     return RemotePtrToI64(rPtr) == RemotePtrToI64(INVALID_REMOTEPTR);
 }
 
-void RemotePtrPrint(RemotePtrT rPtr);
+static inline void RemotePtrPrint(RemotePtrT rPtr) {
+    printf("(RemotePtrT){.dpuId = %x\t, .dpuAddr = %x}\n", rPtr.dpuId, rPtr.dpuAddr);
+}
 
 typedef struct {
+    int edgeId;
     RemotePtrT rPtr;
 } HashAddrT;
 
 static inline bool HashAddrEqual(HashAddrT a, HashAddrT b) {
-    return RemotePtrToI64(a.rPtr) == RemotePtrToI64(b.rPtr);
+    return a.edgeId == b.edgeId && RemotePtrToI64(a.rPtr) == RemotePtrToI64(b.rPtr);
+}
+
+static inline void HashAddrPrint(HashAddrT hashAddr) {
+    printf("(HashAddrT) {.edgeId = %d, \t.dpuId = %d, \t.dpuAddr = 0x%x}\n",
+                   hashAddr.edgeId,
+                   hashAddr.rPtr.dpuId,
+                   hashAddr.rPtr.dpuAddr);
 }
 
 typedef struct {
@@ -76,7 +86,11 @@ static inline bool MaxLinkAddrEqual(MaxLinkAddrT a, MaxLinkAddrT b) {
     return RemotePtrToI64(a.rPtr) == RemotePtrToI64(b.rPtr);
 }
 
-void MaxLinkAddrPrint(MaxLinkAddrT maxLinkAddr);
+static inline void MaxLinkAddrPrint(MaxLinkAddrT maxLinkAddr) {
+    printf("(MaxLinkAddrT) {.dpuId = %d,\t.dpuAddr = 0x%x}\n",
+                   maxLinkAddr.rPtr.dpuId,
+                   maxLinkAddr.rPtr.dpuAddr);
+}
 
 // Base Elements
 typedef struct {
