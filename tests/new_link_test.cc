@@ -67,7 +67,7 @@ TEST(NewLinkTest, NewLink) {
         NewLinkGetMaxLinkAddrs(newLink)[i] =
             (MaxLinkAddrT){.rPtr = (RemotePtrT){.dpuId = 11, .dpuAddr = i}};
         NewLinkGetHashAddrs(newLink)[i] =
-            (HashAddrT){.rPtr = (RemotePtrT){.dpuId = 12, .dpuAddr = i}};
+            (HashAddrT){.edgeId = 1, .rPtr = (RemotePtrT){.dpuId = 12, .dpuAddr = i}};
     }
 
     EXPECT_EQ(sizeof(NewLinkT), sizeof(int) * 4);

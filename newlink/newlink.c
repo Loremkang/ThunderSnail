@@ -19,7 +19,7 @@ void NewLinkPrint(NewLinkT* newLink) {
     }
     for (int i = 0; i < newLink->hashAddrCount; i ++) {
         HashAddrT hashAddr = NewLinkGetHashAddrs(newLink)[i];
-        printf("HashAddrT.rPtr = ");
+        printf("(HashAddrT) {.edgeId = %d, .rPtr = ", hashAddr.edgeId);
         RemotePtrPrint(hashAddr.rPtr);
     
     }

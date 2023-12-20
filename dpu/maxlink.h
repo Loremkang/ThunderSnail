@@ -16,12 +16,12 @@ typedef   __attribute__((aligned(8))) struct {
 
 bool IsNullTuple(TupleIdT* tid);
 bool IsNullHash(HashAddrT* ha) ;
-uint32_t GetIdIndex(int tid);
+uint32_t GetTableIdIndex(int tid);
+uint32_t GetEdgeIdIndex(int tid);
 uint32_t EncodeMaxLink(MaxLinkT* link);
 __mram_ptr MaxLinkEntryT* NewMaxLinkEntry(MaxLinkT* ml);
-void MergeMaxLink(__mram_ptr MaxLinkEntryT* target, MaxLinkT* source);
+void MergeMaxLink(__mram_ptr MaxLinkEntryT* dst, MaxLinkT* src);
 void MergeMaxLinkEntry(MaxLinkEntryT* target, MaxLinkEntryT* source);
 void RetriveMaxLink(__mram_ptr MaxLinkEntryT* src, MaxLinkT* res);
 uint32_t GetMaxLinkSize(__mram_ptr MaxLinkEntryT* src);
-void FetchMaxLink(__mram_ptr MaxLinkEntryT* src, MaxLinkT* dst);
 bool Check(MaxLinkT* link);

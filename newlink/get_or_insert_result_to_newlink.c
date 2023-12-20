@@ -169,7 +169,8 @@ void GetOrInsertResultToNewlink(int length, TupleIdT* tupleIds,
 
 void PrintNewLinkResult(VariableLengthStructBufferT* buf) {
     for (int i = 0; i < buf->count; i ++) {
-        NewLinkPrint(VariableLengthStructBufferGet(buf, i));
+        NewLinkT* newLink = (NewLinkT*)VariableLengthStructBufferGet(buf, i);
+        NewLinkPrint(newLink);
         printf("\n");
     }
 }

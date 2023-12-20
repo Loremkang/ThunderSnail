@@ -10,7 +10,7 @@ void IndexSpaceInit();
 primary_index_dpu *IndexCreate(uint32_t indexId);
 void IndexInitBuckets(primary_index_dpu *pid, uint32_t taskletId);
 primary_index_dpu *IndexCheck(uint32_t indexId);
-void IndexGetOrInsertReq(primary_index_dpu *pid, char *key, uint32_t keyLen, TupleIdT tupleId, HashTableQueryReplyT *reply);
+void IndexGetOrInsertReq(primary_index_dpu *pid, char *key, uint32_t keyLen, TupleIdT tupleId, uint32_t edgeId, HashTableQueryReplyT *reply);
 void IndexUpdateReq(primary_index_dpu *pid, char *key, HashAddrT hashAddr, MaxLinkAddrT maxLinkAddr);
 
 #endif

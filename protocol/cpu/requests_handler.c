@@ -70,7 +70,7 @@ void PrintInsertResp(GetOrInsertResp *resp) {
   }
   case HashAddr: {
     // printf("rid=%d\t", resp->taskidx);
-    printf("(HashAddrT) {.dpuId = %d, \t.dpuAddr = 0x%x}\n", resp->tupleIdOrMaxLinkAddr.value.hashAddr.rPtr.dpuId, resp->tupleIdOrMaxLinkAddr.value.hashAddr.rPtr.dpuAddr);
+    printf("(HashAddrT) {.edgeId = %d, \t.dpuId = %d, \t.dpuAddr = 0x%x}\n", resp->tupleIdOrMaxLinkAddr.value.hashAddr.edgeId, resp->tupleIdOrMaxLinkAddr.value.hashAddr.rPtr.dpuId, resp->tupleIdOrMaxLinkAddr.value.hashAddr.rPtr.dpuAddr);
     break;
   }
   default:
