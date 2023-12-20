@@ -68,7 +68,7 @@ void BufferDecoderInit(BufferDecoder *decoder) {
     offsetsLenBlock = ALIGN_TO(offsetsLenBlock, 8);
     decoder->curBlockOffsetPtr = (__mram_ptr Offset*)(decoder->bufPtr + (decoder->bufHeader).totalSize - offsetsLenBlock);
 
-    InitNextBlock(decoder);
+    // InitNextBlock(decoder);
   }
 }
 
