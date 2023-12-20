@@ -348,6 +348,7 @@ void InsertPreMaxLink(IOManagerT *ioManager,
                       MaxLinkAddrT *newMaxLinkAddrs) {
     ArrayOverflowCheck(preMaxLinkBuffer->count <=
                        MAXSIZE_HASH_TABLE_QUERY_BATCH);
+    printf("===== %s =====\n", __func__);
 
     IOManagerStartBufferBuild(ioManager);
     // New MaxLink
@@ -370,12 +371,12 @@ void InsertPreMaxLink(IOManagerT *ioManager,
                 req->base.taskType = taskType;
                 req->taskIdx = i;
                 NewLinkToMaxLink(preMaxLink, &req->maxLink);
-                assert(size % 4 == 0);
-                for (int i = 0; i < size / 4; i ++) {
-                    int *x = (int*) req;
-                    printf("%x ", x[i]);
-                }
-                printf("size = %zu\n", size);
+                // assert(size % 4 == 0);
+                // for (int i = 0; i < size / 4; i ++) {
+                //     int *x = (int*) req;
+                //     printf("%x ", x[i]);
+                // }
+                // printf("size = %zu\n", size);
                 newMaxLinkTaskCount ++;
                 #ifdef DEBUG
                 newMaxLinkAddrs[i].rPtr = INVALID_REMOTEPTR;
@@ -423,7 +424,7 @@ void InsertPreMaxLink(IOManagerT *ioManager,
 
     // run tasks : 1 IO Round
     IOManagerSendExecReceive(ioManager);
-    ReadDpuSetLog(*ioManager->dpu_set);
+    // ReadDpuSetLog(*ioManager->dpu_set);
 
     // Merge MaxLink has no reply
     for (int dpuId = 0; dpuId < NUM_DPU; dpuId++) {
@@ -444,8 +445,7 @@ void InsertPreMaxLink(IOManagerT *ioManager,
                 ValidValueCheck(preMaxLink->maxLinkAddrCount == 0);
                 ValidValueCheck(resp->base.taskType == NEW_MAX_LINK_RESP);
                 newMaxLinkAddrs[taskIdx].rPtr = resp->ptr;
-                printf("taskidx = %d\n", resp->taskIdx);
-                fflush(stdout);
+                // printf("taskidx = %d\n", resp->taskIdx);
             }
         }
     }
@@ -475,6 +475,7 @@ void UpdateHashTable(IOManagerT *ioManager,
                      MaxLinkAddrT *newMaxLinkAddrs) {
     ArrayOverflowCheck(preMaxLinkBuffer->count <=
                        MAXSIZE_HASH_TABLE_QUERY_BATCH);
+    printf("===== %s =====\n", __func__);
 
     IOManagerStartBufferBuild(ioManager);
 
@@ -496,8 +497,10 @@ void UpdateHashTable(IOManagerT *ioManager,
             HashAddrT hashAddr = NewLinkGetHashAddrs(preMaxLink)[hashIdx];
             UpdatePointerReq task;
             task.base = (Task){.taskType = taskType};
-            task.hashEntry = hashAddr;
+            task.hashAddr = hashAddr;
             task.maxLinkAddr = addr;
+            HashAddrPrint(hashAddr);
+            MaxLinkAddrPrint(addr);
             IOManagerAppendTask(ioManager, dpuId, (Task *)(&task));
         }
     }
@@ -529,37 +532,34 @@ void DriverBatchInsertTuple(DriverT *driver, int batchSize,
     size_t resultCount = RunGetOrInsert(
         &driver->ioManager, &driver->dpu_set, batchSize, tableId, tupleIds,
         driver->resultTupleIds, driver->resultCounterpart);
-    // PrintGetOrInsertResult(batchSize, resultCount, tableId,
-    // driver->resultTupleIds, driver->resultCounterpart);
+    PrintGetOrInsertResult(batchSize, resultCount, tableId,
+        driver->resultTupleIds, driver->resultCounterpart);
 
     GetOrInsertResultToNewlink(resultCount, driver->resultTupleIds,
                                driver->resultCounterpart, &driver->ht,
                                &driver->newLinkBuffer);
 
-    // PrintNewLinkResult(&driver->newLinkBuffer);
+    PrintNewLinkResult(&driver->newLinkBuffer);
 
     GetMaximumMaxLinkInNewLink(&driver->ioManager, &driver->newLinkBuffer,
                                driver->maxLinkSize, driver->largestMaxLinkPos,
                                driver->largestMaxLinkSize);
 
-    // PrintMaximumMaxLinkInfo(&driver->newLinkBuffer, driver->maxLinkSize,
-    //                         driver->largestMaxLinkPos,
-    //                         driver->largestMaxLinkSize);
-    // return;
+    PrintMaximumMaxLinkInfo(&driver->newLinkBuffer, driver->maxLinkSize,
+                            driver->largestMaxLinkPos,
+                            driver->largestMaxLinkSize);
 
     GetPreMaxLinkFromNewLink(&driver->ioManager, &driver->newLinkBuffer,
                              &driver->preMaxLinkBuffer, &driver->merger,
                              driver->idx, driver->largestMaxLinkPos,
                              driver->largestMaxLinkSize);
     
-    // PrintPreMaxLinkInfo(&driver->preMaxLinkBuffer);
-    // return;
+    PrintPreMaxLinkInfo(&driver->preMaxLinkBuffer);
 
     InsertPreMaxLink(&driver->ioManager, &driver->preMaxLinkBuffer,
                      driver->newMaxLinkAddrs);
     
     PrintNewMaxLinkAddrs(&driver->preMaxLinkBuffer, driver->newMaxLinkAddrs);
-    return;
 
     UpdateHashTable(&driver->ioManager, &driver->preMaxLinkBuffer,
                     driver->newMaxLinkAddrs);

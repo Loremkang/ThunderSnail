@@ -55,7 +55,7 @@ TASK(GetPointerReq, GET_POINTER_REQ, UNFIXED, sizeof(GetPointerReq), {
 
 TASK(UpdatePointerReq, UPDATE_POINTER_REQ, FIXED, sizeof(UpdatePointerReq), {
   Task base;
-  HashAddrT hashEntry;
+  HashAddrT hashAddr;
   MaxLinkAddrT maxLinkAddr;
 })
 

@@ -65,6 +65,13 @@ static int Master() {
                 barrier_wait(&barrierBlockReduce);
                 break;
             }
+            case UPDATE_POINTER_REQ:
+            {
+                // do some prepare work
+                barrier_wait(&barrierBlockPrepare);
+                barrier_wait(&barrierBlockReduce);
+                break;
+            }
             case MERGE_MAX_LINK_REQ:
             {
                 barrier_wait(&barrierBlockPrepare);
@@ -162,6 +169,20 @@ static int Slave() {
                 }
                 break;
             }
+            case UPDATE_POINTER_REQ:
+            {
+                barrier_wait(&barrierBlockPrepare);
+                uint32_t slaveTaskletTaskStart = BLOCK_LOW(slaveTaskletId, NR_SLAVE_TASKLETS, taskCnt);
+                uint32_t slaveTaskletTaskCnt = BLOCK_SIZE(slaveTaskletId, NR_SLAVE_TASKLETS, taskCnt);
+                // printf("slaveTaskletTaskStart: %d, slaveTaskletTaskCnt: %d\n", slaveTaskletTaskStart, slaveTaskletTaskCnt);
+                __dma_aligned UpdatePointerReq req;
+                for(int j = slaveTaskletTaskStart; j < slaveTaskletTaskStart + slaveTaskletTaskCnt; j++) {
+                    GetKthTask(&g_decoder, j, (Task*)(&req));
+                    primary_index_dpu *pid = IndexCheck(req.hashAddr.edgeId);
+                    IndexUpdateReq(pid, req.hashAddr, req.maxLinkAddr);
+                }
+                break;
+            }
             case MERGE_MAX_LINK_REQ:
             {
                 barrier_wait(&barrierBlockPrepare);
@@ -173,6 +194,8 @@ static int Slave() {
                 for(int j = slaveTaskletTaskStart; j < slaveTaskletTaskStart + slaveTaskletTaskCnt; j++) {
                     GetKthTask(&g_decoder, j, task);
                     req = (MergeMaxLinkReq *)task;
+                    __mram_ptr MaxLinkEntryT* entry = (__mram_ptr MaxLinkEntryT*) req->ptr.dpuAddr;
+                    MergeMaxLink(entry, &req->maxLink);
                     // process MergeMaxLinkReq
                 }
                 break;

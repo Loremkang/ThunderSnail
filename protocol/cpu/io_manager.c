@@ -6,7 +6,7 @@ Offset GlobalOffsetsBuffer[NUM_DPU][NUM_BLOCKS];
 Offset GlobalVarlenBlockOffsetBuffer[NUM_DPU][BATCH_SIZE];
 
 void IOManagerSend(IOManagerT *manager) {
-    printf("IOManagerSend\n");
+    printf("%s\n", __func__);
     struct dpu_set_t dpu;
     uint32_t idx;
 
@@ -18,13 +18,13 @@ void IOManagerSend(IOManagerT *manager) {
 }
 
 void IOManagerExec(IOManagerT *manager) {
-    printf("IOManagerExec\n");
+    printf("%s\n", __func__);
     DPU_ASSERT(dpu_launch(*manager->dpu_set, DPU_SYNCHRONOUS));
     // ReadDpuSetLog(set);
 }
 
 void IOManagerReceive(IOManagerT *manager) {
-    printf("IOManagerReceive\n");
+    printf("%s\n", __func__);
     struct dpu_set_t dpu;
     uint32_t idx;
 
@@ -39,7 +39,7 @@ void IOManagerReceive(IOManagerT *manager) {
         DpuBufferHeader* header = (DpuBufferHeader*)manager->recvIOBuffers[i];
         manager->recvSizes[i] = header->totalSize;
     }
-    manager->maxReceiveSize = max_in_array(NUM_DPU, manager->recvSizes);
+    manager->maxReceiveSize = ROUND_UP_TO_8(max_in_array(NUM_DPU, manager->recvSizes));
 
     ArrayOverflowCheck(manager->maxReceiveSize <= BUFFER_LEN);
 

@@ -53,8 +53,8 @@ void IndexGetOrInsertReq(primary_index_dpu *pid, char *key, uint32_t keyLen, Tup
     }
 }
 
-void IndexUpdateReq(primary_index_dpu *pid, char *key, HashAddrT hashAddr, MaxLinkAddrT maxLinkAddr) {
-    __mram_ptr primary_index_entry *entry = (__mram_ptr primary_index_entry *)hashAddr.rPtr.dpuAddr;
+void IndexUpdateReq(primary_index_dpu *pid, HashAddrT hashAddr, MaxLinkAddrT maxLinkAddr) {
+    __mram_ptr primary_index_entry *entry = (__mram_ptr primary_index_entry *)(hashAddr.rPtr.dpuAddr);
     metadata newValMeta = {.type = MaxLinkAddr};
     uint64_t newVal = RemotePtrToI64(maxLinkAddr.rPtr);
     primary_index_dpu_update_with_entry_addr(pid, entry, newValMeta, newVal);
