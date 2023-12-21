@@ -59,11 +59,12 @@ static inline bool RemotePtrInvalid(RemotePtrT rPtr) {
 }
 
 static inline void RemotePtrPrint(RemotePtrT rPtr) {
-    printf("(RemotePtrT){.dpuId = %x\t, .dpuAddr = %x}\n", rPtr.dpuId, rPtr.dpuAddr);
+    printf("(RemotePtrT){.dpuId = %u\t, .dpuAddr = 0x%x}\n", rPtr.dpuId, rPtr.dpuAddr);
 }
 
 typedef struct {
-    int edgeId;
+    uint32_t edgeId;
+    uint32_t padding;
     RemotePtrT rPtr;
 } HashAddrT;
 

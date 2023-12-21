@@ -130,66 +130,66 @@ DecoderStateT GetNextTask (BufferDecoder *decoder, Task *task) {
   return state;
 }
 
-void GetOrInsertFake (HashTableId id, char *key, uint32_t keyLen, TupleIdT tupleId, HashTableQueryReplyT *reply) {
-  printf("Warning: this is GetOrInsertFake!\n");
-  printf("hashTableId=%d, keyLen=%d, key=", id, keyLen);
-  for (int i=0; i < keyLen; i++) {
-    printf("%c", (unsigned char)key[i]);
-  }
-  printf(" (TupleIdT){.tableId = %d,\t .tupleAddr = 0x%lx}\n", tupleId.tableId, tupleId.tupleAddr);
+// void GetOrInsertFake (HashTableId id, char *key, uint32_t keyLen, TupleIdT tupleId, HashTableQueryReplyT *reply) {
+//   printf("Warning: this is GetOrInsertFake!\n");
+//   printf("hashTableId=%d, keyLen=%d, key=", id, keyLen);
+//   for (int i=0; i < keyLen; i++) {
+//     printf("%c", (unsigned char)key[i]);
+//   }
+//   printf(" (TupleIdT){.tableId = %d,\t .tupleAddr = 0x%lx}\n", tupleId.tableId, tupleId.tupleAddr);
 
-  // To fill a fake reply
-  reply->type = HashAddr;
-  (reply->value).hashAddr.rPtr.dpuId = 0xaaaa;
-  (reply->value).hashAddr.rPtr.dpuAddr = 0xffff;
-}
+//   // To fill a fake reply
+//   reply->type = HashAddr;
+//   (reply->value).hashAddr.rPtr.dpuId = 0xaaaa;
+//   (reply->value).hashAddr.rPtr.dpuAddr = 0xffff;
+// }
 
-void ExecuteTaskThenAppend (BufferBuilder *builder, Task *task) {
-  switch(task->taskType) {
-  case GET_OR_INSERT_REQ: {
-    GetOrInsertReq *req = (GetOrInsertReq*)task;
-    __dma_aligned HashTableQueryReplyT reply_buffer;
-    /* primary_index_dpu *pid = IndexCheck(req->hashTableId); */
-    /* IndexGetOrInsertReq(pid, (char*)(req->ptr), req->len, req->tid, &reply_buffer); */
-    GetOrInsertFake(req->hashTableId, (char*)(req->ptr), req->len, req->tid, &reply_buffer);
-    GetOrInsertResp resp = {
-      .base = {.taskType = GET_OR_INSERT_RESP},
-      .tupleIdOrMaxLinkAddr = reply_buffer
-    };
-    BufferBuilderAppendTask(builder, (Task*)&resp);
-    break;
-  }
-  default:
-    Unimplemented("Other tasks need to be supported.\n");
-  }
-}
+// void ExecuteTaskThenAppend (BufferBuilder *builder, Task *task) {
+//   switch(task->taskType) {
+//   case GET_OR_INSERT_REQ: {
+//     GetOrInsertReq *req = (GetOrInsertReq*)task;
+//     __dma_aligned HashTableQueryReplyT reply_buffer;
+//     /* primary_index_dpu *pid = IndexCheck(req->hashTableId); */
+//     /* IndexGetOrInsertReq(pid, (char*)(req->ptr), req->len, req->tid, &reply_buffer); */
+//     GetOrInsertFake(req->hashTableId, (char*)(req->ptr), req->len, req->tid, &reply_buffer);
+//     GetOrInsertResp resp = {
+//       .base = {.taskType = GET_OR_INSERT_RESP},
+//       .tupleIdOrMaxLinkAddr = reply_buffer
+//     };
+//     BufferBuilderAppendTask(builder, (Task*)&resp);
+//     break;
+//   }
+//   default:
+//     Unimplemented("Other tasks need to be supported.\n");
+//   }
+// }
 
 
-void DpuMainLoop () {
-  __dma_aligned BufferDecoder decoder;
-  BufferDecoderInit(&decoder);
-  __dma_aligned BufferBuilder builder;
-  BufferBuilderInit(&builder);
-  if (decoder.bufHeader.blockCnt > 0) {
-    BufferBuilderBeginBlock(&builder, RespTaskType(decoder.blockHeader.taskType));
-  }
+// void DpuMainLoop () {
+//   __dma_aligned BufferDecoder decoder;
+//   BufferDecoderInit(&decoder);
+//   __dma_aligned BufferBuilder builder;
+//   BufferBuilderInit(&builder);
+//   if (decoder.bufHeader.blockCnt > 0) {
+//     BufferBuilderBeginBlock(&builder, RespTaskType(decoder.blockHeader.taskType));
+//   }
 
-  __dma_aligned uint8_t taskBuf[TASK_MAX_LEN];
-  Task *task = (Task*)taskBuf;
-  while (true) {
-    DecoderStateT state = GetNextTask(&decoder, task);
-    if (NO_MORE_TASK == state) { // All tasks consumed
-      break;
-    }
-    if (NEW_BLOCK == state) {
-      BufferBuilderEndBlock(&builder);
-      BufferBuilderBeginBlock(&builder, RespTaskType(decoder.blockHeader.taskType));
-    }
-    ExecuteTaskThenAppend(&builder, task);
-  }
+//   __dma_aligned uint8_t taskBuf[TASK_MAX_LEN];
+//   Task *task = (Task*)taskBuf;
+//   while (true) {
+//     DecoderStateT state = GetNextTask(&decoder, task);
+//     if (NO_MORE_TASK == state) { // All tasks consumed
+//       break;
+//     }
+//     if (NEW_BLOCK == state) {
+//       BufferBuilderEndBlock(&builder);
+//       BufferBuilderBeginBlock(&builder, RespTaskType(decoder.blockHeader.taskType));
+//     }
+//     ExecuteTaskThenAppend(&builder, task);
+//   }
 
-  if (decoder.bufHeader.blockCnt > 0) {
-    BufferBuilderEndBlock(&builder);
-  }
-  BufferBuilderFinish(&builder);
-}
+//   if (decoder.bufHeader.blockCnt > 0) {
+//     BufferBuilderEndBlock(&builder);
+//   }
+//   BufferBuilderFinish(&builder);
+// }

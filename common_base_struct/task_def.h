@@ -55,6 +55,7 @@ TASK(GetPointerReq, GET_POINTER_REQ, UNFIXED, sizeof(GetPointerReq), {
 
 TASK(UpdatePointerReq, UPDATE_POINTER_REQ, FIXED, sizeof(UpdatePointerReq), {
   Task base;
+  uint32_t padding;
   HashAddrT hashAddr;
   MaxLinkAddrT maxLinkAddr;
 })
@@ -73,6 +74,7 @@ TASK(FetchMaxLinkReq, FETCH_MAX_LINK_REQ, FIXED, sizeof(FetchMaxLinkReq), {
 
 TASK(MergeMaxLinkReq, MERGE_MAX_LINK_REQ, UNFIXED, sizeof(MergeMaxLinkReq), {
   Task base;
+  uint32_t padding;
   RemotePtrT ptr;
   MaxLinkT maxLink;
 })
@@ -98,6 +100,7 @@ TASK(GetPointerResp, GET_POINTER_RESP, FIXED, sizeof(GetPointerResp), {
 
 TASK(GetMaxLinkSizeResp, GET_MAX_LINK_SIZE_RESP, FIXED, sizeof(GetMaxLinkSizeResp), {
   Task base;
+  uint32_t padding;
   uint32_t taskIdx;
   uint32_t maxLinkSize;
 })

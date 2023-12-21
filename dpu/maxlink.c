@@ -105,7 +105,7 @@ __mram_ptr MaxLinkEntryT* NewMaxLinkEntry(MaxLinkT* ml) {
     new_max_link_entry_ptr += MAX_LINK_ENTRY_SIZE;
     mutex_unlock(heap_mutex);
     // // copy it to mram
-    mram_write(&res, maxLinkEntryPtr, MAX_LINK_ENTRY_SIZE);
+    mram_write_unaligned(&res, maxLinkEntryPtr, MAX_LINK_ENTRY_SIZE);
     return maxLinkEntryPtr;
 }
 
@@ -119,7 +119,8 @@ void MergeMaxLink(__mram_ptr MaxLinkEntryT* dst, MaxLinkT* src) {
     // merge table id
     for (int i = 0; i < src->tupleIDCount; i++) {
         int idx = GetTableIdIndex(tuple_buf[i].tableId);
-        assert(IsNullTuple(&(res.tupleIds[idx])) && !IsNullTuple(&tuple_buf[i]));
+        ValidValueCheck(IsNullTuple(res.tupleIds + idx));
+        ValidValueCheck(!IsNullTuple(tuple_buf[i]));
         res.tupleIds[idx] = tuple_buf[i];
     }
     // no duplicated table id, add directly
@@ -135,11 +136,11 @@ void MergeMaxLink(__mram_ptr MaxLinkEntryT* dst, MaxLinkT* src) {
             res.hashAddrs[idx] = hash_buf[i];
             res.hashAddrCount++;
         } else {
-            // assert(HashAddrEqual(res.hashAddrs[idx], hash_buf[i]));
+            ValidValueCheck(HashAddrEqual(res.hashAddrs[idx], hash_buf[i]));
         }
     }
     // write res to target mram
-    mram_write(&res, dst, MAX_LINK_ENTRY_SIZE);
+    mram_write_unaligned(&res, dst, MAX_LINK_ENTRY_SIZE);
 }
 
 void MergeMaxLinkEntry(MaxLinkEntryT* target, MaxLinkEntryT* source) {
@@ -179,12 +180,15 @@ void RetriveMaxLink(__mram_ptr MaxLinkEntryT* src, MaxLinkT* res) {
     }
 }
 
+// size after compaction
 uint32_t GetMaxLinkSize(__mram_ptr MaxLinkEntryT* src) {
-    MaxLinkT maxLinkHeader;
-    mram_read(src, &maxLinkHeader, sizeof(MaxLinkT));
+    MaxLinkEntryT entry;
+    mram_read(src, &entry, sizeof(entry));
     uint32_t result = sizeof(MaxLinkT);
-    result += maxLinkHeader.tupleIDCount * sizeof(TUPLE_ID_SIZE);
-    result += maxLinkHeader.hashAddrCount * sizeof(HASH_ADDR_SIZE);
+    // printf("Tuple: count = %d, size = %d\n", entry.tupleIDCount, TUPLE_ID_SIZE);
+    // printf("Hash: count = %d, size = %d\n", entry.hashAddrCount, HASH_ADDR_SIZE);
+    result += entry.tupleIDCount * TUPLE_ID_SIZE;
+    result += entry.hashAddrCount * HASH_ADDR_SIZE;
     return result;
 }
 

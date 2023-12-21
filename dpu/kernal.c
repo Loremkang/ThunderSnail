@@ -179,6 +179,7 @@ static int Slave() {
                 for(int j = slaveTaskletTaskStart; j < slaveTaskletTaskStart + slaveTaskletTaskCnt; j++) {
                     GetKthTask(&g_decoder, j, (Task*)(&req));
                     primary_index_dpu *pid = IndexCheck(req.hashAddr.edgeId);
+                    printf("edgeId = %d\n", req.hashAddr.edgeId);
                     IndexUpdateReq(pid, req.hashAddr, req.maxLinkAddr);
                 }
                 break;
@@ -231,20 +232,19 @@ static int Slave() {
             case GET_MAX_LINK_SIZE_REQ:
             {
                 barrier_wait(&barrierBlockPrepare);
-                __dma_aligned uint8_t taskBuf[TASK_MAX_LEN];
-                Task *task = (Task *)taskBuf;
                 uint32_t slaveTaskletTaskStart = BLOCK_LOW(slaveTaskletId, NR_SLAVE_TASKLETS, taskCnt);
                 uint32_t slaveTaskletTaskCnt = BLOCK_SIZE(slaveTaskletId, NR_SLAVE_TASKLETS, taskCnt);
-                GetMaxLinkSizeReq *req;
+                // printf("slaveTaskletTaskStart: %d, slaveTaskletTaskCnt: %d\n", slaveTaskletTaskStart, slaveTaskletTaskCnt);
+                __dma_aligned GetMaxLinkSizeReq req;
                 for(int j = slaveTaskletTaskStart; j < slaveTaskletTaskStart + slaveTaskletTaskCnt; j++) {
-                    GetKthTask(&g_decoder, j, task);
-                    req = (GetMaxLinkSizeReq *)task;
-                    // process MergeMaxLinkReq
-                    __mram_ptr MaxLinkEntryT* entry = (__mram_ptr MaxLinkEntryT*)req->maxLinkAddr.rPtr.dpuAddr;
+                    GetKthTask(&g_decoder, j, (Task*)(&req));
+                    __mram_ptr MaxLinkEntryT* entry = (__mram_ptr MaxLinkEntryT*)req.maxLinkAddr.rPtr.dpuAddr;
+                    // uint32_t size = 0;
                     uint32_t size = GetMaxLinkSize(entry);
+                    // printf("%d %p %u\n", j, entry, size);
                     GetMaxLinkSizeResp resp = {
                         .base = {.taskType = GET_MAX_LINK_SIZE_RESP},
-                        .taskIdx = req->taskIdx,
+                        .taskIdx = req.taskIdx,
                         .maxLinkSize = size
                     };
                     mutex_lock(builderMutex);
@@ -270,7 +270,6 @@ static int Slave() {
                 for(int j = slaveTaskletTaskStart; j < slaveTaskletTaskStart + slaveTaskletTaskCnt; j++) {
                     GetKthTask(&g_decoder, j, task);
                     req = (FetchMaxLinkReq *)task;
-                    // process MergeMaxLinkReq
                     __mram_ptr MaxLinkEntryT* entry = (__mram_ptr MaxLinkEntryT*)req->maxLinkAddr.rPtr.dpuAddr;
                     resp->base.taskType = FETCH_MAX_LINK_RESP;
                     resp->taskIdx = req->taskIdx;

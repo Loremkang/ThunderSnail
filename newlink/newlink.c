@@ -14,7 +14,7 @@ void NewLinkPrint(NewLinkT* newLink) {
     }
     for (int i = 0; i < newLink->maxLinkAddrCount; i++) {
         MaxLinkAddrT maxLinkAddr = NewLinkGetMaxLinkAddrs(newLink)[i];
-        printf("MaxLinkAddrT.rPtr = ");
+        printf("(MaxLinkAddrT) = {.rPtr = ");
         RemotePtrPrint(maxLinkAddr.rPtr);
     }
     for (int i = 0; i < newLink->hashAddrCount; i ++) {

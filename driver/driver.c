@@ -75,7 +75,6 @@ size_t RunGetOrInsert(IOManagerT *ioManager, struct dpu_set_t* set, int batchSiz
     IOManagerEndBlock(ioManager);
     IOManagerFinish(ioManager);
     IOManagerSendExecReceive(ioManager);
-    // ReadDpuSetLog(*set);
 
 #ifdef DEBUG
     bool used[MAXSIZE_HASH_TABLE_QUERY_BATCH] = {false};
@@ -180,6 +179,7 @@ void GetMaximumMaxLinkInNewLink(IOManagerT *ioManager,
             task.base = (Task){.taskType = GET_MAX_LINK_SIZE_REQ};
             task.taskIdx = taskCount++;
             task.maxLinkAddr = addr;
+            MaxLinkAddrPrint(addr);
             IOManagerAppendTask(ioManager, dpuIdx, (Task *)(&task));
         }
     }
@@ -190,6 +190,7 @@ void GetMaximumMaxLinkInNewLink(IOManagerT *ioManager,
     IOManagerFinish(ioManager);
 
     IOManagerSendExecReceive(ioManager);
+    // ReadDpuSetLog(*ioManager->dpu_set);
 
     for (int dpuId = 0; dpuId < NUM_DPU; dpuId++) {
         OffsetsIterator blockIterator =
@@ -415,6 +416,13 @@ void InsertPreMaxLink(IOManagerT *ioManager,
                 req->base.taskType = taskType;
                 req->ptr = addr.rPtr;
                 NewLinkToMaxLink(preMaxLink, &req->maxLink);
+                printf("HashCount = %d; \tTupleIdCount = %d\n", req->maxLink.hashAddrCount, req->maxLink.tupleIDCount);
+                for (int j = 0; j < req->maxLink.hashAddrCount; j ++) {
+                    HashAddrPrint(MaxLinkGetHashAddrs(&req->maxLink)[j]);
+                }
+                for (int j = 0; j < req->maxLink.tupleIDCount; j ++) {
+                    TupleIdPrint(MaxLinkGetTupleIDs(&req->maxLink)[j]);
+                }
             }
         }
         IOManagerEndBlock(ioManager);
@@ -492,12 +500,12 @@ void UpdateHashTable(IOManagerT *ioManager,
             // Merged MaxLink
             addr = NewLinkGetMaxLinkAddrs(preMaxLink)[0];
         }
-        int dpuId = addr.rPtr.dpuId;
         for (int hashIdx = 0; hashIdx < preMaxLink->hashAddrCount; hashIdx++) {
             HashAddrT hashAddr = NewLinkGetHashAddrs(preMaxLink)[hashIdx];
             UpdatePointerReq task;
             task.base = (Task){.taskType = taskType};
             task.hashAddr = hashAddr;
+            int dpuId = hashAddr.rPtr.dpuId;
             task.maxLinkAddr = addr;
             HashAddrPrint(hashAddr);
             MaxLinkAddrPrint(addr);
