@@ -479,7 +479,7 @@ void PrintNewMaxLinkAddrs(VariableLengthStructBufferT *preMaxLinkBuffer, MaxLink
     }
 }
 
-void UpdateHashTableAndGetResult(IOManagerT *ioManager,
+uint32_t UpdateHashTableAndGetResult(IOManagerT *ioManager,
                      VariableLengthStructBufferT *preMaxLinkBuffer,
                      MaxLinkAddrT *newMaxLinkAddrs, uint32_t *validMaxLinkCount) {
     ArrayOverflowCheck(preMaxLinkBuffer->count <=
@@ -531,6 +531,7 @@ void UpdateHashTableAndGetResult(IOManagerT *ioManager,
 
     IOManagerSendExecReceive(ioManager);
 
+    uint32_t totalValidMaxLinkCount = 0;
     for (int dpuId = 0; dpuId < NUM_DPU; dpuId++) {
         OffsetsIterator blockIterator =
             BlockIteratorInit(ioManager->recvIOBuffers[dpuId]);
@@ -544,10 +545,12 @@ void UpdateHashTableAndGetResult(IOManagerT *ioManager,
                 uint8_t *task = OffsetsIteratorGetData(&taskIterator);
                 GetValidMaxLinkCountResp *resp = (GetValidMaxLinkCountResp *)task;
                 validMaxLinkCount[dpuId] = resp->count;
+                totalValidMaxLinkCount += resp->count;
                 ValidValueCheck(resp->base.taskType == GET_VALID_MAXLINK_COUNT_RESP);
             }
         }
     }
+    return totalValidMaxLinkCount;
 }
 
 void PrintValidMaxLinkCount(uint32_t *validMaxLinkCount) {
@@ -569,7 +572,7 @@ void BatchInsertValidCheck(int batchSize, TupleIdT *tupleIds) {
     }
 }
 
-void DriverBatchInsertTuple(DriverT *driver, int batchSize,
+uint32_t DriverBatchInsertTuple(DriverT *driver, int batchSize,
                             TupleIdT *tupleIds) {
     BatchInsertValidCheck(batchSize, tupleIds);
 
@@ -608,10 +611,12 @@ void DriverBatchInsertTuple(DriverT *driver, int batchSize,
     
     PrintNewMaxLinkAddrs(&driver->preMaxLinkBuffer, driver->newMaxLinkAddrs);
 
-    UpdateHashTableAndGetResult(&driver->ioManager, &driver->preMaxLinkBuffer,
+    driver->totalValidMaxLinkCount = UpdateHashTableAndGetResult(&driver->ioManager, &driver->preMaxLinkBuffer,
                     driver->newMaxLinkAddrs, driver->validMaxLinkCount);
     
     PrintValidMaxLinkCount(driver->validMaxLinkCount);
+    
+    return driver->totalValidMaxLinkCount;
 }
 
 void DriverFree(DriverT *driver) {

@@ -32,7 +32,7 @@ TEST(Driver, Driver) {
         for (uint32_t i = 0; i < TEST_BATCH; i++) {
             tupleId[tableId][i] = (TupleIdT){.tableId = tableId, .tupleAddr = i + 1};
         }
-        DriverBatchInsertTuple(driver, TEST_BATCH, tupleId[tableId]);
+        EXPECT_EQ(TEST_BATCH, DriverBatchInsertTuple(driver, TEST_BATCH, tupleId[tableId]));
     }
 
     DriverFree(driver);

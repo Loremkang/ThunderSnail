@@ -39,10 +39,11 @@ typedef struct DriverT {
 
     // Used In Stage 4: Insert MaxLink
     int validMaxLinkCount[NUM_DPU];
+    int totalValidMaxLinkCount;
     // VariableLengthStructBufferT validResultBuffer;
 } DriverT;
 
-void DriverBatchInsertTuple(DriverT *driver, int batchSize, TupleIdT *tupleIds);
+uint32_t DriverBatchInsertTuple(DriverT *driver, int batchSize, TupleIdT *tupleIds);
 void DriverInit(DriverT *driver);
 void DriverFree(DriverT *driver);
 
