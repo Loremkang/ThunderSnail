@@ -44,6 +44,7 @@ static int Master() {
                 __dma_aligned SetDpuIdReq req;
                 GetKthTask(&g_decoder, 0, (Task *)(&req));
                 g_dpuId = req.dpuId;
+                counter = 0;
                 printf("g_dpuId: %u\n", g_dpuId);
                 barrier_wait(&barrierBlockPrepare);
                 barrier_wait(&barrierBlockReduce);
@@ -97,6 +98,16 @@ static int Master() {
                 barrier_wait(&barrierBlockPrepare);
                 barrier_wait(&barrierBlockReduce);
 
+                break;
+            }
+            case GET_VALID_MAXLINK_COUNT_REQ:
+            {
+                barrier_wait(&barrierBlockPrepare);
+                GetValidMaxLinkCountResp resp;
+                resp.base.taskType = GET_VALID_MAXLINK_COUNT_RESP;
+                resp.count = counter;
+                BufferBuilderAppendTask(&g_builder, (Task *)&resp);
+                barrier_wait(&barrierBlockReduce);
                 break;
             }
             default:
@@ -279,6 +290,12 @@ static int Slave() {
                     mutex_unlock(builderMutex);
                 }
                 // buddy_free(resp);
+                break;
+            }
+            case GET_VALID_MAXLINK_COUNT_REQ:
+            {
+                barrier_wait(&barrierBlockPrepare);
+                // do nothing
                 break;
             }
             default:

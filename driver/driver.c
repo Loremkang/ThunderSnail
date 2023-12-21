@@ -22,6 +22,7 @@ void DriverInit(DriverT *driver) {
 
     IOManagerInit(&driver->ioManager, &driver->dpu_set, GlobalIOBuffers, GlobalOffsetsBuffer,
                 GlobalVarlenBlockOffsetBuffer, GlobalIOBuffers);
+    memset(driver->validMaxLinkCount, 0, sizeof(driver->validMaxLinkCount));
 }
 
 size_t RunGetOrInsert(IOManagerT *ioManager, struct dpu_set_t* set, int batchSize, int tableId, TupleIdT *tupleIds,
@@ -203,7 +204,7 @@ void GetMaximumMaxLinkInNewLink(IOManagerT *ioManager,
                 uint8_t *task = OffsetsIteratorGetData(&taskIterator);
                 GetMaxLinkSizeResp *resp = (GetMaxLinkSizeResp *)task;
                 maxLinkSize[resp->taskIdx] = resp->maxLinkSize;
-                ValidValueCheck(resp->base.taskType == GET_MAX_LINK_SIZE_REQ);
+                ValidValueCheck(resp->base.taskType == GET_MAX_LINK_SIZE_RESP);
             }
         }
     }
@@ -478,45 +479,83 @@ void PrintNewMaxLinkAddrs(VariableLengthStructBufferT *preMaxLinkBuffer, MaxLink
     }
 }
 
-void UpdateHashTable(IOManagerT *ioManager,
+void UpdateHashTableAndGetResult(IOManagerT *ioManager,
                      VariableLengthStructBufferT *preMaxLinkBuffer,
-                     MaxLinkAddrT *newMaxLinkAddrs) {
+                     MaxLinkAddrT *newMaxLinkAddrs, uint32_t *validMaxLinkCount) {
     ArrayOverflowCheck(preMaxLinkBuffer->count <=
                        MAXSIZE_HASH_TABLE_QUERY_BATCH);
     printf("===== %s =====\n", __func__);
 
     IOManagerStartBufferBuild(ioManager);
 
-    uint8_t taskType = UPDATE_POINTER_REQ;
-    IOManagerBeginBlock(ioManager, taskType);
-    for (OffsetT i = 0; i < preMaxLinkBuffer->count; i++) {
-        NewLinkT *preMaxLink =
-            (NewLinkT *)VariableLengthStructBufferGet(preMaxLinkBuffer, i);
-        MaxLinkAddrT addr;
-        if (preMaxLink->maxLinkAddrCount == 0) {
-            // New MaxLink
-            addr = newMaxLinkAddrs[i];
-        } else {
-            // Merged MaxLink
-            addr = NewLinkGetMaxLinkAddrs(preMaxLink)[0];
+    {
+        uint8_t taskType = UPDATE_POINTER_REQ;
+        IOManagerBeginBlock(ioManager, taskType);
+        for (OffsetT i = 0; i < preMaxLinkBuffer->count; i++) {
+            NewLinkT *preMaxLink =
+                (NewLinkT *)VariableLengthStructBufferGet(preMaxLinkBuffer, i);
+            MaxLinkAddrT addr;
+            if (preMaxLink->maxLinkAddrCount == 0) {
+                // New MaxLink
+                addr = newMaxLinkAddrs[i];
+            } else {
+                // Merged MaxLink
+                addr = NewLinkGetMaxLinkAddrs(preMaxLink)[0];
+            }
+            for (int hashIdx = 0; hashIdx < preMaxLink->hashAddrCount; hashIdx++) {
+                HashAddrT hashAddr = NewLinkGetHashAddrs(preMaxLink)[hashIdx];
+                UpdatePointerReq task;
+                task.base = (Task){.taskType = taskType};
+                task.hashAddr = hashAddr;
+                int dpuId = hashAddr.rPtr.dpuId;
+                task.maxLinkAddr = addr;
+                HashAddrPrint(hashAddr);
+                MaxLinkAddrPrint(addr);
+                IOManagerAppendTask(ioManager, dpuId, (Task *)(&task));
+            }
         }
-        for (int hashIdx = 0; hashIdx < preMaxLink->hashAddrCount; hashIdx++) {
-            HashAddrT hashAddr = NewLinkGetHashAddrs(preMaxLink)[hashIdx];
-            UpdatePointerReq task;
-            task.base = (Task){.taskType = taskType};
-            task.hashAddr = hashAddr;
-            int dpuId = hashAddr.rPtr.dpuId;
-            task.maxLinkAddr = addr;
-            HashAddrPrint(hashAddr);
-            MaxLinkAddrPrint(addr);
-            IOManagerAppendTask(ioManager, dpuId, (Task *)(&task));
-        }
+        IOManagerEndBlock(ioManager);
     }
-    IOManagerEndBlock(ioManager);
+    {
+        uint8_t taskType = GET_VALID_MAXLINK_COUNT_REQ;
+        IOManagerBeginBlock(ioManager, taskType);
+        for (int dpuId = 0; dpuId < NUM_DPU; dpuId++) {
+            GetValidMaxLinkCountReq req;
+            req.base.taskType = taskType;
+            IOManagerAppendTask(ioManager, dpuId, (Task*)(&req));
+        }
+        IOManagerEndBlock(ioManager);
+    }
 
     IOManagerFinish(ioManager);
 
     IOManagerSendExecReceive(ioManager);
+
+    for (int dpuId = 0; dpuId < NUM_DPU; dpuId++) {
+        OffsetsIterator blockIterator =
+            BlockIteratorInit(ioManager->recvIOBuffers[dpuId]);
+        ValidValueCheck(blockIterator.size == 2);
+        for (; OffsetsIteratorHasNext(&blockIterator);
+             OffsetsIteratorNext(&blockIterator)) {
+            OffsetsIterator taskIterator = TaskIteratorInit(&blockIterator);
+            ValidValueCheck(taskIterator.size <= 1);
+            for (; OffsetsIteratorHasNext(&taskIterator);
+                 OffsetsIteratorNext(&taskIterator)) {
+                uint8_t *task = OffsetsIteratorGetData(&taskIterator);
+                GetValidMaxLinkCountResp *resp = (GetValidMaxLinkCountResp *)task;
+                validMaxLinkCount[dpuId] = resp->count;
+                ValidValueCheck(resp->base.taskType == GET_VALID_MAXLINK_COUNT_RESP);
+            }
+        }
+    }
+}
+
+void PrintValidMaxLinkCount(uint32_t *validMaxLinkCount) {
+    for (int dpuId = 0; dpuId < NUM_DPU; dpuId++) {
+        if (validMaxLinkCount[dpuId] > 0) {
+            printf("Count of DPU [%d] = %d\n", dpuId, validMaxLinkCount[dpuId]);
+        }
+    }
 }
 
 void BatchInsertValidCheck(int batchSize, TupleIdT *tupleIds) {
@@ -569,8 +608,10 @@ void DriverBatchInsertTuple(DriverT *driver, int batchSize,
     
     PrintNewMaxLinkAddrs(&driver->preMaxLinkBuffer, driver->newMaxLinkAddrs);
 
-    UpdateHashTable(&driver->ioManager, &driver->preMaxLinkBuffer,
-                    driver->newMaxLinkAddrs);
+    UpdateHashTableAndGetResult(&driver->ioManager, &driver->preMaxLinkBuffer,
+                    driver->newMaxLinkAddrs, driver->validMaxLinkCount);
+    
+    PrintValidMaxLinkCount(driver->validMaxLinkCount);
 }
 
 void DriverFree(DriverT *driver) {

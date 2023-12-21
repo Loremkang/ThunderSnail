@@ -124,6 +124,7 @@ void BufferBuilderAppendTask(BufferBuilder *builder, Task *task)
   case GET_POINTER_RESP:
   case GET_MAX_LINK_SIZE_RESP:
   case NEW_MAX_LINK_RESP:
+  case GET_VALID_MAXLINK_COUNT_RESP:
     {
     // record the offset and task count++
     FixedLenBlockDescriptor* fixedLenBlockDesc = &builder->bufferDesc.fixedLenBlockDescs[builder->fixedLenBlockIdx];

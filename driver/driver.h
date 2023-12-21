@@ -38,7 +38,8 @@ typedef struct DriverT {
     VariableLengthStructBufferT preMaxLinkBuffer;
 
     // Used In Stage 4: Insert MaxLink
-    VariableLengthStructBufferT validResultBuffer;
+    int validMaxLinkCount[NUM_DPU];
+    // VariableLengthStructBufferT validResultBuffer;
 } DriverT;
 
 void DriverBatchInsertTuple(DriverT *driver, int batchSize, TupleIdT *tupleIds);

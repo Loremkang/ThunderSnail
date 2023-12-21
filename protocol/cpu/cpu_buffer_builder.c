@@ -148,6 +148,7 @@ uint8_t* BufferBuilderAppendPlaceHolder(BufferBuilder* builder, uint8_t taskType
         case SET_DPU_ID_REQ:
         case CREATE_INDEX_REQ:
         case UPDATE_POINTER_REQ:
+        case GET_VALID_MAXLINK_COUNT_REQ:
         case GET_MAX_LINK_SIZE_REQ:
         case FETCH_MAX_LINK_REQ: {
             // record the offset and task count++

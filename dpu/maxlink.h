@@ -14,6 +14,8 @@ typedef   __attribute__((aligned(8))) struct {
     HashAddrT hashAddrs[EDGE_INDEX_LEN];
 } MaxLinkEntryT;
 
+extern __host uint32_t counter;
+
 bool IsNullTuple(TupleIdT* tid);
 bool IsNullHash(HashAddrT* ha) ;
 uint32_t GetTableIdIndex(int tid);
@@ -24,4 +26,4 @@ void MergeMaxLink(__mram_ptr MaxLinkEntryT* dst, MaxLinkT* src);
 void MergeMaxLinkEntry(MaxLinkEntryT* target, MaxLinkEntryT* source);
 void RetriveMaxLink(__mram_ptr MaxLinkEntryT* src, MaxLinkT* res);
 uint32_t GetMaxLinkSize(__mram_ptr MaxLinkEntryT* src);
-bool Check(MaxLinkT* link);
+uint32_t GetValidMaxLinkCount();

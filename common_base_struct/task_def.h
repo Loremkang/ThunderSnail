@@ -11,6 +11,7 @@
 #define FETCH_MAX_LINK_REQ 6
 #define MERGE_MAX_LINK_REQ 7
 #define NEW_MAX_LINK_REQ 8
+#define GET_VALID_MAXLINK_COUNT_REQ 9
 
 #define EMPTY_RESP 128
 #define GET_OR_INSERT_RESP 129
@@ -20,6 +21,7 @@
 #define FETCH_MAX_LINK_RESP 133
 #define MERGE_MAX_LINK_RESP 134
 #define NEW_MAX_LINK_RESP 135
+#define GET_VALID_MAXLINK_COUNT_RESP 136
 
 #define FIXED   true
 #define UNFIXED false
@@ -85,6 +87,10 @@ TASK(NewMaxLinkReq, NEW_MAX_LINK_REQ, UNFIXED, sizeof(NewMaxLinkReq), {
   MaxLinkT maxLink;
 })
 
+TASK(GetValidMaxLinkCountReq, GET_VALID_MAXLINK_COUNT_REQ, FIXED, sizeof(GetValidMaxLinkCountReq), {
+  Task base;
+  uint32_t padding;
+})
 
 TASK(GetOrInsertResp, GET_OR_INSERT_RESP, FIXED, sizeof(GetOrInsertResp), {
   Task base;
@@ -117,5 +123,11 @@ TASK(NewMaxLinkResp, NEW_MAX_LINK_RESP, FIXED, sizeof(NewMaxLinkResp), {
   uint32_t taskIdx;
   RemotePtrT ptr;
 })
+
+TASK(GetValidMaxLinkCountResp, GET_VALID_MAXLINK_COUNT_RESP, FIXED, sizeof(GetValidMaxLinkCountResp), {
+  Task base;
+  uint32_t count;
+})
+
 #undef TASK
 #endif
