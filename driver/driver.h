@@ -53,7 +53,7 @@ typedef struct KeyT {
 } KeyT;
 
 // uint32_t DriverBatchInsertTuple(DriverT *driver, int batchSize, TupleIdT *tupleIds);
-uint32_t DriverBatchInsertTupleWithKeys(DriverT *driver, TupleIdT *tupleIds, int batchSize, KeyT* keys);
+uint32_t DriverBatchInsertTupleWithKeys(DriverT *driver, int batchSize, TupleIdT *tupleIds, KeyT* keys);
 void DriverInit(DriverT *driver);
 void DriverFree(DriverT *driver);
 

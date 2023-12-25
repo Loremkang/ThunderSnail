@@ -104,7 +104,7 @@ size_t RunGetOrInsertWithKeys(CatalogT* catalog, IOManagerT *ioManager, struct d
     int keyCount = 0;
     for (int hashTableIdx = 0; hashTableIdx < hashTableCount; hashTableIdx++) {
         ValidValueCheck(batchSize > 0);
-        int hashTableId = CatalogEdgeIdGet(tableId, hashTableIdx);
+        int hashTableId = CatalogEdgeIdGet(catalog, tableId, hashTableIdx);
         // uint8_t *key = malloc(keyLength);
 
         int keyLength = keys[keyCount].size;
@@ -187,20 +187,47 @@ void PrintHashTableQueryReply(HashTableQueryReplyT value) {
     }
 }
 
-void PrintGetOrInsertResult(CatalogT* catalog, int batchSize, int resultSize, int tableId,
+// void PrintGetOrInsertResult(CatalogT* catalog, int batchSize, int resultSize, int tableId,
+//                             TupleIdT *resultTupleIds,
+//                             HashTableQueryReplyT *resultCounterpart) {
+//     int hashTableCount = CatalogHashTableCountGet(catalog, tableId);
+//     int resultCount = 0;
+//     for (int hashTableIdx = 0; hashTableIdx < hashTableCount; hashTableIdx++) {
+//         ValidValueCheck(batchSize > 0);
+//         int hashTableId = CatalogEdgeIdGet(catalog, tableId, hashTableIdx);
+//         printf("\n\n========== Table %d ========== Edge %d ==========\n", tableId, hashTableId);
+//         for (int i = 0; i < batchSize; i++) {
+//             printf("----- i = %d -----\n", i);
+//             uint64_t val;
+//             ValidValueCheck(sizeof(val) == CatalogHashTableKeyLengthGet(hashTableId));
+//             CatalogHashTableKeyGet(resultTupleIds[resultCount], hashTableIdx, (uint8_t*)&val);
+//             printf("Edge ID = %d\n", hashTableId);
+//             printf("Value = %" PRIx64 "\n", val);
+//             TupleIdPrint(resultTupleIds[resultCount]);
+//             PrintHashTableQueryReply(resultCounterpart[resultCount]);
+//             resultCount ++;
+//         }
+//     }
+//     ValidValueCheck(resultCount == resultSize);
+// }
+
+void PrintGetOrInsertResultWithKeys(CatalogT* catalog, int batchSize, int resultSize, int tableId,
                             TupleIdT *resultTupleIds,
-                            HashTableQueryReplyT *resultCounterpart) {
+                            HashTableQueryReplyT *resultCounterpart, KeyT* keys) {
     int hashTableCount = CatalogHashTableCountGet(catalog, tableId);
     int resultCount = 0;
+    int keyCount = 0;
     for (int hashTableIdx = 0; hashTableIdx < hashTableCount; hashTableIdx++) {
         ValidValueCheck(batchSize > 0);
-        int hashTableId = CatalogEdgeIdGet(tableId, hashTableIdx);
+        int hashTableId = CatalogEdgeIdGet(catalog, tableId, hashTableIdx);
         printf("\n\n========== Table %d ========== Edge %d ==========\n", tableId, hashTableId);
         for (int i = 0; i < batchSize; i++) {
             printf("----- i = %d -----\n", i);
             uint64_t val;
             ValidValueCheck(sizeof(val) == CatalogHashTableKeyLengthGet(hashTableId));
-            CatalogHashTableKeyGet(resultTupleIds[resultCount], hashTableIdx, (uint8_t*)&val);
+            // CatalogHashTableKeyGet(resultTupleIds[resultCount], hashTableIdx, (uint8_t*)&val);
+            ValidValueCheck(sizeof(uint64_t) == keys[keyCount].size);
+            memcpy(&val, keys[keyCount].buf, sizeof(uint64_t));
             printf("Edge ID = %d\n", hashTableId);
             printf("Value = %" PRIx64 "\n", val);
             TupleIdPrint(resultTupleIds[resultCount]);
@@ -672,8 +699,8 @@ uint32_t DriverBatchInsertTupleWithKeys(DriverT *driver, int batchSize,
     size_t resultCount = RunGetOrInsertWithKeys(&driver->catalog,
         &driver->ioManager, &driver->dpu_set, batchSize, tableId, tupleIds,
         driver->resultTupleIds, driver->resultCounterpart, keys);
-    PrintGetOrInsertResult(batchSize, resultCount, tableId,
-        driver->resultTupleIds, driver->resultCounterpart);
+    PrintGetOrInsertResultWithKeys(&driver->catalog, batchSize, resultCount, tableId,
+        driver->resultTupleIds, driver->resultCounterpart, keys);
 
     GetOrInsertResultToNewlink(resultCount, driver->resultTupleIds,
                                driver->resultCounterpart, &driver->ht,

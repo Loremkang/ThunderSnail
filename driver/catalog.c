@@ -26,7 +26,7 @@ void CatalogInitTable(CatalogT* catalog, TableIDT tableId, size_t edgeCount, Edg
 OffsetT CatalogHashTableCountGet(CatalogT* catalog, int tableId) {
     for (int i = 0; i < catalog->tableCount; i++) {
         if (catalog->tableID[i] == tableId) {
-            return VariableLengthStructBufferGetLength(&catalog->edges, i) / sizeof(EdgeIDT);
+            return VariableLengthStructBufferGetSize(&catalog->edges, i) / sizeof(EdgeIDT);
         }
     }
     return 0; // Return 0 if the tableId is not found

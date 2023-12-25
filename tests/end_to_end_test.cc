@@ -28,17 +28,17 @@ TEST(Driver, Driver) {
     DriverInit(driver);
 
     for (int tableID = 1; tableID <= TABLE_COUNT; tableID ++) {
-        int edgeCount = (i == 1 || i == 5) ? 1 : 2;
+        int edgeCount = (tableID == 1 || tableID == 5) ? 1 : 2;
         EdgeIDT edges[2];
-        if (i == 1) {
+        if (tableID == 1) {
             edges[0] = 1;
-        } else if (i >= 2 && i <= 4) {
-            edges[0] = i - 1;
-            edges[1] = i;
+        } else if (tableID >= 2 && tableID <= 4) {
+            edges[0] = tableID - 1;
+            edges[1] = tableID;
         } else {
             edges[0] = 4;
         }
-        CatalogInitTable(&driver->catalog, i, edgeCount, edges);
+        CatalogInitTable(&driver->catalog, tableID, edgeCount, edges);
     }
 
     // init
@@ -51,33 +51,33 @@ TEST(Driver, Driver) {
     TupleIdT tupleId[TABLE_COUNT + 1][TEST_BATCH];
     uint64_t keys[TABLE_COUNT + 1][TEST_BATCH][2];
     KeyT keyBuffer[TABLE_COUNT + 1][TEST_BATCH * 2];
-    for (int tableId = 1; tableId <= TABLE_COUNT; tableId++) {
+    for (int tableID = 1; tableID <= TABLE_COUNT; tableID++) {
         for (uint32_t i = 0; i < TEST_BATCH; i++) {
-            keys[tableId][i][0] = ((tableId - 1) << 24) + i;
-            keys[tableId][i][1] = ((tableId) << 24) + i;
-            tupleId[tableId][i] = (TupleIdT){.tableId = tableId, .tupleAddr = i + 1};
+            keys[tableID][i][0] = ((tableID - 1) << 24) + i;
+            keys[tableID][i][1] = ((tableID) << 24) + i;
+            tupleId[tableID][i] = (TupleIdT){.tableId = tableID, .tupleAddr = i + 1};
         }
         int keyCount = 0;
-        int edgeCount = (i == 1 || i == 5) ? 1 : 2;
-        if (i > 1) { // left side
+        int edgeCount = (tableID == 1 || tableID == 5) ? 1 : 2;
+        if (tableID > 1) { // left side
             for (uint32_t i = 0; i < TEST_BATCH; i ++) {
-                keyBuffer[tableId][keyCount].size = sizeof(uint64_t);
-                keyBuffer[tableId][keyCount].buf = (uint8_t*)&keys[tableId][i][0];
+                keyBuffer[tableID][keyCount].size = sizeof(uint64_t);
+                keyBuffer[tableID][keyCount].buf = (uint8_t*)&keys[tableID][i][0];
                 keyCount ++;
             }
         }
-        if (i < 5) { // right side 
+        if (tableID < 5) { // right side 
             for (uint32_t i = 0; i < TEST_BATCH; i ++) {
-                keyBuffer[tableId][keyCount].size = sizeof(uint64_t);
-                keyBuffer[tableId][keyCount].buf = (uint8_t*)&keys[tableId][i][1];
+                keyBuffer[tableID][keyCount].size = sizeof(uint64_t);
+                keyBuffer[tableID][keyCount].buf = (uint8_t*)&keys[tableID][i][1];
                 keyCount ++;
             }
         }
         ValidValueCheck(keyCount == edgeCount * TEST_BATCH);
     }
 
-    for (int tableId = 1; tableId <= TABLE_COUNT; tableId++) {
-        EXPECT_EQ(TEST_BATCH, DriverBatchInsertTupleWithKeys(driver, TEST_BATCH, tupleId[tableId], keyBuffer[tableId]));
+    for (int tableID = 1; tableID <= TABLE_COUNT; tableID++) {
+        EXPECT_EQ(TEST_BATCH, DriverBatchInsertTupleWithKeys(driver, TEST_BATCH, tupleId[tableID], keyBuffer[tableID]));
     }
 
     DriverFree(driver);
