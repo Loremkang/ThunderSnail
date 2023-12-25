@@ -6,15 +6,21 @@
 
 #define MAX_TABLE (256)
 
+typedef int TableIDT;
+typedef int EdgeIDT;
+
 typedef struct CatalogT {
     int tableCount;
-    int tableId[MAX_TABLE];
+    int tableID[MAX_TABLE];
     VariableLengthStructBufferT edges;
 } CatalogT;
 
 void CatalogInit(CatalogT* catalog);
-void CatalogInitTable(CatalogT* catalog, int tableId, int edgeCount, int *edgeIds);
-OffsetT* CatalogHashTableListGet(CatalogT* catalog, int tableId);
+void CatalogFree(CatalogT* catalog);
+void CatalogInitTable(CatalogT* catalog, TableIDT tableID, size_t edgeCount, EdgeIDT *edgeIDs);
+OffsetT CatalogHashTableCountGet(CatalogT* catalog, TableIDT tableId);
+OffsetT* CatalogHashTableListGet(CatalogT* catalog, TableIDT tableId);
+EdgeIDT CatalogEdgeIdGet(CatalogT* catalog, TableIDT tableId, OffsetT hashTableIndex);
 
 
 #endif // CATALOG_H

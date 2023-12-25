@@ -11,11 +11,11 @@
 
 // called in system startup
 void DriverInit(DriverT *driver) {
-
     DPU_ASSERT(dpu_alloc(NUM_DPU, NULL, &driver->dpu_set));
     DPU_ASSERT(dpu_load(driver->dpu_set, DPU_BINARY, NULL));
     SendSetDpuIdReq(driver->dpu_set);
 
+    CatalogInit(&driver->catalog);
     HashTableForNewLinkInit(&driver->ht);
     VariableLengthStructBufferInit(&driver->newLinkBuffer);
     VariableLengthStructBufferInit(&driver->preMaxLinkBuffer);
@@ -25,31 +25,89 @@ void DriverInit(DriverT *driver) {
     memset(driver->validMaxLinkCount, 0, sizeof(driver->validMaxLinkCount));
 }
 
-size_t RunGetOrInsert(IOManagerT *ioManager, struct dpu_set_t* set, int batchSize, int tableId, TupleIdT *tupleIds,
+// size_t RunGetOrInsert(CatalogT* catalog, IOManagerT *ioManager, struct dpu_set_t* set, int batchSize, int tableId, TupleIdT *tupleIds,
+//                          TupleIdT *resultTupleIds,
+//                          HashTableQueryReplyT *resultCounterpart) {
+//     int hashTableCount = CatalogHashTableCountGet(catalog, tableId);
+//     size_t resultCount = 0;
+//     IOManagerStartBufferBuild(ioManager);
+//     IOManagerBeginBlock(ioManager, GET_OR_INSERT_REQ);
+//     for (int hashTableIdx = 0; hashTableIdx < hashTableCount; hashTableIdx++) {
+//         ValidValueCheck(batchSize > 0);
+//         int hashTableId = CatalogEdgeIdGet(tableId, hashTableIdx);
+//         int keyLength = CatalogHashTableKeyLengthGet(hashTableId);
+//         uint8_t *key = malloc(keyLength);
+//         size_t taskSize = ROUND_UP_TO_8(keyLength + sizeof(GetOrInsertReq));
+//         GetOrInsertReq *req = malloc(taskSize);
+//         memset(req, 0, taskSize);
+//         req->base = (Task){.taskType = GET_OR_INSERT_REQ};
+//         req->len = keyLength;
+//         req->hashTableId = hashTableId;
+//         for (int i = 0; i < batchSize; i++) {
+//             CatalogHashTableKeyGet(tupleIds[i], hashTableIdx, key);
+//             int dpuIdx = _hash_function(key, keyLength) % NUM_DPU;
+//             // printf("Task %d (key: %" PRIx64", len: %d) goes to dpu %d\n", resultCount, *(uint64_t*)key, keyLength, dpuIdx);
+//             req->tid = tupleIds[i];
+//             memcpy(req->ptr, key, keyLength);
+//             req->taskIdx = resultCount;
+//             // append one task for each dpu
+//             IOManagerAppendTask(ioManager, dpuIdx, (Task *)req);
+//             resultTupleIds[resultCount] = tupleIds[i];
+//             resultCount ++;
+//         }
+//         free(key);
+//         free(req);
+//     }
+//     IOManagerEndBlock(ioManager);
+//     IOManagerFinish(ioManager);
+//     IOManagerSendExecReceive(ioManager);
+// #ifdef DEBUG
+//     bool used[MAXSIZE_HASH_TABLE_QUERY_BATCH] = {false};
+// #endif
+//     for (int dpuId = 0; dpuId < NUM_DPU; dpuId++) {
+//         OffsetsIterator blockIterator = BlockIteratorInit(ioManager->recvIOBuffers[dpuId]);
+//         ValidValueCheck(blockIterator.size == 1);
+//         for (; OffsetsIteratorHasNext(&blockIterator);
+//              OffsetsIteratorNext(&blockIterator)) {
+//             OffsetsIterator taskIterator = TaskIteratorInit(&blockIterator);
+//             for (; OffsetsIteratorHasNext(&taskIterator);
+//                  OffsetsIteratorNext(&taskIterator)) {
+//                 uint8_t *task = OffsetsIteratorGetData(&taskIterator);
+//                 GetOrInsertResp *resp = (GetOrInsertResp *)task;
+//                 resultCounterpart[resp->taskIdx] = resp->tupleIdOrMaxLinkAddr;
+//                 ValidValueCheck(resp->base.taskType == GET_OR_INSERT_RESP);
+//                 ValidValueCheck(used[resp->taskIdx] == false);
+//                 #ifdef DEBUG
+//                 used[resp->taskIdx] = true;
+//                 #endif
+//             }
+//         }
+//     }
+// #ifdef DEBUG
+//     for (int i = 0; i < resultCount; i++) {
+//         ValidValueCheck(used[i]);
+//     }
+// #endif
+//     return resultCount;
+// }
+
+size_t RunGetOrInsertWithKeys(CatalogT* catalog, IOManagerT *ioManager, struct dpu_set_t* set, int batchSize, int tableId, TupleIdT *tupleIds,
                          TupleIdT *resultTupleIds,
-                         HashTableQueryReplyT *resultCounterpart) {
-    // static bool hashTableInitialized[PRIMARY_INDEX_MAX_NUM] = {false};
-    int hashTableCount = CatalogHashTableCountGet(tableId);
-    // for (int hashTableIdx = 0; hashTableIdx < hashTableCount; hashTableIdx++) {
-    //     int hashTableId = CatalogEdgeIdGet(tableId, hashTableIdx);
-    //     ArrayOverflowCheck(hashTableId < PRIMARY_INDEX_MAX_NUM);
-    //     if (!hashTableInitialized[hashTableId]) {
-    //         hashTableInitialized[hashTableId] = true;
-    //         SendCreateIndexReq(*set, hashTableId);
-    //     }
-    // }
+                         HashTableQueryReplyT *resultCounterpart, KeyT* keys) {
+    int hashTableCount = CatalogHashTableCountGet(catalog, tableId);
 
     size_t resultCount = 0;
 
     IOManagerStartBufferBuild(ioManager);
     IOManagerBeginBlock(ioManager, GET_OR_INSERT_REQ);
 
+    int keyCount = 0;
     for (int hashTableIdx = 0; hashTableIdx < hashTableCount; hashTableIdx++) {
         ValidValueCheck(batchSize > 0);
         int hashTableId = CatalogEdgeIdGet(tableId, hashTableIdx);
-        int keyLength = CatalogHashTableKeyLengthGet(hashTableId);
-        uint8_t *key = malloc(keyLength);
+        // uint8_t *key = malloc(keyLength);
 
+        int keyLength = keys[keyCount].size;
         size_t taskSize = ROUND_UP_TO_8(keyLength + sizeof(GetOrInsertReq));
         GetOrInsertReq *req = malloc(taskSize);
         memset(req, 0, taskSize);
@@ -58,18 +116,16 @@ size_t RunGetOrInsert(IOManagerT *ioManager, struct dpu_set_t* set, int batchSiz
         req->hashTableId = hashTableId;
 
         for (int i = 0; i < batchSize; i++) {
-            CatalogHashTableKeyGet(tupleIds[i], hashTableIdx, key);
-            int dpuIdx = _hash_function(key, keyLength) % NUM_DPU;
+            memcpy(req->ptr, keys[keyCount].buf, keyLength);
+            int dpuIdx = _hash_function(req->ptr, keyLength) % NUM_DPU;
             // printf("Task %d (key: %" PRIx64", len: %d) goes to dpu %d\n", resultCount, *(uint64_t*)key, keyLength, dpuIdx);
             req->tid = tupleIds[i];
-            memcpy(req->ptr, key, keyLength);
             req->taskIdx = resultCount;
-            // append one task for each dpu
             IOManagerAppendTask(ioManager, dpuIdx, (Task *)req);
             resultTupleIds[resultCount] = tupleIds[i];
             resultCount ++;
+            keyCount ++;
         }
-        free(key);
         free(req);
     }
 
@@ -131,10 +187,10 @@ void PrintHashTableQueryReply(HashTableQueryReplyT value) {
     }
 }
 
-void PrintGetOrInsertResult(int batchSize, int resultSize, int tableId,
+void PrintGetOrInsertResult(CatalogT* catalog, int batchSize, int resultSize, int tableId,
                             TupleIdT *resultTupleIds,
                             HashTableQueryReplyT *resultCounterpart) {
-    int hashTableCount = CatalogHashTableCountGet(tableId);
+    int hashTableCount = CatalogHashTableCountGet(catalog, tableId);
     int resultCount = 0;
     for (int hashTableIdx = 0; hashTableIdx < hashTableCount; hashTableIdx++) {
         ValidValueCheck(batchSize > 0);
@@ -572,16 +628,50 @@ void BatchInsertValidCheck(int batchSize, TupleIdT *tupleIds) {
     }
 }
 
-uint32_t DriverBatchInsertTuple(DriverT *driver, int batchSize,
-                            TupleIdT *tupleIds) {
+// uint32_t DriverBatchInsertTuple(DriverT *driver, int batchSize,
+//                             TupleIdT *tupleIds) {
+//     BatchInsertValidCheck(batchSize, tupleIds);
+//     int tableId = tupleIds[0].tableId;
+//     int HashTableCount = CatalogHashTableCountGet(&driver->catalog, tableId);
+//     size_t resultCount = RunGetOrInsert(&driver->catalog,
+//         &driver->ioManager, &driver->dpu_set, batchSize, tableId, tupleIds,
+//         driver->resultTupleIds, driver->resultCounterpart);
+//     PrintGetOrInsertResult(batchSize, resultCount, tableId,
+//         driver->resultTupleIds, driver->resultCounterpart);
+//     GetOrInsertResultToNewlink(resultCount, driver->resultTupleIds,
+//                                driver->resultCounterpart, &driver->ht,
+//                                &driver->newLinkBuffer);
+//     PrintNewLinkResult(&driver->newLinkBuffer);
+//     GetMaximumMaxLinkInNewLink(&driver->ioManager, &driver->newLinkBuffer,
+//                                driver->maxLinkSize, driver->largestMaxLinkPos,
+//                                driver->largestMaxLinkSize);
+//     PrintMaximumMaxLinkInfo(&driver->newLinkBuffer, driver->maxLinkSize,
+//                             driver->largestMaxLinkPos,
+//                             driver->largestMaxLinkSize);
+//     GetPreMaxLinkFromNewLink(&driver->ioManager, &driver->newLinkBuffer,
+//                              &driver->preMaxLinkBuffer, &driver->merger,
+//                              driver->idx, driver->largestMaxLinkPos,
+//                              driver->largestMaxLinkSize);
+//     PrintPreMaxLinkInfo(&driver->preMaxLinkBuffer);
+//     InsertPreMaxLink(&driver->ioManager, &driver->preMaxLinkBuffer,
+//                      driver->newMaxLinkAddrs);
+//     PrintNewMaxLinkAddrs(&driver->preMaxLinkBuffer, driver->newMaxLinkAddrs);
+//     driver->totalValidMaxLinkCount = UpdateHashTableAndGetResult(&driver->ioManager, &driver->preMaxLinkBuffer,
+//                     driver->newMaxLinkAddrs, driver->validMaxLinkCount);
+//     PrintValidMaxLinkCount(driver->validMaxLinkCount);
+//     return driver->totalValidMaxLinkCount;
+// }
+
+uint32_t DriverBatchInsertTupleWithKeys(DriverT *driver, int batchSize,
+                            TupleIdT *tupleIds, KeyT* keys) {
     BatchInsertValidCheck(batchSize, tupleIds);
 
     int tableId = tupleIds[0].tableId;
-    int HashTableCount = CatalogHashTableCountGet(tableId);
+    int HashTableCount = CatalogHashTableCountGet(&driver->catalog, tableId);
 
-    size_t resultCount = RunGetOrInsert(
+    size_t resultCount = RunGetOrInsertWithKeys(&driver->catalog,
         &driver->ioManager, &driver->dpu_set, batchSize, tableId, tupleIds,
-        driver->resultTupleIds, driver->resultCounterpart);
+        driver->resultTupleIds, driver->resultCounterpart, keys);
     PrintGetOrInsertResult(batchSize, resultCount, tableId,
         driver->resultTupleIds, driver->resultCounterpart);
 
@@ -620,6 +710,7 @@ uint32_t DriverBatchInsertTuple(DriverT *driver, int batchSize,
 }
 
 void DriverFree(DriverT *driver) {
+    CatalogFree(&driver->catalog);
     HashTableForNewLinkFree(&driver->ht);
     VariableLengthStructBufferFree(&driver->newLinkBuffer);
     VariableLengthStructBufferFree(&driver->preMaxLinkBuffer);

@@ -11,12 +11,16 @@
 #include "requests.h"
 #include "newlink.h"
 #include "newlink_to_maxlink.h"
+#include "catalog.h"
 
 // long lasting structures
 typedef struct DriverT {
     
     struct dpu_set_t dpu_set;
     IOManagerT ioManager;
+
+    // Init:
+    CatalogT catalog;
 
     // Stage 1: GetOrInsert Result
     TupleIdT resultTupleIds[MAXSIZE_HASH_TABLE_QUERY_BATCH];
@@ -43,7 +47,13 @@ typedef struct DriverT {
     // VariableLengthStructBufferT validResultBuffer;
 } DriverT;
 
-uint32_t DriverBatchInsertTuple(DriverT *driver, int batchSize, TupleIdT *tupleIds);
+typedef struct KeyT {
+    uint8_t* buf;
+    size_t size;
+} KeyT;
+
+// uint32_t DriverBatchInsertTuple(DriverT *driver, int batchSize, TupleIdT *tupleIds);
+uint32_t DriverBatchInsertTupleWithKeys(DriverT *driver, TupleIdT *tupleIds, int batchSize, KeyT* keys);
 void DriverInit(DriverT *driver);
 void DriverFree(DriverT *driver);
 
