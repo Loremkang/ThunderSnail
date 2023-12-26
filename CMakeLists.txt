@@ -86,8 +86,19 @@ target_include_directories(protocol PUBLIC
                               ${CMAKE_CURRENT_SOURCE_DIR}/protocol/cpu
                               ${CMAKE_CURRENT_SOURCE_DIR}/common_base_struct
                               ${UPMEM_SDK_DIR}/include/dpu)
-target_link_directories(protocol PRIVATE ${UPMEM_SDK_DIR}/lib)
+target_link_directories(protocol PUBLIC ${UPMEM_SDK_DIR}/lib)
 target_link_libraries(protocol dpu dpuverbose)
+
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/driver SRC_DRIVER)
+add_library(driver ${SRC_DRIVER})
+
+target_include_directories(driver PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/driver
+                                  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/common_base_struct
+                                  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/newlink
+                                  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/protocol
+                                  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/protocol/cpu
+                                  PUBLIC ${UPMEM_SDK_DIR}/include/dpu
+                                  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Build tests:
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/tests SRC_TEST)
