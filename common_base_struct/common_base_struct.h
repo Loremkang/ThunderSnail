@@ -4,7 +4,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "../safety_check_macro.h"
+#include "safety_check_macro.h"
 
 // align to 8
 #define NUM_FIXED_LEN_BLOCK_INPUT 4

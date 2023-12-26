@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 
 extern "C" {
-// #include "../protocol/cpu/requests.h"
-// #include "../protocol/cpu/requests_handler.h"
+// #include "protocol/cpu/requests.h"
+// #include "protocol/cpu/requests_handler.h"
 #include "cpu_buffer_builder.h"
 #include "hash_function.h"
 #include "requests_handler.h"

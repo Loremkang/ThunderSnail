@@ -1,7 +1,7 @@
 #ifndef DPU_BUFFER_BUILDER_H
 #define DPU_BUFFER_BUILDER_H
 
-#include "../protocol.h"
+#include "protocol.h"
 
 #define BUDDY_LEN 4096 // save builder and descriptors
 #define BUFFER_STATE_OK 0

@@ -63,10 +63,10 @@ add_custom_target(${DPU_TASK_NAME} ALL
     COMMAND ${UPMEM_C_COMPILER} -O3 -fgnu89-inline
             -DNR_TASKLETS=${NR_TASKLETS}
             -DSTACK_SIZE_DEFAULT=2048
-            -I${CMAKE_CURRENT_SOURCE_DIR}/dpu
+            -I${CMAKE_CURRENT_SOURCE_DIR}
             -I${CMAKE_CURRENT_SOURCE_DIR}/protocol
-            -I${CMAKE_CURRENT_SOURCE_DIR}/protocol/dpu
             -I${CMAKE_CURRENT_SOURCE_DIR}/deps/pim-index/dpu/sto
+            -I${CMAKE_CURRENT_SOURCE_DIR}/deps/pim-index
             -I${CMAKE_CURRENT_SOURCE_DIR}/deps/pim-index/util
             -I${CMAKE_CURRENT_SOURCE_DIR}/common_base_struct
             ${DPU_SOURCES} ${SRC_PROTOCOL} ${PROTOCOL_DPU_SOURCES} ${PIM_INDEX_DPU_STO} ${PIM_INDEX_UTIL}
@@ -85,6 +85,7 @@ target_include_directories(protocol PUBLIC
                               ${CMAKE_CURRENT_SOURCE_DIR}/protocol
                               ${CMAKE_CURRENT_SOURCE_DIR}/protocol/cpu
                               ${CMAKE_CURRENT_SOURCE_DIR}/common_base_struct
+                              ${CMAKE_CURRENT_SOURCE_DIR}
                               ${UPMEM_SDK_DIR}/include/dpu)
 target_link_directories(protocol PUBLIC ${UPMEM_SDK_DIR}/lib)
 target_link_libraries(protocol dpu dpuverbose)

@@ -1,7 +1,7 @@
 #ifndef REQUESTS_H
 #define REQUESTS_H
 
-#include "../protocol.h"
+#include "protocol.h"
 #include "dpu.h"
 
 #ifndef DPU_BINARY

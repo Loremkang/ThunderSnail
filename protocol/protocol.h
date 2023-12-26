@@ -4,7 +4,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
-#include "../common_base_struct/common_base_struct.h"
+#include "common_base_struct.h"
 
 
 typedef ALIGN8 struct {
@@ -48,6 +48,6 @@ typedef struct {
   Offset offsets[NUM_BLOCKS];
 } DpuToCpuBufferDescriptor;
 
-#include "../common_base_struct/task.h"
+#include "common_base_struct/task.h"
 
 #endif

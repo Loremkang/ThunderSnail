@@ -2,8 +2,8 @@
 #ifndef INDEX_REQ_H
 #define INDEX_REQ_H
 
-#include "../deps/pim-index/dpu/sto/primary_index_dpu.h"
-#include "../common_base_struct/common_base_struct.h"
+#include "dpu/sto/primary_index_dpu.h"
+#include "common_base_struct.h"
 
 void IndexAllocatorInit();
 void IndexSpaceInit();

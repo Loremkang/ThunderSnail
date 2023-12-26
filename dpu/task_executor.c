@@ -1,8 +1,8 @@
 #include <mram_unaligned.h>
 #include <alloc.h>
 #include "task_executor.h"
-#include "../protocol/dpu/dpu_buffer_builder.h"
-#include "../dpu/index_req.h"
+#include "dpu/dpu_buffer_builder.h"
+#include "dpu/index_req.h"
 
 extern uint8_t __mram_noinit replyBuffer[BUFFER_LEN];
 extern uint8_t __mram_noinit receiveBuffer[BUFFER_LEN];
