@@ -1,7 +1,7 @@
 #include "catalog.h"
 
 // Initialize the catalog
-void CatalogInit(CatalogT* catalog) {
+void InitCatalog(CatalogT* catalog) {
     catalog->tableCount = 0;
     for (int i = 0; i < MAX_TABLE; i++) {
         catalog->tableID[i] = -1; // -1 indicates that the tableId is not used

@@ -15,7 +15,7 @@ typedef struct CatalogT {
     VariableLengthStructBufferT edges;
 } CatalogT;
 
-void CatalogInit(CatalogT* catalog);
+void InitCatalog(CatalogT* catalog);
 void CatalogFree(CatalogT* catalog);
 void CatalogInitTable(CatalogT* catalog, TableIDT tableID, size_t edgeCount, EdgeIDT *edgeIDs);
 OffsetT CatalogHashTableCountGet(CatalogT* catalog, TableIDT tableId);

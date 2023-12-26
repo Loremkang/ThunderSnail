@@ -15,7 +15,7 @@ void DriverInit(DriverT *driver) {
     DPU_ASSERT(dpu_load(driver->dpu_set, DPU_BINARY, NULL));
     SendSetDpuIdReq(driver->dpu_set);
 
-    CatalogInit(&driver->catalog);
+    InitCatalog(&driver->catalog);
     HashTableForNewLinkInit(&driver->ht);
     VariableLengthStructBufferInit(&driver->newLinkBuffer);
     VariableLengthStructBufferInit(&driver->preMaxLinkBuffer);
@@ -211,32 +211,32 @@ void PrintHashTableQueryReply(HashTableQueryReplyT value) {
 //     ValidValueCheck(resultCount == resultSize);
 // }
 
-void PrintGetOrInsertResultWithKeys(CatalogT* catalog, int batchSize, int resultSize, int tableId,
-                            TupleIdT *resultTupleIds,
-                            HashTableQueryReplyT *resultCounterpart, KeyT* keys) {
-    int hashTableCount = CatalogHashTableCountGet(catalog, tableId);
-    int resultCount = 0;
-    int keyCount = 0;
-    for (int hashTableIdx = 0; hashTableIdx < hashTableCount; hashTableIdx++) {
-        ValidValueCheck(batchSize > 0);
-        int hashTableId = CatalogEdgeIdGet(catalog, tableId, hashTableIdx);
-        printf("\n\n========== Table %d ========== Edge %d ==========\n", tableId, hashTableId);
-        for (int i = 0; i < batchSize; i++) {
-            printf("----- i = %d -----\n", i);
-            uint64_t val;
-            ValidValueCheck(sizeof(val) == CatalogHashTableKeyLengthGet(hashTableId));
-            // CatalogHashTableKeyGet(resultTupleIds[resultCount], hashTableIdx, (uint8_t*)&val);
-            ValidValueCheck(sizeof(uint64_t) == keys[keyCount].size);
-            memcpy(&val, keys[keyCount].buf, sizeof(uint64_t));
-            printf("Edge ID = %d\n", hashTableId);
-            printf("Value = %" PRIx64 "\n", val);
-            TupleIdPrint(resultTupleIds[resultCount]);
-            PrintHashTableQueryReply(resultCounterpart[resultCount]);
-            resultCount ++;
-        }
-    }
-    ValidValueCheck(resultCount == resultSize);
-}
+// void PrintGetOrInsertResultWithKeys(CatalogT* catalog, int batchSize, int resultSize, int tableId,
+//                             TupleIdT *resultTupleIds,
+//                             HashTableQueryReplyT *resultCounterpart, KeyT* keys) {
+//     int hashTableCount = CatalogHashTableCountGet(catalog, tableId);
+//     int resultCount = 0;
+//     int keyCount = 0;
+//     for (int hashTableIdx = 0; hashTableIdx < hashTableCount; hashTableIdx++) {
+//         ValidValueCheck(batchSize > 0);
+//         int hashTableId = CatalogEdgeIdGet(catalog, tableId, hashTableIdx);
+//         printf("\n\n========== Table %d ========== Edge %d ==========\n", tableId, hashTableId);
+//         for (int i = 0; i < batchSize; i++) {
+//             printf("----- i = %d -----\n", i);
+//             uint64_t val;
+//             ValidValueCheck(sizeof(val) == CatalogHashTableKeyLengthGet(hashTableId));
+//             // CatalogHashTableKeyGet(resultTupleIds[resultCount], hashTableIdx, (uint8_t*)&val);
+//             ValidValueCheck(sizeof(uint64_t) == keys[keyCount].size);
+//             memcpy(&val, keys[keyCount].buf, sizeof(uint64_t));
+//             printf("Edge ID = %d\n", hashTableId);
+//             printf("Value = %" PRIx64 "\n", val);
+//             TupleIdPrint(resultTupleIds[resultCount]);
+//             PrintHashTableQueryReply(resultCounterpart[resultCount]);
+//             resultCount ++;
+//         }
+//     }
+//     ValidValueCheck(resultCount == resultSize);
+// }
 
 void GetMaximumMaxLinkInNewLink(IOManagerT *ioManager,
                                 VariableLengthStructBufferT *newLinkBuffer,
@@ -699,8 +699,8 @@ uint32_t DriverBatchInsertTupleWithKeys(DriverT *driver, int batchSize,
     size_t resultCount = RunGetOrInsertWithKeys(&driver->catalog,
         &driver->ioManager, &driver->dpu_set, batchSize, tableId, tupleIds,
         driver->resultTupleIds, driver->resultCounterpart, keys);
-    PrintGetOrInsertResultWithKeys(&driver->catalog, batchSize, resultCount, tableId,
-        driver->resultTupleIds, driver->resultCounterpart, keys);
+    // PrintGetOrInsertResultWithKeys(&driver->catalog, batchSize, resultCount, tableId,
+    //     driver->resultTupleIds, driver->resultCounterpart, keys);
 
     GetOrInsertResultToNewlink(resultCount, driver->resultTupleIds,
                                driver->resultCounterpart, &driver->ht,
