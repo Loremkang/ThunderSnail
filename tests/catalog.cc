@@ -7,7 +7,7 @@ extern "C" {
 
 TEST(FakeInterfaceTest, FakeInterfaceTest) {
     CatalogT catalog;
-    CatalogInit(&catalog);
+    InitCatalog(&catalog);
     
     const int TABLE_COUNT = 5;
 
