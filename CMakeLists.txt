@@ -79,7 +79,7 @@ add_custom_target(${DPU_TASK_NAME} ALL
 
 install(PROGRAMS ${EXECUTABLE_OUTPUT_PATH}/${DPU_TASK_NAME} DESTINATION bin)
 
-add_library(protocol ${SRC_PROTOCOL} ${PROTOCOL_CPU_SOURCES}
+add_library(protocol SHARED ${SRC_PROTOCOL} ${PROTOCOL_CPU_SOURCES}
                       ${CMAKE_CURRENT_SOURCE_DIR}/common_base_struct/task.c)
 target_include_directories(protocol PUBLIC
                               ${CMAKE_CURRENT_SOURCE_DIR}/protocol
@@ -91,7 +91,8 @@ target_link_directories(protocol PUBLIC ${UPMEM_SDK_DIR}/lib)
 target_link_libraries(protocol dpu dpuverbose)
 
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/driver SRC_DRIVER)
-add_library(driver ${SRC_DRIVER})
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/newlink SRC_NEWLINE)
+add_library(driver SHARED ${SRC_DRIVER} ${SRC_NEWLINE})
 
 target_include_directories(driver PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/driver
                                   PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/common_base_struct
