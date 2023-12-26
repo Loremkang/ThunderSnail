@@ -1,4 +1,4 @@
-#include "../protocol.h"
+#include "protocol.h"
 #include "dpu_buffer_builder.h"
 #include <string.h>
 #include <alloc.h>

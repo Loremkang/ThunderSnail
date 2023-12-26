@@ -1,7 +1,7 @@
 #ifndef CPU_BUFFER_BUILDER_H
 #define CPU_BUFFER_BUILDER_H
 
-#include "../protocol.h"
+#include "protocol.h"
 #include "requests.h"
 
 typedef enum {

@@ -1,7 +1,7 @@
 #ifndef REQUESTS_HANDLER_H
 #define REQUESTS_HANDLER_H
 
-#include "../protocol.h"
+#include "protocol.h"
 #include "iterators.h"
 
 void GetBufferHeader(uint8_t *buffer, DpuBufferHeader *header);
