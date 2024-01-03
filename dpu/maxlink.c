@@ -25,9 +25,9 @@ MUTEX_INIT(counter_mutex);
 
 MUTEX_INIT(heap_mutex);
 
-void CounterInc() {
+void CounterInc(int value) {
     mutex_lock(counter_mutex);
-    counter++;
+    counter += value;
     mutex_unlock(counter_mutex);
 }
 
@@ -116,7 +116,7 @@ __mram_ptr MaxLinkEntryT* NewMaxLinkEntry(MaxLinkT* ml) {
     }
     printf("valid = %d\n", (int)CheckValidMaxLink(&res));
     if (CheckValidMaxLink(&res)) {
-        CounterInc();
+        CounterInc(1);
     }
     
 
@@ -162,7 +162,7 @@ void MergeMaxLink(__mram_ptr MaxLinkEntryT* dst, MaxLinkT* src) {
         }
     }
     if (!alreadyValid && CheckValidMaxLink(&res)) {
-        CounterInc();
+        CounterInc(1);
     }
     // write res to target mram
     mram_write_unaligned(&res, dst, MAX_LINK_ENTRY_SIZE);
@@ -202,6 +202,10 @@ void RetriveMaxLink(__mram_ptr MaxLinkEntryT* src, MaxLinkT* res) {
             *hids = cpy.hashAddrs[i];
             hids++;
         }
+    }
+
+    if (CheckValidMaxLink(&cpy)) {
+        CounterInc(-1);
     }
 }
 

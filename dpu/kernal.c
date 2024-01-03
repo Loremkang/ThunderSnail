@@ -286,7 +286,7 @@ static int Slave() {
                     resp->taskIdx = req->taskIdx;
                     RetriveMaxLink(entry, &resp->maxLink);
                     mutex_lock(builderMutex);
-                    BufferBuilderAppendTask(&g_builder, (Task *)&resp);
+                    BufferBuilderAppendTask(&g_builder, (Task *)resp);
                     mutex_unlock(builderMutex);
                 }
                 // buddy_free(resp);

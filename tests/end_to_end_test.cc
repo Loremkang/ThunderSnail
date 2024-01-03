@@ -76,9 +76,14 @@ TEST(Driver, Driver) {
         ValidValueCheck(keyCount == edgeCount * TEST_BATCH);
     }
 
-    for (int tableID = 1; tableID <= TABLE_COUNT; tableID++) {
-        EXPECT_EQ(TEST_BATCH, DriverBatchInsertTupleWithKeys(driver, TEST_BATCH, tupleId[tableID], keyBuffer[tableID]));
-    }
+    EXPECT_EQ(TEST_BATCH, DriverBatchInsertTupleWithKeys(driver, TEST_BATCH, tupleId[1], keyBuffer[1]));
+    EXPECT_EQ(TEST_BATCH, DriverBatchInsertTupleWithKeys(driver, TEST_BATCH, tupleId[3], keyBuffer[3]));
+    EXPECT_EQ(TEST_BATCH, DriverBatchInsertTupleWithKeys(driver, TEST_BATCH, tupleId[5], keyBuffer[5]));
+    EXPECT_EQ(TEST_BATCH, DriverBatchInsertTupleWithKeys(driver, TEST_BATCH, tupleId[4], keyBuffer[4]));
+    EXPECT_EQ(TEST_BATCH, DriverBatchInsertTupleWithKeys(driver, TEST_BATCH, tupleId[2], keyBuffer[2]));
+    // for (int tableID = 1; tableID <= TABLE_COUNT; tableID++) {
+    //     EXPECT_EQ(TEST_BATCH, DriverBatchInsertTupleWithKeys(driver, TEST_BATCH, tupleId[tableID], keyBuffer[tableID]));
+    // }
 
     DriverFree(driver);
     free(driver);
