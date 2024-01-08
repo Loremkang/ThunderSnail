@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <mram.h>
 #include <alloc.h>
+#include <string.h>
 #include "mram_space.h"
 #include "mutex.h"
 #include "protocol.h"

@@ -44,6 +44,7 @@ typedef struct DriverT {
     // Used In Stage 4: Insert MaxLink
     int validMaxLinkCount[NUM_DPU];
     int totalValidMaxLinkCount;
+    int newMaxLinkCount;
     // VariableLengthStructBufferT validResultBuffer;
 } DriverT;
 

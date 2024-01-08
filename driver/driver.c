@@ -23,6 +23,7 @@ void DriverInit(DriverT *driver) {
     IOManagerInit(&driver->ioManager, &driver->dpu_set, GlobalIOBuffers, GlobalOffsetsBuffer,
                 GlobalVarlenBlockOffsetBuffer, GlobalIOBuffers);
     memset(driver->validMaxLinkCount, 0, sizeof(driver->validMaxLinkCount));
+    driver->newMaxLinkCount = 0;
 }
 
 // size_t RunGetOrInsert(CatalogT* catalog, IOManagerT *ioManager, struct dpu_set_t* set, int batchSize, int tableId, TupleIdT *tupleIds,
@@ -430,7 +431,7 @@ void PrintPreMaxLinkInfo(VariableLengthStructBufferT* buf) {
 
 void InsertPreMaxLink(IOManagerT *ioManager,
                       VariableLengthStructBufferT *preMaxLinkBuffer,
-                      MaxLinkAddrT *newMaxLinkAddrs) {
+                      MaxLinkAddrT *newMaxLinkAddrs, int *nextNewMaxLinkCount) {
     ArrayOverflowCheck(preMaxLinkBuffer->count <=
                        MAXSIZE_HASH_TABLE_QUERY_BATCH);
     printf("===== %s =====\n", __func__);
@@ -446,7 +447,7 @@ void InsertPreMaxLink(IOManagerT *ioManager,
                 (NewLinkT *)VariableLengthStructBufferGet(preMaxLinkBuffer, i);
             if (preMaxLink->maxLinkAddrCount == 0) {
                 // new MaxLink
-                int dpuId = i % NUM_DPU;  // TODO: NOTE !!! should be rand here
+                int dpuId = hash32((*nextNewMaxLinkCount)++) % NUM_DPU;
                 size_t size = ROUND_UP_TO_8(sizeof(NewMaxLinkReq) +
                               preMaxLink->hashAddrCount * sizeof(HashAddrT) +
                               preMaxLink->tupleIDCount * sizeof(TupleIdT));
@@ -724,7 +725,7 @@ uint32_t DriverBatchInsertTupleWithKeys(DriverT *driver, int batchSize,
     PrintPreMaxLinkInfo(&driver->preMaxLinkBuffer);
 
     InsertPreMaxLink(&driver->ioManager, &driver->preMaxLinkBuffer,
-                     driver->newMaxLinkAddrs);
+                     driver->newMaxLinkAddrs, &driver->newMaxLinkCount);
     
     PrintNewMaxLinkAddrs(&driver->preMaxLinkBuffer, driver->newMaxLinkAddrs);
 
