@@ -1,7 +1,7 @@
 #ifndef TASK_EXECUTOR_H
 #define TASK_EXECUTOR_H
 
-#include "../protocol/protocol.h"
+#include "protocol.h"
 
 // Make sure TASK_HEADER_LEN is long enough to calculate any task's length
 #define TASK_HEADER_LEN 128
@@ -37,5 +37,5 @@ typedef struct {
 void BufferDecoderInit(BufferDecoder *decoder);
 DecoderStateT InitNextBlock(BufferDecoder *decoder);
 DecoderStateT GetKthTask(BufferDecoder *decoder, uint32_t idxK, Task *task);
-void DpuMainLoop();
+// void DpuMainLoop();
 #endif

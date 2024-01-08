@@ -98,6 +98,12 @@ uint16_t GetTaskLen(void *task)
   case NEW_MAX_LINK_RESP: {
     return sizeof(NewMaxLinkResp);
   }
+  case GET_VALID_MAXLINK_COUNT_REQ: {
+    return sizeof(GetValidMaxLinkCountReq);
+  }
+  case GET_VALID_MAXLINK_COUNT_RESP: {
+    return sizeof(GetValidMaxLinkCountResp);
+  }
   default:
     ValidValueCheck(0);
     break;

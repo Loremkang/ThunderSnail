@@ -3,57 +3,72 @@
 
 #include <stdint.h>
 
-typedef struct {
-  void *data;
-  void (*next) (void *itr);
-  int (*hasNext) (void *itr);
-  void (*reset) (void *itr);
-} Iterator;
+typedef enum {
+    FixedLengthTask = 0,
+    VariableLengthTask = 1
+} TaskLengthType;
 
 typedef struct {
-  Iterator iterator;
-  Offset *offsets; // offsets
+  uint8_t* baseAddr; // base address of the buffer
+  TaskLengthType type;
+  Offset *offsets; // offsets for varlen tasks
+  size_t taskSize; // task size for fixed length tasks
   size_t size;
   size_t index; // current offsets index
 } OffsetsIterator;
 
-void OffsetsIteratorNext(void *itr)
+static inline void OffsetsIteratorNext(OffsetsIterator *iterator)
 {
-  OffsetsIterator *iterator = (OffsetsIterator*)itr;
   iterator->index++;
 }
 
-int OffsetsIteratorHasNext(void *itr)
+static inline int OffsetsIteratorHasNext(OffsetsIterator *iterator)
 {
-  OffsetsIterator *iterator = (OffsetsIterator*)itr;
   return iterator->index < iterator->size;
 }
 
-void OffsetsIteratorReset(void *itr)
+static inline void OffsetsIteratorReset(OffsetsIterator *iterator)
 {
-  OffsetsIterator *iterator = (OffsetsIterator*)itr;
   iterator->index = 0;
 }
 
-Offset* OffsetsIteratorGetData(void *itr)
+static inline Offset OffsetsIteratorGetOffset(OffsetsIterator *iterator)
 {
-  OffsetsIterator *iterator = (OffsetsIterator*)itr;
-  return &(iterator->offsets[iterator->index]);
+  if (iterator->type == FixedLengthTask) {
+    return iterator->taskSize * iterator->index;
+  } else {
+    return iterator->offsets[iterator->index];
+  }
 }
 
-Iterator* CreateOffsetsIterator(Offset *offsetsPtr, size_t size)
+static inline uint8_t* OffsetsIteratorGetData(OffsetsIterator *iterator)
 {
-  OffsetsIterator *iterator = malloc(sizeof(OffsetsIterator));
-  iterator->iterator = (Iterator) {
-    .data = iterator,
-    .next = OffsetsIteratorNext,
-    .hasNext = OffsetsIteratorHasNext,
-    .reset = OffsetsIteratorReset,
-  };
-  iterator->offsets = offsetsPtr;
-  iterator->size = size;
-  iterator->index = 0;
-  return &(iterator->iterator);
+  return iterator->baseAddr + OffsetsIteratorGetOffset(iterator);
+}
+
+static inline OffsetsIterator OffsetsIteratorInit(TaskLengthType type, uint8_t* basePtr, Offset *offsetsPtr, size_t size, size_t taskSize)
+{
+  OffsetsIterator iterator;
+  iterator.baseAddr = basePtr;
+  iterator.offsets = offsetsPtr;
+  iterator.size = size;
+  iterator.type = type;
+  iterator.taskSize = taskSize;
+  ValidValueCheck(type != FixedLengthTask || (offsetsPtr == NULL && (size == 0 || taskSize != 0)));
+  ValidValueCheck(type != VariableLengthTask || (offsetsPtr != NULL && taskSize == 0));
+  iterator.index = 0;
+  return iterator;
+}
+
+static inline void OffsetsIteratorJumpToKth(OffsetsIterator *iterator, uint8_t k)
+{
+  iterator->index = k;
+}
+
+static inline uint8_t* OffsetsIteratorGetKthData(OffsetsIterator *iterator, uint8_t k)
+{
+  OffsetsIteratorJumpToKth(iterator, k);
+  return OffsetsIteratorGetData(iterator);
 }
 
 #endif
