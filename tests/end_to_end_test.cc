@@ -19,11 +19,76 @@ extern "C" {
 // Tuple(T2, j) = [1..j, 2..j]
 // H1(j) = [1..j]
 
-#define TEST_BATCH (10)
-#define TABLE_COUNT (5)
+TEST(Driver, LargeBatchSize) {
+
+    const int TEST_BATCH = 400;
+    const int TABLE_COUNT = 5;
+    DriverT* driver = (DriverT*)malloc(sizeof(DriverT));
+    DriverInit(driver);
+
+    for (int tableID = 1; tableID <= TABLE_COUNT; tableID ++) {
+        int edgeCount = (tableID == 1 || tableID == 5) ? 1 : 2;
+        EdgeIDT edges[2];
+        if (tableID == 1) {
+            edges[0] = 1;
+        } else if (tableID >= 2 && tableID <= 4) {
+            edges[0] = tableID - 1;
+            edges[1] = tableID;
+        } else {
+            edges[0] = 4;
+        }
+        CatalogInitTable(&driver->catalog, tableID, edgeCount, edges);
+    }
+
+    // init
+    for (int hashTableId = 1; hashTableId <= 4; hashTableId++) {
+        SendCreateIndexReq(driver->dpu_set, hashTableId);
+    }
+
+    assert(TABLE_COUNT == 5);
+
+    TupleIdT tupleId[TABLE_COUNT + 1][TEST_BATCH];
+    uint64_t keys[TABLE_COUNT + 1][TEST_BATCH][2];
+    KeyT keyBuffer[TABLE_COUNT + 1][TEST_BATCH * 2];
+    for (int tableID = 1; tableID <= TABLE_COUNT; tableID++) {
+        for (uint32_t i = 0; i < TEST_BATCH; i++) {
+            keys[tableID][i][0] = ((tableID - 1) << 24) + i;
+            keys[tableID][i][1] = ((tableID) << 24) + i;
+            tupleId[tableID][i] = (TupleIdT){.tableId = tableID, .tupleAddr = i + 1};
+        }
+        int keyCount = 0;
+        int edgeCount = (tableID == 1 || tableID == 5) ? 1 : 2;
+        if (tableID > 1) { // left side
+            for (uint32_t i = 0; i < TEST_BATCH; i ++) {
+                keyBuffer[tableID][keyCount].size = sizeof(uint64_t);
+                keyBuffer[tableID][keyCount].buf = (uint8_t*)&keys[tableID][i][0];
+                keyCount ++;
+            }
+        }
+        if (tableID < 5) { // right side 
+            for (uint32_t i = 0; i < TEST_BATCH; i ++) {
+                keyBuffer[tableID][keyCount].size = sizeof(uint64_t);
+                keyBuffer[tableID][keyCount].buf = (uint8_t*)&keys[tableID][i][1];
+                keyCount ++;
+            }
+        }
+        ValidValueCheck(keyCount == edgeCount * TEST_BATCH);
+    }
+
+    EXPECT_EQ(TEST_BATCH, DriverBatchInsertTupleWithKeys(driver, TEST_BATCH, tupleId[1], keyBuffer[1]));
+    EXPECT_EQ(TEST_BATCH, DriverBatchInsertTupleWithKeys(driver, TEST_BATCH, tupleId[3], keyBuffer[3]));
+    // EXPECT_EQ(TEST_BATCH, DriverBatchInsertTupleWithKeys(driver, TEST_BATCH, tupleId[5], keyBuffer[5]));
+    // EXPECT_EQ(TEST_BATCH, DriverBatchInsertTupleWithKeys(driver, TEST_BATCH, tupleId[4], keyBuffer[4]));
+    EXPECT_EQ(TEST_BATCH, DriverBatchInsertTupleWithKeys(driver, TEST_BATCH, tupleId[2], keyBuffer[2]));
+
+    DriverFree(driver);
+    free(driver);
+}
 
 TEST(Driver, Driver) {
 
+    const int TEST_BATCH = 10;
+    const int TABLE_COUNT = 5;
     DriverT* driver = (DriverT*)malloc(sizeof(DriverT));
     DriverInit(driver);
 
