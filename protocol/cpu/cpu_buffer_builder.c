@@ -119,6 +119,7 @@ uint8_t* BufferBuilderFinish(BufferBuilder* builder, size_t* size) {
     // flush buffer header
     memcpy(builder->buffer, &builder->bufferDesc->header,
            sizeof(CpuBufferHeader));
+    ArrayOverflowCheck(builder->bufferDesc->header.totalSize < BUFFER_LEN);
     // free
     // free(builder->bufferDesc->offsets);
     return builder->buffer;
@@ -143,6 +144,8 @@ uint8_t* BufferBuilderAppendPlaceHolder(BufferBuilder* builder, uint8_t taskType
             varLenBlockDesc->blockDescBase.totalSize +=
                 size + sizeof(Offset);
             builder->bufferDesc->header.totalSize += size + sizeof(Offset);
+            ArrayOverflowCheck(varLenBlockDesc->blockDescBase.taskCount < BATCH_SIZE);
+            ArrayOverflowCheck(builder->bufferDesc->header.totalSize < BUFFER_LEN);
             break;
         }
         case SET_DPU_ID_REQ:
@@ -161,6 +164,7 @@ uint8_t* BufferBuilderAppendPlaceHolder(BufferBuilder* builder, uint8_t taskType
             // updata total size
             fixedLenBlockDesc->blockDescBase.totalSize += size;
             builder->bufferDesc->header.totalSize += size;
+            ArrayOverflowCheck(builder->bufferDesc->header.totalSize < BUFFER_LEN);
             break;
         }
 
