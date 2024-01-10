@@ -95,40 +95,40 @@ DecoderStateT GetKthTask(BufferDecoder *decoder, uint32_t idxK, Task *task) {
   return NEW_TASK;
 }
 
-DecoderStateT GetNextTask (BufferDecoder *decoder, Task *task) {
-  DecoderStateT state = NEW_TASK;
-  if (decoder->taskIdx >= (decoder->blockHeader).taskCount) {
-    if (decoder->blockIdx >= (decoder->bufHeader).blockCnt) { // all tasks have been decoded
-      state = NO_MORE_TASK;
-      return state;
-    } else { // move to next non-empty block
-      decoder->taskIdx = 0;
-      (decoder->blockHeader).taskCount = 0;
-      state = NEW_BLOCK;
-      while ((decoder->blockHeader).taskCount == 0) {
-        if (decoder->blockIdx >= (decoder->bufHeader).blockCnt) {
-          state = NO_MORE_TASK;
-          return state;
-        }
-        GetNextBlockHeader(decoder);
-      }
-      decoder->curTaskPtr = decoder->curBlockPtr + BLOCK_HEAD_LEN;
-      decoder->isCurVarLenBlock = IsVarLenTask((decoder->blockHeader).taskType);
-      InitTaskOffsets(decoder);
-    }
-  }
+// DecoderStateT GetNextTask (BufferDecoder *decoder, Task *task) {
+//   DecoderStateT state = NEW_TASK;
+//   if (decoder->taskIdx >= (decoder->blockHeader).taskCount) {
+//     if (decoder->blockIdx >= (decoder->bufHeader).blockCnt) { // all tasks have been decoded
+//       state = NO_MORE_TASK;
+//       return state;
+//     } else { // move to next non-empty block
+//       decoder->taskIdx = 0;
+//       (decoder->blockHeader).taskCount = 0;
+//       state = NEW_BLOCK;
+//       while ((decoder->blockHeader).taskCount == 0) {
+//         if (decoder->blockIdx >= (decoder->bufHeader).blockCnt) {
+//           state = NO_MORE_TASK;
+//           return state;
+//         }
+//         GetNextBlockHeader(decoder);
+//       }
+//       decoder->curTaskPtr = decoder->curBlockPtr + BLOCK_HEAD_LEN;
+//       decoder->isCurVarLenBlock = IsVarLenTask((decoder->blockHeader).taskType);
+//       InitTaskOffsets(decoder);
+//     }
+//   }
 
-  // get the next task from the current block
-  ReadTask(decoder->curTaskPtr, task);
-  decoder->taskIdx++;
-  if (decoder->isCurVarLenBlock) { // Var-length task
-    Offset taskOffset = decoder->tskOffsets[decoder->taskIdx];
-    decoder->curTaskPtr = decoder->curBlockPtr + taskOffset;
-  } else { // Fix-length task
-    decoder->curTaskPtr += decoder->taskLen;
-  }
-  return state;
-}
+//   // get the next task from the current block
+//   ReadTask(decoder->curTaskPtr, task);
+//   decoder->taskIdx++;
+//   if (decoder->isCurVarLenBlock) { // Var-length task
+//     Offset taskOffset = decoder->tskOffsets[decoder->taskIdx];
+//     decoder->curTaskPtr = decoder->curBlockPtr + taskOffset;
+//   } else { // Fix-length task
+//     decoder->curTaskPtr += decoder->taskLen;
+//   }
+//   return state;
+// }
 
 // void GetOrInsertFake (HashTableId id, char *key, uint32_t keyLen, TupleIdT tupleId, HashTableQueryReplyT *reply) {
 //   printf("Warning: this is GetOrInsertFake!\n");
