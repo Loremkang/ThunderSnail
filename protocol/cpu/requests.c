@@ -114,7 +114,7 @@ void SendGetOrInsertReq(struct dpu_set_t set, uint32_t tableId,
                         HashTableId hashTableId, Key *keys,
                         uint64_t *tupleAddrs, size_t batchSize,
                         uint8_t *recvBuffers[]) {
-    ValidValueCheck(batchSize <= BATCH_SIZE * NUM_DPU);
+    ValidValueCheck(batchSize <= TASK_COUNT_PER_BLOCK * NUM_DPU);
     // prepare dpu buffers
     uint8_t *buffers[NUM_DPU];
     size_t sizes[NUM_DPU];

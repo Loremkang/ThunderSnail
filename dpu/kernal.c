@@ -37,13 +37,14 @@ static int Master() {
         uint8_t taskType = g_decoder.blockHeader.taskType;
         // printf("%d %d\n", i, (int)taskType);
         BufferBuilderBeginBlock(&g_builder, RespTaskType(taskType));
+        __dma_aligned uint8_t taskBuf[TASK_MAX_LEN];
 
         switch (taskType){
             case SET_DPU_ID_REQ:
             {
-                __dma_aligned SetDpuIdReq req;
-                GetKthTask(&g_decoder, 0, (Task *)(&req));
-                g_dpuId = req.dpuId;
+                SetDpuIdReq *req = (SetDpuIdReq*)taskBuf;
+                GetKthTask(&g_decoder, 0, (Task *)req);
+                g_dpuId = req->dpuId;
                 counter = 0;
                 printf("g_dpuId: %u\n", g_dpuId);
                 barrier_wait(&barrierBlockPrepare);
@@ -52,9 +53,9 @@ static int Master() {
             }
             case CREATE_INDEX_REQ:
             {
-                __dma_aligned CreateIndexReq req;
-                GetKthTask(&g_decoder, 0, (Task *)(&req));
-                IndexCreate(req.hashTableId);
+                CreateIndexReq *req = (CreateIndexReq *)taskBuf;
+                GetKthTask(&g_decoder, 0, (Task *)req);
+                IndexCreate(req->hashTableId);
                 barrier_wait(&barrierBlockPrepare);
                 barrier_wait(&barrierBlockReduce);
                 break;
@@ -103,7 +104,7 @@ static int Master() {
             case GET_VALID_MAXLINK_COUNT_REQ:
             {
                 barrier_wait(&barrierBlockPrepare);
-                GetValidMaxLinkCountResp resp;
+                __dma_aligned GetValidMaxLinkCountResp resp;
                 resp.base.taskType = GET_VALID_MAXLINK_COUNT_RESP;
                 resp.count = counter;
                 BufferBuilderAppendTask(&g_builder, (Task *)&resp);
@@ -130,6 +131,7 @@ static int Slave() {
         barrier_wait(&barrierBlockInit);
         uint8_t taskType = g_decoder.blockHeader.taskType;
         uint32_t taskCnt = g_decoder.blockHeader.taskCount;
+        __dma_aligned uint8_t taskBuf[TASK_MAX_LEN];
 
         switch (taskType){
             case SET_DPU_ID_REQ:
@@ -141,16 +143,15 @@ static int Slave() {
             case CREATE_INDEX_REQ:
             {
                 barrier_wait(&barrierBlockPrepare);
-                __dma_aligned CreateIndexReq req;
-                GetKthTask(&g_decoder, 0, (Task *)(&req));
-                primary_index_dpu *pid = IndexCheck(req.hashTableId);
+                CreateIndexReq *req = (CreateIndexReq *)taskBuf;
+                GetKthTask(&g_decoder, 0, (Task *)req);
+                primary_index_dpu *pid = IndexCheck(req->hashTableId);
                 IndexInitBuckets(pid, slaveTaskletId);
                 break;
             }
             case GET_OR_INSERT_REQ:
             {
                 barrier_wait(&barrierBlockPrepare);
-                __dma_aligned uint8_t taskBuf[TASK_MAX_LEN];
                 Task *task = (Task *)taskBuf;
                 uint32_t slaveTaskletTaskStart = BLOCK_LOW(slaveTaskletId, NR_SLAVE_TASKLETS, taskCnt);
                 uint32_t slaveTaskletTaskCnt = BLOCK_SIZE(slaveTaskletId, NR_SLAVE_TASKLETS, taskCnt);
@@ -170,7 +171,7 @@ static int Slave() {
                     //     printf("reply_buffer type: %d, %d, %p\n", reply_buffer.type, reply_buffer.value.hashAddr.rPtr.dpuId,
                     //         reply_buffer.value.hashAddr.rPtr.dpuAddr);
                     // }
-                    GetOrInsertResp resp = {
+                    __dma_aligned GetOrInsertResp resp = {
                         .base = {.taskType = GET_OR_INSERT_RESP},
                         .taskIdx = req->taskIdx,
                         .tupleIdOrMaxLinkAddr = reply_buffer};
@@ -186,19 +187,18 @@ static int Slave() {
                 uint32_t slaveTaskletTaskStart = BLOCK_LOW(slaveTaskletId, NR_SLAVE_TASKLETS, taskCnt);
                 uint32_t slaveTaskletTaskCnt = BLOCK_SIZE(slaveTaskletId, NR_SLAVE_TASKLETS, taskCnt);
                 // printf("slaveTaskletTaskStart: %d, slaveTaskletTaskCnt: %d\n", slaveTaskletTaskStart, slaveTaskletTaskCnt);
-                __dma_aligned UpdatePointerReq req;
+                UpdatePointerReq *req = (UpdatePointerReq*)taskBuf;
                 for(int j = slaveTaskletTaskStart; j < slaveTaskletTaskStart + slaveTaskletTaskCnt; j++) {
-                    GetKthTask(&g_decoder, j, (Task*)(&req));
-                    primary_index_dpu *pid = IndexCheck(req.hashAddr.edgeId);
-                    printf("edgeId = %d\n", req.hashAddr.edgeId);
-                    IndexUpdateReq(pid, req.hashAddr, req.maxLinkAddr);
+                    GetKthTask(&g_decoder, j, (Task*)req);
+                    primary_index_dpu *pid = IndexCheck(req->hashAddr.edgeId);
+                    printf("edgeId = %d j = %d\n", req->hashAddr.edgeId, j);
+                    IndexUpdateReq(pid, req->hashAddr, req->maxLinkAddr);
                 }
                 break;
             }
             case MERGE_MAX_LINK_REQ:
             {
                 barrier_wait(&barrierBlockPrepare);
-                __dma_aligned uint8_t taskBuf[TASK_MAX_LEN];
                 Task *task = (Task *)taskBuf;
                 uint32_t slaveTaskletTaskStart = BLOCK_LOW(slaveTaskletId, NR_SLAVE_TASKLETS, taskCnt);
                 uint32_t slaveTaskletTaskCnt = BLOCK_SIZE(slaveTaskletId, NR_SLAVE_TASKLETS, taskCnt);
@@ -206,6 +206,8 @@ static int Slave() {
                 for(int j = slaveTaskletTaskStart; j < slaveTaskletTaskStart + slaveTaskletTaskCnt; j++) {
                     GetKthTask(&g_decoder, j, task);
                     req = (MergeMaxLinkReq *)task;
+                    // printf("MergeMaxLink: j = %d; addr = ", j);
+                    RemotePtrPrint(req->ptr);
                     __mram_ptr MaxLinkEntryT* entry = (__mram_ptr MaxLinkEntryT*) req->ptr.dpuAddr;
                     MergeMaxLink(entry, &req->maxLink);
                     // process MergeMaxLinkReq
@@ -216,7 +218,6 @@ static int Slave() {
             {
                 // printf("NewMaxLink\n");
                 barrier_wait(&barrierBlockPrepare);
-                __dma_aligned uint8_t taskBuf[TASK_MAX_LEN];
                 Task *task = (Task *)taskBuf;
                 uint32_t slaveTaskletTaskStart = BLOCK_LOW(slaveTaskletId, NR_SLAVE_TASKLETS, taskCnt);
                 uint32_t slaveTaskletTaskCnt = BLOCK_SIZE(slaveTaskletId, NR_SLAVE_TASKLETS, taskCnt);
@@ -227,7 +228,7 @@ static int Slave() {
                     // process MergeMaxLinkReq
                     // __mram_ptr MaxLinkEntryT* entry = INVALID_REMOTEPTR.dpuAddr;
                     __mram_ptr MaxLinkEntryT* entry = NewMaxLinkEntry(&req->maxLink);
-                    NewMaxLinkResp resp = {
+                    __dma_aligned NewMaxLinkResp resp = {
                         .base = {.taskType = NEW_MAX_LINK_RESP},
                         .taskIdx = req->taskIdx,
                         .ptr = {.dpuId = g_dpuId, .dpuAddr = entry }};
@@ -246,16 +247,16 @@ static int Slave() {
                 uint32_t slaveTaskletTaskStart = BLOCK_LOW(slaveTaskletId, NR_SLAVE_TASKLETS, taskCnt);
                 uint32_t slaveTaskletTaskCnt = BLOCK_SIZE(slaveTaskletId, NR_SLAVE_TASKLETS, taskCnt);
                 // printf("slaveTaskletTaskStart: %d, slaveTaskletTaskCnt: %d\n", slaveTaskletTaskStart, slaveTaskletTaskCnt);
-                __dma_aligned GetMaxLinkSizeReq req;
+                GetMaxLinkSizeReq *req = (GetMaxLinkSizeReq*)taskBuf;
                 for(int j = slaveTaskletTaskStart; j < slaveTaskletTaskStart + slaveTaskletTaskCnt; j++) {
-                    GetKthTask(&g_decoder, j, (Task*)(&req));
-                    __mram_ptr MaxLinkEntryT* entry = (__mram_ptr MaxLinkEntryT*)req.maxLinkAddr.rPtr.dpuAddr;
+                    GetKthTask(&g_decoder, j, (Task*)req);
+                    __mram_ptr MaxLinkEntryT* entry = (__mram_ptr MaxLinkEntryT*)req->maxLinkAddr.rPtr.dpuAddr;
                     // uint32_t size = 0;
                     uint32_t size = GetMaxLinkSize(entry);
                     // printf("%d %p %u\n", j, entry, size);
-                    GetMaxLinkSizeResp resp = {
+                    __dma_aligned GetMaxLinkSizeResp resp = {
                         .base = {.taskType = GET_MAX_LINK_SIZE_RESP},
-                        .taskIdx = req.taskIdx,
+                        .taskIdx = req->taskIdx,
                         .maxLinkSize = size
                     };
                     mutex_lock(builderMutex);
@@ -267,7 +268,6 @@ static int Slave() {
             case FETCH_MAX_LINK_REQ:
             {
                 barrier_wait(&barrierBlockPrepare);
-                __dma_aligned uint8_t taskBuf[TASK_MAX_LEN];
                 Task *task = (Task *)taskBuf;
                 uint32_t slaveTaskletTaskStart = BLOCK_LOW(slaveTaskletId, NR_SLAVE_TASKLETS, taskCnt);
                 uint32_t slaveTaskletTaskCnt = BLOCK_SIZE(slaveTaskletId, NR_SLAVE_TASKLETS, taskCnt);
@@ -275,7 +275,7 @@ static int Slave() {
                 // slightly larger than what's really needed. but fine
                 // int respSize = ROUND_UP_TO_8((sizeof(FetchMaxLinkResp) + MAX_LINK_ENTRY_SIZE));
                 // FetchMaxLinkResp* resp = buddy_alloc(respSize);
-                uint8_t respBuf[ROUND_UP_TO_8((sizeof(FetchMaxLinkResp) + MAX_LINK_ENTRY_SIZE))];
+                __dma_aligned uint8_t respBuf[ROUND_UP_TO_8((sizeof(FetchMaxLinkResp) + MAX_LINK_ENTRY_SIZE))];
                 FetchMaxLinkResp* resp = (FetchMaxLinkResp*)respBuf;
 
                 for(int j = slaveTaskletTaskStart; j < slaveTaskletTaskStart + slaveTaskletTaskCnt; j++) {
@@ -285,6 +285,9 @@ static int Slave() {
                     resp->base.taskType = FETCH_MAX_LINK_RESP;
                     resp->taskIdx = req->taskIdx;
                     RetriveMaxLink(entry, &resp->maxLink);
+                    if (resp->maxLink.tupleIDCount > 1) {
+                        printf("(MaxLink) TupleCount = %d;\t HashAddrCount = %d\n", resp->maxLink.tupleIDCount, resp->maxLink.hashAddrCount);
+                    }
                     mutex_lock(builderMutex);
                     BufferBuilderAppendTask(&g_builder, (Task *)resp);
                     mutex_unlock(builderMutex);
@@ -308,5 +311,7 @@ static int Slave() {
 }
 
 int main() {
+
+
     return me() == 0 ? Master() : Slave();
 }

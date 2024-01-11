@@ -144,7 +144,7 @@ uint8_t* BufferBuilderAppendPlaceHolder(BufferBuilder* builder, uint8_t taskType
             varLenBlockDesc->blockDescBase.totalSize +=
                 size + sizeof(Offset);
             builder->bufferDesc->header.totalSize += size + sizeof(Offset);
-            ArrayOverflowCheck(varLenBlockDesc->blockDescBase.taskCount < BATCH_SIZE);
+            ArrayOverflowCheck(varLenBlockDesc->blockDescBase.taskCount < TASK_COUNT_PER_BLOCK);
             ArrayOverflowCheck(builder->bufferDesc->header.totalSize < BUFFER_LEN);
             break;
         }

@@ -15,8 +15,14 @@
 #define CPU_BUFFER_HEAD_LEN 8 // |epochNumber blockCnt totalSize|
 #define DPU_BUFFER_HEAD_LEN 8 // |bufferState blockCnt totalSize|
 #define BLOCK_HEAD_LEN sizeof(BlockDescriptorBase)
-#define BATCH_SIZE 320
-#define NUM_BLOCKS 8
+
+#define BATCH_SIZE (64000)
+#define MAXSIZE_HASH_TABLE_QUERY_BATCH (6400000) 
+
+#define MAX_HASH_TABLE_COUNT_PER_TABLE (16)
+#define MAX_ELEMENT_COUNT_PER_MAXLINK (300)
+#define TASK_COUNT_PER_BLOCK (600)
+#define NUM_BLOCKS (8)
 
 #define BUFFER_LEN 65535
 #define ROUND_UP_TO_8(x) (((x)+7) &~7) // to align key len to 8

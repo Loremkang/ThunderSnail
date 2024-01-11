@@ -9,7 +9,7 @@
 
 extern uint8_t GlobalIOBuffers[NUM_DPU][BUFFER_LEN];
 extern Offset GlobalOffsetsBuffer[NUM_DPU][NUM_BLOCKS];
-extern Offset GlobalVarlenBlockOffsetBuffer[NUM_DPU][BATCH_SIZE];
+extern Offset GlobalVarlenBlockOffsetBuffer[NUM_DPU][TASK_COUNT_PER_BLOCK];
 
 
 typedef struct IOManagerT {
@@ -47,7 +47,7 @@ static inline void IOManagerInit(IOManagerT *manager,
                                  struct dpu_set_t* dpu_set,
                                  uint8_t sendIOBuffers[NUM_DPU][BUFFER_LEN],
                                  Offset sendOffsetBuffers[NUM_DPU][NUM_BLOCKS],
-                                 Offset sendVarlenBlockOffsetBuffers[NUM_DPU][BATCH_SIZE],
+                                 Offset sendVarlenBlockOffsetBuffers[NUM_DPU][TASK_COUNT_PER_BLOCK],
                                  uint8_t recvIOBuffers[NUM_DPU][BUFFER_LEN]) {
     manager->dpu_set = dpu_set;
     for (int i = 0; i < NUM_DPU; i++) {

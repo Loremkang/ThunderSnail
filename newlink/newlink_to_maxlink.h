@@ -13,9 +13,9 @@ typedef struct NewLinkMergerT {
     int tupleIDCount;
     int maxLinkAddrCount;
     int hashAddrCount;
-    TupleIdT tupleIds[MAXSIZE_MAXLINK];
-    MaxLinkAddrT maxLinkAddrs[MAXSIZE_MAXLINK];
-    HashAddrT hashAddrs[MAXSIZE_MAXLINK];
+    TupleIdT tupleIds[MAX_ELEMENT_COUNT_PER_MAXLINK];
+    MaxLinkAddrT maxLinkAddrs[MAX_ELEMENT_COUNT_PER_MAXLINK];
+    HashAddrT hashAddrs[MAX_ELEMENT_COUNT_PER_MAXLINK];
 } NewLinkMergerT;
 
 static inline void NewLinkMergerReset(NewLinkMergerT *merger) {
@@ -37,7 +37,7 @@ static inline void NewLinkMergeMaxLink(NewLinkMergerT *merger, MaxLinkT *maxLink
         if (!duplicate) {
             merger->tupleIds[merger->tupleIDCount ++] = tupleId;
         }
-        ArrayOverflowCheck(merger->tupleIDCount <= MAXSIZE_MAXLINK);
+        ArrayOverflowCheck(merger->tupleIDCount <= MAX_ELEMENT_COUNT_PER_MAXLINK);
     }
     for (int i = 0; i < maxLink->hashAddrCount; i ++) {
         bool duplicate = false;
@@ -51,7 +51,7 @@ static inline void NewLinkMergeMaxLink(NewLinkMergerT *merger, MaxLinkT *maxLink
         if (!duplicate) {
             merger->hashAddrs[merger->hashAddrCount ++] = hashAddr;
         }
-        ArrayOverflowCheck(merger->hashAddrCount <= MAXSIZE_MAXLINK);
+        ArrayOverflowCheck(merger->hashAddrCount <= MAX_ELEMENT_COUNT_PER_MAXLINK);
     }
 }
 
@@ -68,7 +68,7 @@ static inline void NewLinkMergeNewLink(NewLinkMergerT *merger, NewLinkT *newLink
         if (!duplicate) {
             merger->tupleIds[merger->tupleIDCount ++] = tupleId;
         }
-        ArrayOverflowCheck(merger->tupleIDCount <= MAXSIZE_MAXLINK);
+        ArrayOverflowCheck(merger->tupleIDCount <= MAX_ELEMENT_COUNT_PER_MAXLINK);
     }
     for (int i = 0; i < newLink->maxLinkAddrCount; i ++) {
         bool duplicate = false;
@@ -82,7 +82,7 @@ static inline void NewLinkMergeNewLink(NewLinkMergerT *merger, NewLinkT *newLink
         if (!duplicate) {
             merger->maxLinkAddrs[merger->maxLinkAddrCount ++] = maxLinkAddr;
         }
-        ArrayOverflowCheck(merger->maxLinkAddrCount <= MAXSIZE_MAXLINK);
+        ArrayOverflowCheck(merger->maxLinkAddrCount <= MAX_ELEMENT_COUNT_PER_MAXLINK);
     }
     for (int i = 0; i < newLink->hashAddrCount; i ++) {
         bool duplicate = false;
@@ -96,7 +96,7 @@ static inline void NewLinkMergeNewLink(NewLinkMergerT *merger, NewLinkT *newLink
         if (!duplicate) {
             merger->hashAddrs[merger->hashAddrCount ++] = hashAddr;
         }
-        ArrayOverflowCheck(merger->hashAddrCount <= MAXSIZE_MAXLINK);
+        ArrayOverflowCheck(merger->hashAddrCount <= MAX_ELEMENT_COUNT_PER_MAXLINK);
     }
 }
 

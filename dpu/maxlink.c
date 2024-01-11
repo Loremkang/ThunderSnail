@@ -21,7 +21,7 @@ __mram_ptr void* mram_stack_ptr = (__mram_ptr void*)STACK_BOTTOM_ADDR;
 // it will just bump up when a new entry is appended.
 __mram_ptr void* new_max_link_entry_ptr = (__mram_ptr void*)MAX_LINK_ENTRY_START_ADDR;
 
-__host uint32_t counter;
+__host int counter;
 MUTEX_INIT(counter_mutex);
 
 MUTEX_INIT(heap_mutex);
@@ -89,7 +89,7 @@ bool CheckValidMaxLink(MaxLinkEntryT* link) {
 
 __mram_ptr MaxLinkEntryT* NewMaxLinkEntry(MaxLinkT* ml) {
     // allocate memory on wram
-    MaxLinkEntryT res;
+    __dma_aligned MaxLinkEntryT res;
     // expand MaxLinkT to MaxLinkEntryT
     // write Tuple
     
@@ -133,7 +133,7 @@ __mram_ptr MaxLinkEntryT* NewMaxLinkEntry(MaxLinkT* ml) {
 
 void MergeMaxLink(__mram_ptr MaxLinkEntryT* dst, MaxLinkT* src) {
     // allocate wram
-    MaxLinkEntryT res;
+    __dma_aligned MaxLinkEntryT res;
     // copy target to wram
     mram_read(dst, &res, MAX_LINK_ENTRY_SIZE);
     bool alreadyValid = CheckValidMaxLink(&res);
@@ -180,7 +180,7 @@ void MergeMaxLinkEntry(MaxLinkEntryT* target, MaxLinkEntryT* source) {
 
 void RetriveMaxLink(__mram_ptr MaxLinkEntryT* src, MaxLinkT* res) {
     // allocate stack memory
-    MaxLinkEntryT cpy;
+    __dma_aligned MaxLinkEntryT cpy;
     // move src to cpy
     mram_read(src, &cpy, MAX_LINK_ENTRY_SIZE);
     
@@ -199,7 +199,7 @@ void RetriveMaxLink(__mram_ptr MaxLinkEntryT* src, MaxLinkT* res) {
     // write hash. Here tids should be equal to hids
     HashAddrT* hids = MaxLinkGetHashAddrs(res);
     for (int i = 0; i < EDGE_INDEX_LEN; i++) {
-        if(!IsNullHash(cpy.hashAddrs+i)) {
+        if(!IsNullHash(&cpy.hashAddrs[i])) {
             *hids = cpy.hashAddrs[i];
             hids++;
         }
@@ -212,7 +212,7 @@ void RetriveMaxLink(__mram_ptr MaxLinkEntryT* src, MaxLinkT* res) {
 
 // size after compaction
 uint32_t GetMaxLinkSize(__mram_ptr MaxLinkEntryT* src) {
-    MaxLinkEntryT entry;
+    __dma_aligned MaxLinkEntryT entry;
     mram_read(src, &entry, sizeof(entry));
     uint32_t result = sizeof(MaxLinkT);
     // printf("Tuple: count = %d, size = %d\n", entry.tupleIDCount, TUPLE_ID_SIZE);

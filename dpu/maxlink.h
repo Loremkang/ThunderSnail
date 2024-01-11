@@ -14,7 +14,7 @@ typedef   __attribute__((aligned(8))) struct {
     HashAddrT hashAddrs[EDGE_INDEX_LEN];
 } MaxLinkEntryT;
 
-extern __host uint32_t counter;
+extern __host int counter;
 
 bool IsNullTuple(TupleIdT* tid);
 bool IsNullHash(HashAddrT* ha) ;

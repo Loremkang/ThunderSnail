@@ -126,7 +126,7 @@ TASK(NewMaxLinkResp, NEW_MAX_LINK_RESP, FIXED, sizeof(NewMaxLinkResp), {
 
 TASK(GetValidMaxLinkCountResp, GET_VALID_MAXLINK_COUNT_RESP, FIXED, sizeof(GetValidMaxLinkCountResp), {
   Task base;
-  uint32_t count;
+  int count;
 })
 
 #undef TASK

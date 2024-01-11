@@ -3,7 +3,7 @@
 
 uint8_t GlobalIOBuffers[NUM_DPU][BUFFER_LEN];
 Offset GlobalOffsetsBuffer[NUM_DPU][NUM_BLOCKS];
-Offset GlobalVarlenBlockOffsetBuffer[NUM_DPU][BATCH_SIZE];
+Offset GlobalVarlenBlockOffsetBuffer[NUM_DPU][TASK_COUNT_PER_BLOCK];
 
 void IOManagerSend(IOManagerT *manager) {
     printf("%s\n", __func__);

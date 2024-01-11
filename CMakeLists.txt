@@ -60,7 +60,7 @@ file(GLOB DPU_HEADERS "dpu/*.h")
 
 set(DPU_TASK_NAME dpu_task)
 add_custom_target(${DPU_TASK_NAME} ALL
-    COMMAND ${UPMEM_C_COMPILER} -O3 -fgnu89-inline
+    COMMAND ${UPMEM_C_COMPILER} -g -fgnu89-inline
             -DNR_TASKLETS=${NR_TASKLETS}
             -DSTACK_SIZE_DEFAULT=2048
             -I${CMAKE_CURRENT_SOURCE_DIR}
