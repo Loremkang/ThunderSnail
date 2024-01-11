@@ -755,7 +755,7 @@ uint32_t DriverBatchInsertTupleWithKeys(DriverT *driver, int batchSize,
     driver->totalValidMaxLinkCount = UpdateHashTableAndGetResult(&driver->ioManager, &driver->preMaxLinkBuffer,
                     driver->newMaxLinkAddrs, driver->validMaxLinkCount);
     
-    PrintValidMaxLinkCount(driver->validMaxLinkCount);
+    // PrintValidMaxLinkCount(driver->validMaxLinkCount);
     
     return driver->totalValidMaxLinkCount;
 }
