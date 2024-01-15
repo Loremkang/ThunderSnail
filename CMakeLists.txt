@@ -62,7 +62,7 @@ set(DPU_TASK_NAME dpu_task)
 add_custom_target(${DPU_TASK_NAME} ALL
     COMMAND ${UPMEM_C_COMPILER} -g -fgnu89-inline
             -DNR_TASKLETS=${NR_TASKLETS}
-            -DSTACK_SIZE_DEFAULT=2048
+            -DSTACK_SIZE_DEFAULT=3120
             -I${CMAKE_CURRENT_SOURCE_DIR}
             -I${CMAKE_CURRENT_SOURCE_DIR}/protocol
             -I${CMAKE_CURRENT_SOURCE_DIR}/deps/pim-index/dpu/sto

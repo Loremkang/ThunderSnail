@@ -8,8 +8,6 @@
 #define DPU_BINARY "dpu_task"
 #endif
 
-#define NUM_DPU 256
-
 typedef struct {
   uint8_t *data;
   uint32_t len;

@@ -21,7 +21,8 @@ extern "C" {
 
 TEST(Driver, LargeBatchSize) {
 
-    const int TEST_BATCH = 64000;
+    const int TOTAL_COUNT = 64000;
+    const int TEST_BATCH = 6400;
     const int TABLE_COUNT = 5;
     DriverT* driver = (DriverT*)malloc(sizeof(DriverT));
     DriverInit(driver);
@@ -47,12 +48,12 @@ TEST(Driver, LargeBatchSize) {
 
     assert(TABLE_COUNT == 5);
 
-    TupleIdT tupleId[TABLE_COUNT + 1][TEST_BATCH];
-    uint64_t keys[TABLE_COUNT + 1][TEST_BATCH][2];
-    KeyT keyBuffer[TABLE_COUNT + 1][TEST_BATCH * 2];
+    TupleIdT tupleId[TABLE_COUNT + 1][TOTAL_COUNT];
+    uint64_t keys[TABLE_COUNT + 1][TOTAL_COUNT][2];
+    KeyT keyBuffer[TABLE_COUNT + 1][TOTAL_COUNT * 2];
 
     for (int tableID = 1; tableID <= TABLE_COUNT; tableID++) {
-        for (uint32_t i = 0; i < TEST_BATCH; i++) {
+        for (uint32_t i = 0; i < TOTAL_COUNT; i++) {
             keys[tableID][i][0] = ((tableID - 1) << 24) + i;
             keys[tableID][i][1] = ((tableID) << 24) + i;
             tupleId[tableID][i] = (TupleIdT){.tableId = tableID, .tupleAddr = i + 1};
@@ -60,27 +61,32 @@ TEST(Driver, LargeBatchSize) {
         int keyCount = 0;
         int edgeCount = (tableID == 1 || tableID == 5) ? 1 : 2;
         if (tableID > 1) { // left side
-            for (uint32_t i = 0; i < TEST_BATCH; i ++) {
+            for (uint32_t i = 0; i < TOTAL_COUNT; i ++) {
                 keyBuffer[tableID][keyCount].size = sizeof(uint64_t);
                 keyBuffer[tableID][keyCount].buf = (uint8_t*)&keys[tableID][i][0];
                 keyCount ++;
             }
         }
         if (tableID < 5) { // right side 
-            for (uint32_t i = 0; i < TEST_BATCH; i ++) {
+            for (uint32_t i = 0; i < TOTAL_COUNT; i ++) {
                 keyBuffer[tableID][keyCount].size = sizeof(uint64_t);
                 keyBuffer[tableID][keyCount].buf = (uint8_t*)&keys[tableID][i][1];
                 keyCount ++;
             }
         }
-        ValidValueCheck(keyCount == edgeCount * TEST_BATCH);
+        ValidValueCheck(keyCount == edgeCount * TOTAL_COUNT);
     }
 
-    EXPECT_EQ(TEST_BATCH, DriverBatchInsertTupleWithKeys(driver, TEST_BATCH, tupleId[1], keyBuffer[1]));
-    EXPECT_EQ(TEST_BATCH, DriverBatchInsertTupleWithKeys(driver, TEST_BATCH, tupleId[3], keyBuffer[3]));
-    EXPECT_EQ(TEST_BATCH, DriverBatchInsertTupleWithKeys(driver, TEST_BATCH, tupleId[5], keyBuffer[5]));
-    EXPECT_EQ(TEST_BATCH, DriverBatchInsertTupleWithKeys(driver, TEST_BATCH, tupleId[4], keyBuffer[4]));
-    EXPECT_EQ(TEST_BATCH, DriverBatchInsertTupleWithKeys(driver, TEST_BATCH, tupleId[2], keyBuffer[2]));
+    for (int i = 0; i < TOTAL_COUNT; i += TEST_BATCH) {
+        int len = std::min(TEST_BATCH, TOTAL_COUNT - i);
+        int result = std::min(TOTAL_COUNT, i + len);
+        EXPECT_EQ(result, DriverBatchInsertTupleWithKeys(driver, len, tupleId[1] + i, keyBuffer[1] + i));
+        EXPECT_EQ(result, DriverBatchInsertTupleWithKeys(driver, len, tupleId[3] + i, keyBuffer[3] + i));
+        EXPECT_EQ(result, DriverBatchInsertTupleWithKeys(driver, len, tupleId[5] + i, keyBuffer[5] + i));
+        EXPECT_EQ(result, DriverBatchInsertTupleWithKeys(driver, len, tupleId[4] + i, keyBuffer[4] + i));
+        EXPECT_EQ(result, DriverBatchInsertTupleWithKeys(driver, len, tupleId[2] + i, keyBuffer[2] + i));
+    }
+    
 
     DriverFree(driver);
     free(driver);
