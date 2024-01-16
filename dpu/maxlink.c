@@ -11,6 +11,7 @@
 #include "maxlink.h"
 #include "global_mutex.h"
 #include "common_base_struct.h"
+#include "shared_wram.h"
 
 // A entry is something like 
 // [tid_coaunt, hash_count, T(1,1), NULL, NULL, NULL, H(1,1), NULL, NULL]
@@ -178,47 +179,55 @@ void MergeMaxLinkEntry(MaxLinkEntryT* target, MaxLinkEntryT* source) {
     }
 }
 
-void RetrieveMaxLinkAndAppendResp(__mram_ptr MaxLinkEntryT* src, MaxLinkT* res, uint32_t taskIdx) {
+void RetrieveMaxLink(__mram_ptr MaxLinkEntryT* src, MaxLinkT* res) {
+    mram_read(src, res, MAX_LINK_ENTRY_SIZE);
+    
+    MaxLinkEntryT* cpy = (MaxLinkEntryT*) res;
+
+    if (CheckValidMaxLink(cpy)) {
+        CounterInc(-1);
+    }
+
+    int tupleIDCount = cpy->tupleIDCount;
+    int hashAddrCount = cpy->hashAddrCount;
+
+    res->tupleIDCount = 0;
+    res->hashAddrCount = 0;
+
+    // physically colocating arrays
+    TupleIdT* srcTupleIDs = cpy->tupleIds; 
+    TupleIdT* dstTupleIDs = MaxLinkGetTupleIDs(res);
+
+    for(int i = 0; i < TABLE_INDEX_LEN; i++) {
+        if (!IsNullTuple(&srcTupleIDs[i])) {
+            dstTupleIDs[res->tupleIDCount] = srcTupleIDs[i];
+            res->tupleIDCount ++;
+        }
+    }
+
+    // write hash. Here tids should be equal to hids
+    HashAddrT* srcHashAddrs = cpy->hashAddrs;
+    HashAddrT* dstHashAddrs = MaxLinkGetHashAddrs(res);
+    for (int i = 0; i < EDGE_INDEX_LEN; i++) {
+        if(!IsNullHash(&srcHashAddrs[i])) {
+            dstHashAddrs[res->hashAddrCount] = srcHashAddrs[i];
+            res->hashAddrCount ++;
+        }
+    }
+
+    assert(res->tupleIDCount == tupleIDCount);
+    assert(res->hashAddrCount == hashAddrCount);
+}
+
+void RetrieveMaxLinkAndAppendResp(__mram_ptr MaxLinkEntryT* entry, uint32_t taskIdx, mutex_id_t* builderMutex) {
     __dma_aligned uint8_t respBuf[ROUND_UP_TO_8((sizeof(FetchMaxLinkResp) + MAX_LINK_ENTRY_SIZE))];
     FetchMaxLinkResp* resp = (FetchMaxLinkResp*)respBuf;
     resp->base.taskType = FETCH_MAX_LINK_RESP;
     resp->taskIdx = taskIdx;
     RetrieveMaxLink(entry, &resp->maxLink);
-    mutex_lock(builderMutex);
+    mutex_lock(*builderMutex);
     BufferBuilderAppendTask(&g_builder, (Task *)resp);
-    mutex_unlock(builderMutex);
-}
-
-void RetrieveMaxLink(__mram_ptr MaxLinkEntryT* src, MaxLinkT* res) {
-    // allocate stack memory
-    __dma_aligned MaxLinkEntryT cpy;
-    // move src to cpy
-    mram_read(src, &cpy, MAX_LINK_ENTRY_SIZE);
-    
-    res->tupleIDCount = cpy.tupleIDCount;
-    res->hashAddrCount = cpy.hashAddrCount;
-
-    // write Tuple
-    TupleIdT* tids = MaxLinkGetTupleIDs(res);
-    for(int i = 0; i < TABLE_INDEX_LEN; i++) {
-        if(!IsNullTuple(&cpy.tupleIds[i])) {
-            *tids = cpy.tupleIds[i];
-            tids++;
-        }
-    }
-
-    // write hash. Here tids should be equal to hids
-    HashAddrT* hids = MaxLinkGetHashAddrs(res);
-    for (int i = 0; i < EDGE_INDEX_LEN; i++) {
-        if(!IsNullHash(&cpy.hashAddrs[i])) {
-            *hids = cpy.hashAddrs[i];
-            hids++;
-        }
-    }
-
-    if (CheckValidMaxLink(&cpy)) {
-        CounterInc(-1);
-    }
+    mutex_unlock(*builderMutex);
 }
 
 // size after compaction

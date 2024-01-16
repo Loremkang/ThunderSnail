@@ -282,13 +282,13 @@ static int Slave() {
                     GetKthTask(&g_decoder, j, task);
                     req = (FetchMaxLinkReq *)task;
                     __mram_ptr MaxLinkEntryT* entry = (__mram_ptr MaxLinkEntryT*)req->maxLinkAddr.rPtr.dpuAddr;
-                    resp->base.taskType = FETCH_MAX_LINK_RESP;
-                    resp->taskIdx = req->taskIdx;
+                    // resp->base.taskType = FETCH_MAX_LINK_RESP;
+                    // resp->taskIdx = req->taskIdx;
 
                     // A dirty work around to reduce stack usage shown in dpu_stack_analyser.
                     // Although I don't think this actually reduce space usage.
                     // Used to simplify debugging.
-                    RetrieveMaxLinkAndAppendResp(entry, &resp->maxLink, taskIdx, builderMutex, &g_builder);
+                    RetrieveMaxLinkAndAppendResp(entry, req->taskIdx, &builderMutex);
 
                     // RetrieveMaxLink(entry, &resp->maxLink);
                     // mutex_lock(builderMutex);
