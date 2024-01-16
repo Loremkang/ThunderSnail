@@ -24,6 +24,7 @@ uint32_t EncodeMaxLink(MaxLinkT* link);
 __mram_ptr MaxLinkEntryT* NewMaxLinkEntry(MaxLinkT* ml);
 void MergeMaxLink(__mram_ptr MaxLinkEntryT* dst, MaxLinkT* src);
 void MergeMaxLinkEntry(MaxLinkEntryT* target, MaxLinkEntryT* source);
-void RetriveMaxLink(__mram_ptr MaxLinkEntryT* src, MaxLinkT* res);
+void RetrieveMaxLink(__mram_ptr MaxLinkEntryT* src, MaxLinkT* res);
+void RetrieveMaxLinkAndAppendResp(__mram_ptr MaxLinkEntryT* src, MaxLinkT* res);
 uint32_t GetMaxLinkSize(__mram_ptr MaxLinkEntryT* src);
 uint32_t GetValidMaxLinkCount();

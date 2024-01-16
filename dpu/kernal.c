@@ -275,8 +275,8 @@ static int Slave() {
                 // slightly larger than what's really needed. but fine
                 // int respSize = ROUND_UP_TO_8((sizeof(FetchMaxLinkResp) + MAX_LINK_ENTRY_SIZE));
                 // FetchMaxLinkResp* resp = buddy_alloc(respSize);
-                __dma_aligned uint8_t respBuf[ROUND_UP_TO_8((sizeof(FetchMaxLinkResp) + MAX_LINK_ENTRY_SIZE))];
-                FetchMaxLinkResp* resp = (FetchMaxLinkResp*)respBuf;
+                // __dma_aligned uint8_t respBuf[ROUND_UP_TO_8((sizeof(FetchMaxLinkResp) + MAX_LINK_ENTRY_SIZE))];
+                // FetchMaxLinkResp* resp = (FetchMaxLinkResp*)respBuf;
 
                 for(int j = slaveTaskletTaskStart; j < slaveTaskletTaskStart + slaveTaskletTaskCnt; j++) {
                     GetKthTask(&g_decoder, j, task);
@@ -284,13 +284,16 @@ static int Slave() {
                     __mram_ptr MaxLinkEntryT* entry = (__mram_ptr MaxLinkEntryT*)req->maxLinkAddr.rPtr.dpuAddr;
                     resp->base.taskType = FETCH_MAX_LINK_RESP;
                     resp->taskIdx = req->taskIdx;
-                    RetriveMaxLink(entry, &resp->maxLink);
-                    if (resp->maxLink.tupleIDCount > 1) {
-                        printf("(MaxLink) TupleCount = %d;\t HashAddrCount = %d\n", resp->maxLink.tupleIDCount, resp->maxLink.hashAddrCount);
-                    }
-                    mutex_lock(builderMutex);
-                    BufferBuilderAppendTask(&g_builder, (Task *)resp);
-                    mutex_unlock(builderMutex);
+
+                    // A dirty work around to reduce stack usage shown in dpu_stack_analyser.
+                    // Although I don't think this actually reduce space usage.
+                    // Used to simplify debugging.
+                    RetrieveMaxLinkAndAppendResp(entry, &resp->maxLink, taskIdx, builderMutex, &g_builder);
+
+                    // RetrieveMaxLink(entry, &resp->maxLink);
+                    // mutex_lock(builderMutex);
+                    // BufferBuilderAppendTask(&g_builder, (Task *)resp);
+                    // mutex_unlock(builderMutex);
                 }
                 // buddy_free(resp);
                 break;

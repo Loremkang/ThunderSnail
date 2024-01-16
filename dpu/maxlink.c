@@ -178,7 +178,18 @@ void MergeMaxLinkEntry(MaxLinkEntryT* target, MaxLinkEntryT* source) {
     }
 }
 
-void RetriveMaxLink(__mram_ptr MaxLinkEntryT* src, MaxLinkT* res) {
+void RetrieveMaxLinkAndAppendResp(__mram_ptr MaxLinkEntryT* src, MaxLinkT* res, uint32_t taskIdx) {
+    __dma_aligned uint8_t respBuf[ROUND_UP_TO_8((sizeof(FetchMaxLinkResp) + MAX_LINK_ENTRY_SIZE))];
+    FetchMaxLinkResp* resp = (FetchMaxLinkResp*)respBuf;
+    resp->base.taskType = FETCH_MAX_LINK_RESP;
+    resp->taskIdx = taskIdx;
+    RetrieveMaxLink(entry, &resp->maxLink);
+    mutex_lock(builderMutex);
+    BufferBuilderAppendTask(&g_builder, (Task *)resp);
+    mutex_unlock(builderMutex);
+}
+
+void RetrieveMaxLink(__mram_ptr MaxLinkEntryT* src, MaxLinkT* res) {
     // allocate stack memory
     __dma_aligned MaxLinkEntryT cpy;
     // move src to cpy
