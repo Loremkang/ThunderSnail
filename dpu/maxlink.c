@@ -81,7 +81,7 @@ uint32_t EncodeMaxLinkEntry(MaxLinkEntryT* link) {
 bool CheckValidMaxLink(MaxLinkEntryT* link) {
     uint32_t code = EncodeMaxLinkEntry(link);
     for (int i = 0; i < PATH_CODES_LEN; i++) {
-        if (code & pathCodes[i] == pathCodes[i]) {
+        if ((code & pathCodes[i]) == pathCodes[i]) {
             return true;
         }
     }
