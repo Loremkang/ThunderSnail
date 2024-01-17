@@ -128,7 +128,7 @@ __mram_ptr MaxLinkEntryT* NewMaxLinkEntry(MaxLinkT* ml) {
     new_max_link_entry_ptr += MAX_LINK_ENTRY_SIZE;
     mutex_unlock(heap_mutex);
     // // copy it to mram
-    mram_write_unaligned(&res, maxLinkEntryPtr, MAX_LINK_ENTRY_SIZE);
+    mram_write_small(&res, maxLinkEntryPtr, MAX_LINK_ENTRY_SIZE);
     return maxLinkEntryPtr;
 }
 
@@ -136,7 +136,7 @@ void MergeMaxLink(__mram_ptr MaxLinkEntryT* dst, MaxLinkT* src) {
     // allocate wram
     __dma_aligned MaxLinkEntryT res;
     // copy target to wram
-    mram_read(dst, &res, MAX_LINK_ENTRY_SIZE);
+    mram_read_small(dst, &res, MAX_LINK_ENTRY_SIZE);
     bool alreadyValid = CheckValidMaxLink(&res);
 
     TupleIdT* tuple_buf = MaxLinkGetTupleIDs(src);
@@ -167,7 +167,7 @@ void MergeMaxLink(__mram_ptr MaxLinkEntryT* dst, MaxLinkT* src) {
         CounterInc(1);
     }
     // write res to target mram
-    mram_write_unaligned(&res, dst, MAX_LINK_ENTRY_SIZE);
+    mram_write_small(&res, dst, MAX_LINK_ENTRY_SIZE);
 }
 
 void MergeMaxLinkEntry(MaxLinkEntryT* target, MaxLinkEntryT* source) {
@@ -180,7 +180,7 @@ void MergeMaxLinkEntry(MaxLinkEntryT* target, MaxLinkEntryT* source) {
 }
 
 void RetrieveMaxLink(__mram_ptr MaxLinkEntryT* src, MaxLinkT* res) {
-    mram_read(src, res, MAX_LINK_ENTRY_SIZE);
+    mram_read_small(src, res, MAX_LINK_ENTRY_SIZE);
     
     MaxLinkEntryT* cpy = (MaxLinkEntryT*) res;
 
@@ -233,7 +233,7 @@ void RetrieveMaxLinkAndAppendResp(__mram_ptr MaxLinkEntryT* entry, uint32_t task
 // size after compaction
 uint32_t GetMaxLinkSize(__mram_ptr MaxLinkEntryT* src) {
     __dma_aligned MaxLinkEntryT entry;
-    mram_read(src, &entry, sizeof(entry));
+    mram_read_small(src, &entry, sizeof(MaxLinkEntryT));
     uint32_t result = sizeof(MaxLinkT);
     // printf("Tuple: count = %d, size = %d\n", entry.tupleIDCount, TUPLE_ID_SIZE);
     // printf("Hash: count = %d, size = %d\n", entry.hashAddrCount, HASH_ADDR_SIZE);

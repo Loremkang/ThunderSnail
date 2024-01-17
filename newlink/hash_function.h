@@ -10,6 +10,7 @@ static inline uint32_t _hash_function(uint8_t *buf, uint32_t len)
 
     while (len--)
         hash = ((hash << 5) + hash) + (*buf++); /* hash * 33 + c */
+    // return hash32(hash);
     return hash;
 }
 

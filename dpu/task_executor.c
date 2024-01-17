@@ -3,6 +3,7 @@
 #include "task_executor.h"
 #include "dpu/dpu_buffer_builder.h"
 #include "dpu/index_req.h"
+#include "mram_wrap.h"
 
 extern uint8_t __mram_noinit replyBuffer[BUFFER_LEN];
 extern uint8_t __mram_noinit receiveBuffer[BUFFER_LEN];
@@ -16,19 +17,19 @@ void InitTaskOffsets(BufferDecoder *decoder) {
     }
     uint32_t offsetsLenTask = ROUND_UP_TO_8((decoder->blockHeader).taskCount * sizeof(Offset));
     decoder->curTaskOffsetPtr = (__mram_ptr Offset*)(decoder->curBlockPtr + (decoder->blockHeader).totalSize - offsetsLenTask);
-    mram_read_unaligned(decoder->curTaskOffsetPtr, decoder->tskOffsets, offsetsLenTask);
+    mram_read_large(decoder->curTaskOffsetPtr, decoder->tskOffsets, offsetsLenTask);
   }
 }
 
 void GetNextBlockHeader(BufferDecoder *decoder) {
   if (decoder->blockIdx % OFFSETS_BUF_CAP == 0) { // Fetch new offsets buffer
     uint32_t offset = decoder->blockIdx / OFFSETS_BUF_CAP * OFFSETS_BUF_CAP;
-    mram_read_unaligned(decoder->curBlockOffsetPtr + offset, decoder->blkOffsets, sizeof(Offset) * OFFSETS_BUF_CAP);
+    mram_read_small(decoder->curBlockOffsetPtr + offset, decoder->blkOffsets, sizeof(Offset) * OFFSETS_BUF_CAP);
   }
   Offset blockOffset = decoder->blkOffsets[decoder->blockIdx % OFFSETS_BUF_CAP];
   decoder->curBlockPtr = decoder->bufPtr + blockOffset;
   decoder->blockIdx++;
-  mram_read_unaligned(decoder->curBlockPtr, &(decoder->blockHeader), sizeof(BlockDescriptorBase));
+  mram_read_small(decoder->curBlockPtr, &(decoder->blockHeader), sizeof(BlockDescriptorBase));
 }
 
 DecoderStateT InitNextBlock(BufferDecoder *decoder) {
@@ -43,7 +44,7 @@ DecoderStateT InitNextBlock(BufferDecoder *decoder) {
   if (!decoder->isCurVarLenBlock) {
     __dma_aligned uint8_t taskBuf[TASK_HEADER_LEN];
     Task *task = (Task*)taskBuf;
-    mram_read_unaligned(decoder->curBlockPtr + BLOCK_HEAD_LEN, task, TASK_HEADER_LEN);
+    mram_read_small(decoder->curBlockPtr + BLOCK_HEAD_LEN, task, TASK_HEADER_LEN);
     decoder->taskLen = GetTaskLen(task);
   }
   InitTaskOffsets(decoder);
@@ -56,7 +57,7 @@ void BufferDecoderInit(BufferDecoder *decoder) {
   decoder->bufPtr = receiveBuffer;
   decoder->tskOffsetsLen = OFFSETS_CAP;
   decoder->tskOffsets = mem_alloc(OFFSETS_CAP * sizeof(Offset));
-  mram_read_unaligned(decoder->bufPtr, &(decoder->bufHeader), sizeof(CpuBufferHeader));
+  mram_read_small(decoder->bufPtr, &(decoder->bufHeader), sizeof(CpuBufferHeader));
   decoder->curTaskOffsetPtr = NULL;
   decoder->isCurVarLenBlock = false;
   if ((decoder->bufHeader).blockCnt == 0) { // empty buffer
@@ -73,11 +74,11 @@ void BufferDecoderInit(BufferDecoder *decoder) {
 }
 
 void ReadTask(__mram_ptr uint8_t* tskPtr, Task *task) {
-  mram_read_unaligned(tskPtr, task, TASK_HEADER_LEN);
+  mram_read_small(tskPtr, task, TASK_HEADER_LEN);
   uint32_t taskLen = ROUND_UP_TO_8(GetTaskLen(task));
   assert(taskLen < TASK_MAX_LEN && "Task size overflow");
   if (taskLen > TASK_HEADER_LEN) {
-    mram_read_unaligned(tskPtr, task, taskLen);
+    mram_read_small(tskPtr, task, taskLen);
   }
 }
 

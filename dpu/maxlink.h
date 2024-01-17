@@ -7,6 +7,7 @@
 #define HASH_ADDR_SIZE sizeof(HashAddrT)
 #define TUPLE_ID_SIZE sizeof(TupleIdT)
 
+// size should be less than 2K. Otherwise should use mram_read_large.
 typedef   __attribute__((aligned(8))) struct {
     int tupleIDCount;
     int hashAddrCount;
