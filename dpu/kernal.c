@@ -30,13 +30,20 @@ static int Master() {
     KernalInitial();
     barrier_wait(&barrierPackagePrepare);
 
-    for (int i = 0; i < g_decoder.bufHeader.blockCnt; i++) {
+    uint8_t taskType;
+    for (int i = 0; i < g_decoder.bufHeader.blockCnt;) {
+      if (g_decoder.remainingTaskCnt == 0) {
         DecoderStateT state = InitNextBlock(&g_decoder);
-        // printf("Next Block: %d\n", (int)state);
-        barrier_wait(&barrierBlockInit);
-        uint8_t taskType = g_decoder.blockHeader.taskType;
+        taskType = g_decoder.blockHeader.taskType;
         // printf("%d %d\n", i, (int)taskType);
         BufferBuilderBeginBlock(&g_builder, RespTaskType(taskType));
+      }
+        InitTaskOffsets(&g_decoder);
+        if (g_decoder.remainingTaskCnt == 0) {
+          i = i + 1;
+        }
+        // printf("Next Block: %d\n", (int)state);
+        barrier_wait(&barrierBlockInit);
         __dma_aligned uint8_t taskBuf[TASK_MAX_LEN];
 
         switch (taskType){
@@ -114,7 +121,9 @@ static int Master() {
             default:
                 Unimplemented("Other tasks need to be supported.\n");
         }
-        BufferBuilderEndBlock(&g_builder);
+        if (g_decoder.remainingTaskCnt == 0) {
+          BufferBuilderEndBlock(&g_builder);
+        }
     }
 
     barrier_wait(&barrierPackageReduce);
@@ -127,8 +136,11 @@ static int Slave() {
     barrier_wait(&barrierPackagePrepare);
     uint32_t slaveTaskletId = me() - 1; // slaveTaskletId: 0-16
 
-    for (int i = 0; i < g_decoder.bufHeader.blockCnt; i++) {
+    for (int i = 0; i < g_decoder.bufHeader.blockCnt;) {
         barrier_wait(&barrierBlockInit);
+        if (g_decoder.remainingTaskCnt == 0) {
+          i = i + 1;
+        }
         uint8_t taskType = g_decoder.blockHeader.taskType;
         uint32_t taskCnt = g_decoder.blockHeader.taskCount;
         __dma_aligned uint8_t taskBuf[TASK_MAX_LEN];

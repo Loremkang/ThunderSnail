@@ -29,12 +29,14 @@ typedef struct {
   __mram_ptr uint8_t *curTaskPtr;
   __mram_ptr Offset *curBlockOffsetPtr;
   __mram_ptr Offset *curTaskOffsetPtr;
+  uint16_t remainingTaskCnt;
   uint32_t taskLen;
   uint32_t tskOffsetsLen;
   bool isCurVarLenBlock;
 } BufferDecoder;
 
 void BufferDecoderInit(BufferDecoder *decoder);
+void InitTaskOffsets(BufferDecoder *decoder);
 DecoderStateT InitNextBlock(BufferDecoder *decoder);
 DecoderStateT GetKthTask(BufferDecoder *decoder, uint32_t idxK, Task *task);
 // void DpuMainLoop();

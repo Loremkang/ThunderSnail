@@ -9,16 +9,31 @@ extern uint8_t __mram_noinit replyBuffer[BUFFER_LEN];
 extern uint8_t __mram_noinit receiveBuffer[BUFFER_LEN];
 
 void InitTaskOffsets(BufferDecoder *decoder) {
-  decoder->curTaskOffsetPtr = NULL;
-  if (decoder->isCurVarLenBlock) {
-    if ((decoder->blockHeader).taskCount > decoder->tskOffsetsLen) {
-      decoder->tskOffsets = mem_alloc((decoder->blockHeader).taskCount * sizeof(Offset));
-      decoder->tskOffsetsLen = (decoder->blockHeader).taskCount;
-    }
+  // Only for var length block
+  if (!decoder->isCurVarLenBlock) {
+    return;
+  }
+
+  // Set curTaskOffsetPtr only when processing a new block
+  if (decoder->curTaskOffsetPtr == NULL) {
     uint32_t offsetsLenTask = ROUND_UP_TO_8((decoder->blockHeader).taskCount * sizeof(Offset));
     decoder->curTaskOffsetPtr = (__mram_ptr Offset*)(decoder->curBlockPtr + (decoder->blockHeader).totalSize - offsetsLenTask);
-    mram_read_large(decoder->curTaskOffsetPtr, decoder->tskOffsets, offsetsLenTask);
   }
+
+  if ((decoder->blockHeader).taskCount > decoder->tskOffsetsLen) {
+    // This also implies a new block
+    decoder->remainingTaskCnt = (decoder->blockHeader).taskCount - decoder->tskOffsetsLen;
+    (decoder->blockHeader).taskCount = decoder->tskOffsetsLen;
+
+    // If taskCount * sizeof(Offset) is not aligned to 8, a deep error may occur!
+    ValidValueCheck(((decoder->blockHeader).taskCount * sizeof(Offset)) % 8 == 0);
+  } else if (decoder->remainingTaskCnt > 0) {
+    (decoder->blockHeader).taskCount = decoder->remainingTaskCnt % decoder->tskOffsetsLen;
+    decoder->remainingTaskCnt -= (decoder->blockHeader).taskCount;
+  }
+  uint32_t offsetsLenTask = ROUND_UP_TO_8((decoder->blockHeader).taskCount * sizeof(Offset));
+  mram_read_large(decoder->curTaskOffsetPtr, decoder->tskOffsets, offsetsLenTask);
+  decoder->curTaskOffsetPtr += (decoder->blockHeader).taskCount;
 }
 
 void GetNextBlockHeader(BufferDecoder *decoder) {
@@ -39,6 +54,7 @@ DecoderStateT InitNextBlock(BufferDecoder *decoder) {
   }
   GetNextBlockHeader(decoder);
 
+  decoder->remainingTaskCnt = 0;
   decoder->curTaskPtr = decoder->curBlockPtr + sizeof(BlockDescriptorBase);
   decoder->isCurVarLenBlock = IsVarLenTask((decoder->blockHeader).taskType);
   if (!decoder->isCurVarLenBlock) {
@@ -47,7 +63,8 @@ DecoderStateT InitNextBlock(BufferDecoder *decoder) {
     mram_read_small(decoder->curBlockPtr + BLOCK_HEAD_LEN, task, TASK_HEADER_LEN);
     decoder->taskLen = GetTaskLen(task);
   }
-  InitTaskOffsets(decoder);
+  decoder->curTaskOffsetPtr = NULL;
+  //InitTaskOffsets(decoder);
   return NEW_BLOCK;
 }
 
