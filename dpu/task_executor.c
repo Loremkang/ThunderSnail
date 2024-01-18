@@ -28,7 +28,11 @@ void InitTaskOffsets(BufferDecoder *decoder) {
     // If taskCount * sizeof(Offset) is not aligned to 8, a deep error may occur!
     ValidValueCheck(((decoder->blockHeader).taskCount * sizeof(Offset)) % 8 == 0);
   } else if (decoder->remainingTaskCnt > 0) {
-    (decoder->blockHeader).taskCount = decoder->remainingTaskCnt % decoder->tskOffsetsLen;
+    if (decoder->remainingTaskCnt > decoder->tskOffsetsLen) {
+      (decoder->blockHeader).taskCount = decoder->tskOffsetsLen;
+    } else {
+      (decoder->blockHeader).taskCount = decoder->remainingTaskCnt;
+    }
     decoder->remainingTaskCnt -= (decoder->blockHeader).taskCount;
   }
   uint32_t offsetsLenTask = ROUND_UP_TO_8((decoder->blockHeader).taskCount * sizeof(Offset));
@@ -71,6 +75,7 @@ DecoderStateT InitNextBlock(BufferDecoder *decoder) {
 void BufferDecoderInit(BufferDecoder *decoder) {
   decoder->blockIdx = 0;
   decoder->taskIdx = 0;
+  decoder->remainingTaskCnt = 0;
   decoder->bufPtr = receiveBuffer;
   decoder->tskOffsetsLen = OFFSETS_CAP;
   decoder->tskOffsets = mem_alloc(OFFSETS_CAP * sizeof(Offset));
