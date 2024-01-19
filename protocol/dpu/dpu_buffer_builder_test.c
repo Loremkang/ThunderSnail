@@ -1,7 +1,7 @@
-#include "protocol.h"
 #include "dpu_buffer_builder.h"
-#include <string.h>
 #include <alloc.h>
+#include <string.h>
+#include "protocol.h"
 
 // void CreateDpuToCpuBufferForEachDPU()
 // {

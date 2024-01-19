@@ -10,17 +10,18 @@ typedef int TableIDT;
 typedef int EdgeIDT;
 
 typedef struct CatalogT {
-    int tableCount;
-    int tableID[MAX_TABLE];
-    VariableLengthStructBufferT edges;
+  int tableCount;
+  int tableID[MAX_TABLE];
+  VariableLengthStructBufferT edges;
 } CatalogT;
 
 void InitCatalog(CatalogT* catalog);
 void CatalogFree(CatalogT* catalog);
-void CatalogInitTable(CatalogT* catalog, TableIDT tableID, size_t edgeCount, EdgeIDT *edgeIDs);
+void CatalogInitTable(CatalogT* catalog, TableIDT tableID, size_t edgeCount,
+                      EdgeIDT* edgeIDs);
 OffsetT CatalogHashTableCountGet(CatalogT* catalog, TableIDT tableId);
 OffsetT* CatalogHashTableListGet(CatalogT* catalog, TableIDT tableId);
-EdgeIDT CatalogEdgeIdGet(CatalogT* catalog, TableIDT tableId, OffsetT hashTableIndex);
+EdgeIDT CatalogEdgeIdGet(CatalogT* catalog, TableIDT tableId,
+                         OffsetT hashTableIndex);
 
-
-#endif // CATALOG_H
+#endif  // CATALOG_H

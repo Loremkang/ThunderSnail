@@ -23,7 +23,7 @@
 #define NEW_MAX_LINK_RESP 135
 #define GET_VALID_MAXLINK_COUNT_RESP 136
 
-#define FIXED   true
+#define FIXED true
 #define UNFIXED false
 
 #endif
@@ -43,16 +43,16 @@ TASK(GetOrInsertReq, GET_OR_INSERT_REQ, UNFIXED, sizeof(GetOrInsertReq), {
   Task base;
   uint8_t len;  // key len
   uint32_t taskIdx;
-  TupleIdT tid; // value
+  TupleIdT tid;  // value
   HashTableId hashTableId;
-  uint8_t ptr[]; // key
+  uint8_t ptr[];  // key
 })
 
 TASK(GetPointerReq, GET_POINTER_REQ, UNFIXED, sizeof(GetPointerReq), {
   Task base;
   uint8_t len;
   HashTableId hashTableId;
-  uint8_t ptr[]; // key
+  uint8_t ptr[];  // key
 })
 
 TASK(UpdatePointerReq, UPDATE_POINTER_REQ, FIXED, sizeof(UpdatePointerReq), {
@@ -62,11 +62,12 @@ TASK(UpdatePointerReq, UPDATE_POINTER_REQ, FIXED, sizeof(UpdatePointerReq), {
   MaxLinkAddrT maxLinkAddr;
 })
 
-TASK(GetMaxLinkSizeReq, GET_MAX_LINK_SIZE_REQ, FIXED, sizeof(GetMaxLinkSizeReq), {
-  Task base;
-  uint32_t taskIdx;
-  MaxLinkAddrT maxLinkAddr;
-})
+TASK(GetMaxLinkSizeReq, GET_MAX_LINK_SIZE_REQ, FIXED, sizeof(GetMaxLinkSizeReq),
+     {
+       Task base;
+       uint32_t taskIdx;
+       MaxLinkAddrT maxLinkAddr;
+     })
 
 TASK(FetchMaxLinkReq, FETCH_MAX_LINK_REQ, FIXED, sizeof(FetchMaxLinkReq), {
   Task base;
@@ -87,10 +88,11 @@ TASK(NewMaxLinkReq, NEW_MAX_LINK_REQ, UNFIXED, sizeof(NewMaxLinkReq), {
   MaxLinkT maxLink;
 })
 
-TASK(GetValidMaxLinkCountReq, GET_VALID_MAXLINK_COUNT_REQ, FIXED, sizeof(GetValidMaxLinkCountReq), {
-  Task base;
-  uint32_t padding;
-})
+TASK(GetValidMaxLinkCountReq, GET_VALID_MAXLINK_COUNT_REQ, FIXED,
+     sizeof(GetValidMaxLinkCountReq), {
+       Task base;
+       uint32_t padding;
+     })
 
 TASK(GetOrInsertResp, GET_OR_INSERT_RESP, FIXED, sizeof(GetOrInsertResp), {
   Task base;
@@ -103,14 +105,13 @@ TASK(GetPointerResp, GET_POINTER_RESP, FIXED, sizeof(GetPointerResp), {
   MaxLinkAddrT maxLinkAddr;
 })
 
-
-TASK(GetMaxLinkSizeResp, GET_MAX_LINK_SIZE_RESP, FIXED, sizeof(GetMaxLinkSizeResp), {
-  Task base;
-  uint32_t padding;
-  uint32_t taskIdx;
-  uint32_t maxLinkSize;
-})
-
+TASK(GetMaxLinkSizeResp, GET_MAX_LINK_SIZE_RESP, FIXED,
+     sizeof(GetMaxLinkSizeResp), {
+       Task base;
+       uint32_t padding;
+       uint32_t taskIdx;
+       uint32_t maxLinkSize;
+     })
 
 TASK(FetchMaxLinkResp, FETCH_MAX_LINK_RESP, UNFIXED, sizeof(FetchMaxLinkResp), {
   Task base;
@@ -124,10 +125,11 @@ TASK(NewMaxLinkResp, NEW_MAX_LINK_RESP, FIXED, sizeof(NewMaxLinkResp), {
   RemotePtrT ptr;
 })
 
-TASK(GetValidMaxLinkCountResp, GET_VALID_MAXLINK_COUNT_RESP, FIXED, sizeof(GetValidMaxLinkCountResp), {
-  Task base;
-  int count;
-})
+TASK(GetValidMaxLinkCountResp, GET_VALID_MAXLINK_COUNT_RESP, FIXED,
+     sizeof(GetValidMaxLinkCountResp), {
+       Task base;
+       int count;
+     })
 
 #undef TASK
 #endif

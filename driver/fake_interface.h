@@ -1,8 +1,8 @@
 #ifndef DRIVER_FAKE_INTERFACE_H
 #define DRIVER_FAKE_INTERFACE_H
 
-#include "safety_check_macro.h"
 #include "common_base_struct.h"
+#include "safety_check_macro.h"
 #include "string.h"
 
 // assuming T1 --[H1]-- T2 --[H2]-- T3 --[H3]-- T4 --[H4]-- T5

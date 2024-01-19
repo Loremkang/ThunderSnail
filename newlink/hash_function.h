@@ -4,14 +4,13 @@
 
 #include <stdint.h>
 
-static inline uint32_t _hash_function(uint8_t *buf, uint32_t len)
-{
-    uint32_t hash = 3917;
+static inline uint32_t _hash_function(uint8_t* buf, uint32_t len) {
+  uint32_t hash = 3917;
 
-    while (len--)
-        hash = ((hash << 5) + hash) + (*buf++); /* hash * 33 + c */
-    // return hash32(hash);
-    return hash;
+  while (len--)
+    hash = ((hash << 5) + hash) + (*buf++); /* hash * 33 + c */
+  // return hash32(hash);
+  return hash;
 }
 
 // from parlaylib

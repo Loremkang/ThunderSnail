@@ -1,6 +1,6 @@
-#include <mram_unaligned.h>
-#include <alloc.h>
 #include "task_executor.h"
+#include <alloc.h>
+#include <mram_unaligned.h>
 #include "dpu/dpu_buffer_builder.h"
 #include "dpu/index_req.h"
 #include "mram_wrap.h"
@@ -8,31 +8,38 @@
 extern uint8_t __mram_noinit replyBuffer[BUFFER_LEN];
 extern uint8_t __mram_noinit receiveBuffer[BUFFER_LEN];
 
-void InitTaskOffsets(BufferDecoder *decoder) {
+void InitTaskOffsets(BufferDecoder* decoder) {
   decoder->curTaskOffsetPtr = NULL;
   if (decoder->isCurVarLenBlock) {
     if ((decoder->blockHeader).taskCount > decoder->tskOffsetsLen) {
-      decoder->tskOffsets = mem_alloc((decoder->blockHeader).taskCount * sizeof(Offset));
+      decoder->tskOffsets =
+          mem_alloc((decoder->blockHeader).taskCount * sizeof(Offset));
       decoder->tskOffsetsLen = (decoder->blockHeader).taskCount;
     }
-    uint32_t offsetsLenTask = ROUND_UP_TO_8((decoder->blockHeader).taskCount * sizeof(Offset));
-    decoder->curTaskOffsetPtr = (__mram_ptr Offset*)(decoder->curBlockPtr + (decoder->blockHeader).totalSize - offsetsLenTask);
-    mram_read_large(decoder->curTaskOffsetPtr, decoder->tskOffsets, offsetsLenTask);
+    uint32_t offsetsLenTask =
+        ROUND_UP_TO_8((decoder->blockHeader).taskCount * sizeof(Offset));
+    decoder->curTaskOffsetPtr =
+        (__mram_ptr Offset*)(decoder->curBlockPtr +
+                             (decoder->blockHeader).totalSize - offsetsLenTask);
+    mram_read_large(decoder->curTaskOffsetPtr, decoder->tskOffsets,
+                    offsetsLenTask);
   }
 }
 
-void GetNextBlockHeader(BufferDecoder *decoder) {
-  if (decoder->blockIdx % OFFSETS_BUF_CAP == 0) { // Fetch new offsets buffer
+void GetNextBlockHeader(BufferDecoder* decoder) {
+  if (decoder->blockIdx % OFFSETS_BUF_CAP == 0) {  // Fetch new offsets buffer
     uint32_t offset = decoder->blockIdx / OFFSETS_BUF_CAP * OFFSETS_BUF_CAP;
-    mram_read_small(decoder->curBlockOffsetPtr + offset, decoder->blkOffsets, sizeof(Offset) * OFFSETS_BUF_CAP);
+    mram_read_small(decoder->curBlockOffsetPtr + offset, decoder->blkOffsets,
+                    sizeof(Offset) * OFFSETS_BUF_CAP);
   }
   Offset blockOffset = decoder->blkOffsets[decoder->blockIdx % OFFSETS_BUF_CAP];
   decoder->curBlockPtr = decoder->bufPtr + blockOffset;
   decoder->blockIdx++;
-  mram_read_small(decoder->curBlockPtr, &(decoder->blockHeader), sizeof(BlockDescriptorBase));
+  mram_read_small(decoder->curBlockPtr, &(decoder->blockHeader),
+                  sizeof(BlockDescriptorBase));
 }
 
-DecoderStateT InitNextBlock(BufferDecoder *decoder) {
+DecoderStateT InitNextBlock(BufferDecoder* decoder) {
   // blockIdx points to the next block to get
   if (decoder->blockIdx >= (decoder->bufHeader).blockCnt) {
     return NO_MORE_BLOCK;
@@ -43,37 +50,41 @@ DecoderStateT InitNextBlock(BufferDecoder *decoder) {
   decoder->isCurVarLenBlock = IsVarLenTask((decoder->blockHeader).taskType);
   if (!decoder->isCurVarLenBlock) {
     __dma_aligned uint8_t taskBuf[TASK_HEADER_LEN];
-    Task *task = (Task*)taskBuf;
-    mram_read_small(decoder->curBlockPtr + BLOCK_HEAD_LEN, task, TASK_HEADER_LEN);
+    Task* task = (Task*)taskBuf;
+    mram_read_small(decoder->curBlockPtr + BLOCK_HEAD_LEN, task,
+                    TASK_HEADER_LEN);
     decoder->taskLen = GetTaskLen(task);
   }
   InitTaskOffsets(decoder);
   return NEW_BLOCK;
 }
 
-void BufferDecoderInit(BufferDecoder *decoder) {
+void BufferDecoderInit(BufferDecoder* decoder) {
   decoder->blockIdx = 0;
   decoder->taskIdx = 0;
   decoder->bufPtr = receiveBuffer;
   decoder->tskOffsetsLen = OFFSETS_CAP;
   decoder->tskOffsets = mem_alloc(OFFSETS_CAP * sizeof(Offset));
-  mram_read_small(decoder->bufPtr, &(decoder->bufHeader), sizeof(CpuBufferHeader));
+  mram_read_small(decoder->bufPtr, &(decoder->bufHeader),
+                  sizeof(CpuBufferHeader));
   decoder->curTaskOffsetPtr = NULL;
   decoder->isCurVarLenBlock = false;
-  if ((decoder->bufHeader).blockCnt == 0) { // empty buffer
-      decoder->curBlockPtr = NULL;
-      decoder->curTaskPtr = NULL;
-      decoder->curBlockOffsetPtr = NULL;
-  } else { // point to the 1st task of the 1st block, don't mind if it's empty
+  if ((decoder->bufHeader).blockCnt == 0) {  // empty buffer
+    decoder->curBlockPtr = NULL;
+    decoder->curTaskPtr = NULL;
+    decoder->curBlockOffsetPtr = NULL;
+  } else {  // point to the 1st task of the 1st block, don't mind if it's empty
     uint32_t offsetsLenBlock = (decoder->bufHeader).blockCnt * sizeof(Offset);
     offsetsLenBlock = ALIGN_TO(offsetsLenBlock, 8);
-    decoder->curBlockOffsetPtr = (__mram_ptr Offset*)(decoder->bufPtr + (decoder->bufHeader).totalSize - offsetsLenBlock);
+    decoder->curBlockOffsetPtr =
+        (__mram_ptr Offset*)(decoder->bufPtr + (decoder->bufHeader).totalSize -
+                             offsetsLenBlock);
 
     // InitNextBlock(decoder);
   }
 }
 
-void ReadTask(__mram_ptr uint8_t* tskPtr, Task *task) {
+void ReadTask(__mram_ptr uint8_t* tskPtr, Task* task) {
   mram_read_small(tskPtr, task, TASK_HEADER_LEN);
   uint32_t taskLen = ROUND_UP_TO_8(GetTaskLen(task));
   assert(taskLen < TASK_MAX_LEN && "Task size overflow");
@@ -82,7 +93,7 @@ void ReadTask(__mram_ptr uint8_t* tskPtr, Task *task) {
   }
 }
 
-DecoderStateT GetKthTask(BufferDecoder *decoder, uint32_t idxK, Task *task) {
+DecoderStateT GetKthTask(BufferDecoder* decoder, uint32_t idxK, Task* task) {
   if (idxK >= (decoder->blockHeader).taskCount) {
     return NO_MORE_TASK;
   }
@@ -90,7 +101,7 @@ DecoderStateT GetKthTask(BufferDecoder *decoder, uint32_t idxK, Task *task) {
   if (decoder->isCurVarLenBlock) {
     ReadTask(decoder->curBlockPtr + decoder->tskOffsets[idxK], task);
   } else {
-    __mram_ptr uint8_t * base = decoder->curBlockPtr + BLOCK_HEAD_LEN;
+    __mram_ptr uint8_t* base = decoder->curBlockPtr + BLOCK_HEAD_LEN;
     ReadTask(base + idxK * decoder->taskLen, task);
   }
   return NEW_TASK;
@@ -164,7 +175,6 @@ DecoderStateT GetKthTask(BufferDecoder *decoder, uint32_t idxK, Task *task) {
 //     Unimplemented("Other tasks need to be supported.\n");
 //   }
 // }
-
 
 // void DpuMainLoop () {
 //   __dma_aligned BufferDecoder decoder;

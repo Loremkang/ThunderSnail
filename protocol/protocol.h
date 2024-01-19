@@ -6,7 +6,6 @@
 #include <stdlib.h>
 #include "common_base_struct.h"
 
-
 typedef ALIGN8 struct {
   uint8_t taskType;
   uint16_t taskCount;
@@ -19,7 +18,7 @@ typedef struct {
 
 typedef struct {
   BlockDescriptorBase blockDescBase;
-  Offset *offsets;
+  Offset* offsets;
 } VarLenBlockDescriptor;
 
 typedef ALIGN8 struct {
@@ -32,7 +31,7 @@ typedef struct {
   CpuBufferHeader header;
   FixedLenBlockDescriptor fixedLenBlockDescs[NUM_FIXED_LEN_BLOCK_INPUT];
   VarLenBlockDescriptor varLenBlockDescs[NUM_VAR_LEN_BLOCK_INPUT];
-  Offset *offsets;
+  Offset* offsets;
 } CpuToDpuBufferDescriptor;
 
 typedef ALIGN8 struct {

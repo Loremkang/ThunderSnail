@@ -3,12 +3,12 @@
 
 #include "protocol.h"
 
-#define BUDDY_LEN 4096 // save builder and descriptors
+#define BUDDY_LEN 4096  // save builder and descriptors
 #define BUFFER_STATE_OK 0
 
 typedef struct {
   DpuToCpuBufferDescriptor bufferDesc;
-  __mram_ptr uint8_t *curBlockPtr;
+  __mram_ptr uint8_t* curBlockPtr;
   Offset curBlockOffset;
   Offset curTaskOffset;
   uint16_t varLenBlockIdx;
@@ -16,14 +16,14 @@ typedef struct {
   bool isCurVarLenBlock;
 } BufferBuilder;
 
-void BufferBuilderInit(BufferBuilder *builder);
+void BufferBuilderInit(BufferBuilder* builder);
 
-void BufferBuilderBeginBlock(BufferBuilder *builder, uint8_t taskType);
+void BufferBuilderBeginBlock(BufferBuilder* builder, uint8_t taskType);
 
-void BufferBuilderEndBlock(BufferBuilder *builder);
+void BufferBuilderEndBlock(BufferBuilder* builder);
 
-size_t BufferBuilderFinish(BufferBuilder *builder);
+size_t BufferBuilderFinish(BufferBuilder* builder);
 
-void BufferBuilderAppendTask(BufferBuilder *builder, Task *task);
+void BufferBuilderAppendTask(BufferBuilder* builder, Task* task);
 
 #endif

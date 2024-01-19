@@ -2,10 +2,10 @@
 #ifndef SHARED_WRAM_H
 #define SHARED_WRAM_H
 
-#include <stdint.h>
 #include <mram.h>
-#include "task_executor.h"
+#include <stdint.h>
 #include "protocol/dpu/dpu_buffer_builder.h"
+#include "task_executor.h"
 
 extern uint32_t g_dpuId;
 extern __host BufferDecoder g_decoder;

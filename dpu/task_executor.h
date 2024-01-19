@@ -24,18 +24,18 @@ typedef struct {
   Offset* tskOffsets;
   uint16_t blockIdx;
   uint16_t taskIdx;
-  __mram_ptr uint8_t *bufPtr;
-  __mram_ptr uint8_t *curBlockPtr;
-  __mram_ptr uint8_t *curTaskPtr;
-  __mram_ptr Offset *curBlockOffsetPtr;
-  __mram_ptr Offset *curTaskOffsetPtr;
+  __mram_ptr uint8_t* bufPtr;
+  __mram_ptr uint8_t* curBlockPtr;
+  __mram_ptr uint8_t* curTaskPtr;
+  __mram_ptr Offset* curBlockOffsetPtr;
+  __mram_ptr Offset* curTaskOffsetPtr;
   uint32_t taskLen;
   uint32_t tskOffsetsLen;
   bool isCurVarLenBlock;
 } BufferDecoder;
 
-void BufferDecoderInit(BufferDecoder *decoder);
-DecoderStateT InitNextBlock(BufferDecoder *decoder);
-DecoderStateT GetKthTask(BufferDecoder *decoder, uint32_t idxK, Task *task);
+void BufferDecoderInit(BufferDecoder* decoder);
+DecoderStateT InitNextBlock(BufferDecoder* decoder);
+DecoderStateT GetKthTask(BufferDecoder* decoder, uint32_t idxK, Task* task);
 // void DpuMainLoop();
 #endif
