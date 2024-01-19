@@ -41,5 +41,8 @@ if [[ $FLAG == "debug" ]]; then
 elif [[ $FLAG == "release" ]]; then 
     cd ${SOURCE_DIR} && cmake -S . -B build
     cd ${SOURCE_DIR}/build && make -j
+elif [[ $FLAG == "gprof" ]]; then
+    cd ${SOURCE_DIR} && cmake -DCMAKE_CXX_FLAGS=-pg -DCMAKE_EXE_LINKER_FLAGS=-pg -DCMAKE_SHARED_LINKER_FLAGS=-pg -S . -B build
+    cd ${SOURCE_DIR}/build && make -j
 fi
 popd 2>&1 > /dev/null
