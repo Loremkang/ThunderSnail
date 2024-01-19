@@ -8,7 +8,6 @@
 // Could a task longer than this? But mram_read only supports reads <= 2048 Bytes
 #define TASK_MAX_LEN 512
 #define OFFSETS_BUF_CAP 2
-#define OFFSETS_CAP 256
 
 typedef enum {
   NO_MORE_TASK = 0,

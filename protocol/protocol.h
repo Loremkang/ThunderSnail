@@ -6,6 +6,9 @@
 #include <stdlib.h>
 #include "common_base_struct.h"
 
+// offsets capacity of offsets buffer
+// used in buffer builder and decoder
+#define OFFSETS_CAP 256
 
 typedef ALIGN8 struct {
   uint8_t taskType;
