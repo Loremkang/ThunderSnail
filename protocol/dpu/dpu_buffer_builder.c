@@ -8,7 +8,8 @@
 // reply buffer
 __mram_noinit uint8_t replyBuffer[BUFFER_LEN];
 __mram_noinit uint8_t receiveBuffer[BUFFER_LEN];
-__dma_aligned __host Offset varlenBufferOffsets[TASK_COUNT_PER_BLOCK];
+__mram_noinit Offset offsetsBuffMRAM[TASK_COUNT_PER_BLOCK];
+__dma_aligned __host Offset varlenBufferOffsets[OFFSETS_CAP];
 
 void BufferBuilderInit(BufferBuilder *builder)
 {
@@ -50,9 +51,7 @@ void BufferBuilderBeginBlock(BufferBuilder *builder, uint8_t taskType)
       .taskCount = 0,
       .totalSize = sizeof(BlockDescriptorBase)
     };
-    // each time alloc BATCH_SIZE
     varLenBlockDesc->offsets = varlenBufferOffsets;
-    // varLenBlockDesc->offsets = buddy_alloc(sizeof(Offset) * TASK_COUNT_PER_BLOCK);
   } else {
     builder->isCurVarLenBlock = false;
     builder->bufferDesc.fixedLenBlockDescs[builder->fixedLenBlockIdx].blockDescBase = (BlockDescriptorBase) {
@@ -70,15 +69,31 @@ void BufferBuilderEndBlock(BufferBuilder *builder)
   // flush offsets of block
   if (builder->isCurVarLenBlock) {
     VarLenBlockDescriptor* varLenBlockDesc = &builder->bufferDesc.varLenBlockDescs[builder->varLenBlockIdx++];
-    uint32_t offsetsLen = varLenBlockDesc->blockDescBase.taskCount * sizeof(Offset);
+    uint16_t taskCnt = varLenBlockDesc->blockDescBase.taskCount;
+    uint32_t offsetsLen = taskCnt * sizeof(Offset);
     __mram_ptr uint8_t* offsetsBegin = builder->curBlockPtr + varLenBlockDesc->blockDescBase.totalSize - offsetsLen;
+    offsetsLen = (taskCnt % OFFSETS_CAP) * sizeof(Offset);
     uint32_t paddingOffsetsLen = ROUND_UP_TO_8(offsetsLen);
-    mram_write_large(varLenBlockDesc->offsets, offsetsBegin, paddingOffsetsLen);
+
+    if (offsetsLen > 0) {
+      mram_write_large(varLenBlockDesc->offsets,
+                       offsetsBegin + sizeof(Offset) * (taskCnt - taskCnt % OFFSETS_CAP ),
+                       paddingOffsetsLen);
+    }
+
+    if (taskCnt >= OFFSETS_CAP) {
+      // flush offsets from MRAM to MRAM
+      for (int i=0; i < taskCnt / OFFSETS_CAP; i++){
+        mram_read_large(&offsetsBuffMRAM[i * OFFSETS_CAP], varLenBlockDesc->offsets, sizeof(Offset) * OFFSETS_CAP);
+        mram_write_large(varLenBlockDesc->offsets, offsetsBegin + (i * OFFSETS_CAP * sizeof(Offset)), sizeof(Offset) * OFFSETS_CAP);
+      }
+    }
+
     // update total size
     varLenBlockDesc->blockDescBase.totalSize += paddingOffsetsLen - offsetsLen;
     builder->bufferDesc.header.totalSize += paddingOffsetsLen - offsetsLen;
     builder->curBlockOffset += varLenBlockDesc->blockDescBase.totalSize;
-    // buddy_free(varLenBlockDesc->offsets);
+
     // flush block header
     mram_write_small(varLenBlockDesc, builder->curBlockPtr, sizeof(BlockDescriptorBase));
   } else {
@@ -114,8 +129,16 @@ void BufferBuilderAppendTask(BufferBuilder *builder, Task *task)
     {
       // record the offset and task count++
       VarLenBlockDescriptor* varLenBlockDesc = &builder->bufferDesc.varLenBlockDescs[builder->varLenBlockIdx];
-      varLenBlockDesc->offsets[varLenBlockDesc->blockDescBase.taskCount++] = builder->curTaskOffset;
-      ArrayOverflowCheck(varLenBlockDesc->blockDescBase.taskCount <= TASK_COUNT_PER_BLOCK);
+
+      varLenBlockDesc->offsets[varLenBlockDesc->blockDescBase.taskCount % OFFSETS_CAP] = builder->curTaskOffset;
+      varLenBlockDesc->blockDescBase.taskCount++;
+      //ArrayOverflowCheck(varLenBlockDesc->blockDescBase.taskCount <= TASK_COUNT_PER_BLOCK);
+      if (varLenBlockDesc->blockDescBase.taskCount % OFFSETS_CAP == 0) {
+        mram_write_large(varLenBlockDesc->offsets,
+                         &offsetsBuffMRAM[(varLenBlockDesc->blockDescBase.taskCount / OFFSETS_CAP - 1) * OFFSETS_CAP],
+                         sizeof(Offset) * OFFSETS_CAP);
+      }
+
       uint32_t taskSize = GetTaskLen(task);
       mram_write_small(task, builder->curBlockPtr + builder->curTaskOffset, taskSize);
       builder->curTaskOffset += taskSize;
