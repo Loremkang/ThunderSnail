@@ -27,7 +27,7 @@ primary_index_dpu *IndexCheck(uint32_t indexId){
     __dma_aligned HashTableQueryReplyT reply_buffer;
     IndexGetOrInsertReq(pid, key, keyLen, tupleID, &reply_buffer);
 */
-void IndexGetOrInsertReq(primary_index_dpu *pid, char *key, uint32_t keyLen, TupleIdT tupleId, HashTableQueryReplyT *reply) {
+void IndexGetOrInsertReq(primary_index_dpu *pid, char *key, uint32_t keyLen, TupleIdT tupleId, uint32_t edgeId, HashTableQueryReplyT *reply) {
     __mram_ptr primary_index_entry *entry;
     metadata valMeta = {.type = TupleId, .id = tupleId.tableId};
     uint64_t val = tupleId.tupleAddr;
@@ -47,13 +47,14 @@ void IndexGetOrInsertReq(primary_index_dpu *pid, char *key, uint32_t keyLen, Tup
     } else {
         entry = primary_index_dpu_lookup(pid, key, keyLen);
         reply->type = HashAddr;
+        reply->value.hashAddr.edgeId = edgeId;
         reply->value.hashAddr.rPtr.dpuId = g_dpuId;
         reply->value.hashAddr.rPtr.dpuAddr = (uint32_t)entry;
     }
 }
 
-void IndexUpdateReq(primary_index_dpu *pid, char *key, HashAddrT hashAddr, MaxLinkAddrT maxLinkAddr) {
-    __mram_ptr primary_index_entry *entry = (__mram_ptr primary_index_entry *)hashAddr.rPtr.dpuAddr;
+void IndexUpdateReq(primary_index_dpu *pid, HashAddrT hashAddr, MaxLinkAddrT maxLinkAddr) {
+    __mram_ptr primary_index_entry *entry = (__mram_ptr primary_index_entry *)(hashAddr.rPtr.dpuAddr);
     metadata newValMeta = {.type = MaxLinkAddr};
     uint64_t newVal = RemotePtrToI64(maxLinkAddr.rPtr);
     primary_index_dpu_update_with_entry_addr(pid, entry, newValMeta, newVal);

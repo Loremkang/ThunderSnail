@@ -1,6 +1,6 @@
 #include "requests_handler.h"
 #include "iterators.h"
-#include "../common_base_struct/task_def.h"
+#include "task_def.h"
 
 void GetBufferHeader(uint8_t *buffer, DpuBufferHeader *header)
 {
@@ -59,20 +59,26 @@ Offset* GetBlockOffsetsPtr(uint8_t *blockPtr)
 void PrintInsertResp(GetOrInsertResp *resp) {
   switch(resp->tupleIdOrMaxLinkAddr.type) {
   case TupleId: {
+    // printf("rid=%d\t", resp->taskidx);
     printf("(TupleIdT){.tableId = %d, \t.tupleAddr = 0x%lx}\n", resp->tupleIdOrMaxLinkAddr.value.tupleId.tableId, resp->tupleIdOrMaxLinkAddr.value.tupleId.tupleAddr);
     break;
   }
   case MaxLinkAddr: {
+    // printf("rid=%d\t", resp->taskidx);
     printf("(MaxLinkAddrT) {.dpuId = %d,\t.dpuAddr = 0x%x}\n", resp->tupleIdOrMaxLinkAddr.value.maxLinkAddr.rPtr.dpuId, resp->tupleIdOrMaxLinkAddr.value.maxLinkAddr.rPtr.dpuAddr);
     break;
   }
   case HashAddr: {
-    printf("(HashAddrT) {.dpuId = %d, \t.dpuAddr = 0x%x}\n", resp->tupleIdOrMaxLinkAddr.value.hashAddr.rPtr.dpuId, resp->tupleIdOrMaxLinkAddr.value.hashAddr.rPtr.dpuAddr);
+    // printf("rid=%d\t", resp->taskidx);
+    printf("(HashAddrT) {.edgeId = %d, \t.dpuId = %d, \t.dpuAddr = 0x%x}\n", resp->tupleIdOrMaxLinkAddr.value.hashAddr.edgeId, resp->tupleIdOrMaxLinkAddr.value.hashAddr.rPtr.dpuId, resp->tupleIdOrMaxLinkAddr.value.hashAddr.rPtr.dpuAddr);
     break;
   }
+  default:
+    printf("PrintInsertResp Error\n");
+    ValidValueCheck(false);
   }
 }
-void* ProcessTask(uint8_t *taskPtr, uint8_t taskType)
+void ProcessTask(uint8_t *taskPtr, uint8_t taskType)
 {
   switch(taskType) {
   case GET_OR_INSERT_RESP: {
@@ -103,14 +109,13 @@ void TraverseBlock(uint8_t *blockPtr)
   uint16_t taskCount = GetTaskCount(blockPtr);
   if(IsVarLenTask(taskType)){
     Offset *offsetsPtr = GetBlockOffsetsPtr(blockPtr);
-    Iterator *taskIterator = CreateOffsetsIterator(offsetsPtr, taskCount);
-    while (taskIterator->hasNext(taskIterator->data)) {
-      Offset *taskOffset = OffsetsIteratorGetData(taskIterator->data);
-      uint8_t *taskPtr = blockPtr + *taskOffset;
+    OffsetsIterator taskIterator = OffsetsIteratorInit(VariableLengthTask, blockPtr, offsetsPtr, taskCount, 0);
+    while (OffsetsIteratorHasNext(&taskIterator)) {
+      uint8_t *taskPtr = OffsetsIteratorGetData(&taskIterator);
       ProcessTask(taskPtr, taskType);
-      taskIterator->next(taskIterator->data);
+      OffsetsIteratorNext(&taskIterator);
     }
-    taskIterator->reset(taskIterator->data);
+    OffsetsIteratorReset(&taskIterator);
   } else {
     uint32_t eachTaskSize = (GetBlockTotalSize(blockPtr) - DPU_BUFFER_HEAD_LEN) / taskCount;
     for(int i = 0; i < taskCount; i++){
@@ -123,13 +128,37 @@ void TraverseBlock(uint8_t *blockPtr)
 void TraverseReceiveBuffer(uint8_t *buffer)
 {
   Offset *offsetsPtr = GetBufferOffsetsPtr(buffer);
-  Iterator *blockIterator = CreateOffsetsIterator(offsetsPtr, GetBlockCnt(buffer));
-  while (blockIterator->hasNext(blockIterator->data)) {
-    Offset *blockOffset = OffsetsIteratorGetData(blockIterator->data);
-    uint8_t *blockPtr = buffer + *blockOffset;
+  OffsetsIterator blockIterator = OffsetsIteratorInit(VariableLengthTask, buffer, offsetsPtr, GetBlockCnt(buffer), 0);
+  while (OffsetsIteratorHasNext(&blockIterator)) {
+    uint8_t *blockPtr = OffsetsIteratorGetData(&blockIterator);
     TraverseBlock(blockPtr);
-    blockIterator->next(blockIterator->data);
+    OffsetsIteratorNext(&blockIterator);
   }
-  blockIterator->reset(blockIterator->data);
+  OffsetsIteratorReset(&blockIterator);
 }
 
+OffsetsIterator BlockIteratorInit(uint8_t *buffer)
+{
+  Offset *offsetsPtr = GetBufferOffsetsPtr(buffer);
+  return OffsetsIteratorInit(VariableLengthTask, buffer, offsetsPtr, GetBlockCnt(buffer), 0);
+}
+
+OffsetsIterator TaskIteratorInit(OffsetsIterator *blockIterator) {
+  OffsetsIterator taskIterator;
+  if (!OffsetsIteratorHasNext(blockIterator)) {
+    return OffsetsIteratorInit(FixedLengthTask, NULL, NULL, 0, 1);
+  }
+  uint8_t *blockPtr = OffsetsIteratorGetData(blockIterator);
+  uint8_t taskType = GetTaskType(blockPtr);
+  uint16_t taskCount = GetTaskCount(blockPtr);
+  if (taskCount == 0) {
+    return OffsetsIteratorInit(FixedLengthTask, NULL, NULL, 0, 1);
+  }
+  if(IsVarLenTask(taskType)){
+    Offset *offsetsPtr = GetBlockOffsetsPtr(blockPtr);
+    return OffsetsIteratorInit(VariableLengthTask, blockPtr, offsetsPtr, taskCount, 0);
+  } else {
+    uint32_t eachTaskSize = (GetBlockTotalSize(blockPtr) - DPU_BUFFER_HEAD_LEN) / taskCount;
+    return OffsetsIteratorInit(FixedLengthTask, blockPtr + sizeof(BlockDescriptorBase), (Offset*)NULL, taskCount, eachTaskSize);
+  }
+}

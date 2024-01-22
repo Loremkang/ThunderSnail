@@ -67,7 +67,7 @@ TEST(NewLinkTest, NewLink) {
         NewLinkGetMaxLinkAddrs(newLink)[i] =
             (MaxLinkAddrT){.rPtr = (RemotePtrT){.dpuId = 11, .dpuAddr = i}};
         NewLinkGetHashAddrs(newLink)[i] =
-            (HashAddrT){.rPtr = (RemotePtrT){.dpuId = 12, .dpuAddr = i}};
+            (HashAddrT){.edgeId = 1, .rPtr = (RemotePtrT){.dpuId = 12, .dpuAddr = i}};
     }
 
     EXPECT_EQ(sizeof(NewLinkT), sizeof(int) * 4);
@@ -90,13 +90,15 @@ TEST(NewLinkTest, VariableLengthStructBuffer) {
     const int MAXN = 100;
     VariableLengthStructBufferT *buf = (VariableLengthStructBufferT*)malloc(sizeof(VariableLengthStructBufferT));
     VariableLengthStructBufferInit(buf);
+    uint64_t* arr = (uint64_t*)malloc(MAXN * sizeof(uint64_t));
     for (int i = 1; i < MAXN; i ++) {
-        uint64_t* arr = (uint64_t*)malloc(i * sizeof(uint64_t));
         for (int j = 0; j < i; j ++) {
             arr[j] = i * MAXN + (j + 1);
         }
         EXPECT_EQ(VariableLengthStructBufferAppend(buf, (uint8_t*)arr, i * sizeof(uint64_t)), i - 1);
     }
+    free(arr);
+    arr = NULL;
     for (int i = 1; i < MAXN; i ++) {
         uint64_t* arr = (uint64_t*)VariableLengthStructBufferGet(buf, i - 1);
         OffsetT length = VariableLengthStructBufferGetSize(buf, i - 1);

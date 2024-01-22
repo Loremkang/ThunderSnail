@@ -7,6 +7,7 @@
 #define HASH_ADDR_SIZE sizeof(HashAddrT)
 #define TUPLE_ID_SIZE sizeof(TupleIdT)
 
+// size should be less than 2K. Otherwise should use mram_read_large.
 typedef   __attribute__((aligned(8))) struct {
     int tupleIDCount;
     int hashAddrCount;
@@ -14,12 +15,16 @@ typedef   __attribute__((aligned(8))) struct {
     HashAddrT hashAddrs[EDGE_INDEX_LEN];
 } MaxLinkEntryT;
 
+extern __host int counter;
+
 bool IsNullTuple(TupleIdT* tid);
 bool IsNullHash(HashAddrT* ha) ;
-uint32_t GetIdIndex(int tid);
+uint32_t GetTableIdIndex(int tid);
+uint32_t GetEdgeIdIndex(int tid);
 uint32_t EncodeMaxLink(MaxLinkT* link);
 __mram_ptr MaxLinkEntryT* NewMaxLinkEntry(MaxLinkT* ml);
-void MergeMaxLink(__mram_ptr MaxLinkEntryT* target, MaxLinkT* source);
+void MergeMaxLink(__mram_ptr MaxLinkEntryT* dst, MaxLinkT* src);
 void MergeMaxLinkEntry(MaxLinkEntryT* target, MaxLinkEntryT* source);
-void RetriveMaxLink(__mram_ptr MaxLinkEntryT* src, MaxLinkT* res);
-bool Check(MaxLinkT* link);
+void RetrieveMaxLink(__mram_ptr MaxLinkEntryT* src, MaxLinkT* res);
+void RetrieveMaxLinkAndAppendResp(__mram_ptr MaxLinkEntryT* entry, uint32_t taskIdx, mutex_id_t *mutex);
+uint32_t GetMaxLinkSize(__mram_ptr MaxLinkEntryT* src);

@@ -4,7 +4,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "../safety_check_macro.h"
+#include "safety_check_macro.h"
 
 // align to 8
 #define NUM_FIXED_LEN_BLOCK_INPUT 4
@@ -15,8 +15,16 @@
 #define CPU_BUFFER_HEAD_LEN 8 // |epochNumber blockCnt totalSize|
 #define DPU_BUFFER_HEAD_LEN 8 // |bufferState blockCnt totalSize|
 #define BLOCK_HEAD_LEN sizeof(BlockDescriptorBase)
-#define BATCH_SIZE 320
-#define NUM_BLOCKS 8
+
+#define NUM_DPU (256)
+
+#define BATCH_SIZE (6400)
+#define MAXSIZE_HASH_TABLE_QUERY_BATCH (BATCH_SIZE * MAX_HASH_TABLE_COUNT_PER_TABLE * 2)
+
+#define MAX_HASH_TABLE_COUNT_PER_TABLE (16)
+#define MAX_ELEMENT_COUNT_PER_MAXLINK (300)
+#define TASK_COUNT_PER_BLOCK (MAXSIZE_HASH_TABLE_QUERY_BATCH / NUM_DPU)
+#define NUM_BLOCKS (8)
 
 #define BUFFER_LEN 65535
 #define ROUND_UP_TO_8(x) (((x)+7) &~7) // to align key len to 8
@@ -58,14 +66,25 @@ static inline bool RemotePtrInvalid(RemotePtrT rPtr) {
     return RemotePtrToI64(rPtr) == RemotePtrToI64(INVALID_REMOTEPTR);
 }
 
-void RemotePtrPrint(RemotePtrT rPtr);
+static inline void RemotePtrPrint(RemotePtrT rPtr) {
+    printf("(RemotePtrT){.dpuId = %u\t, .dpuAddr = 0x%x}\n", rPtr.dpuId, rPtr.dpuAddr);
+}
 
 typedef struct {
+    uint32_t edgeId;
+    uint32_t padding;
     RemotePtrT rPtr;
 } HashAddrT;
 
 static inline bool HashAddrEqual(HashAddrT a, HashAddrT b) {
-    return RemotePtrToI64(a.rPtr) == RemotePtrToI64(b.rPtr);
+    return a.edgeId == b.edgeId && RemotePtrToI64(a.rPtr) == RemotePtrToI64(b.rPtr);
+}
+
+static inline void HashAddrPrint(HashAddrT hashAddr) {
+    printf("(HashAddrT) {.edgeId = %d, \t.dpuId = %d, \t.dpuAddr = 0x%x}\n",
+                   hashAddr.edgeId,
+                   hashAddr.rPtr.dpuId,
+                   hashAddr.rPtr.dpuAddr);
 }
 
 typedef struct {
@@ -76,7 +95,11 @@ static inline bool MaxLinkAddrEqual(MaxLinkAddrT a, MaxLinkAddrT b) {
     return RemotePtrToI64(a.rPtr) == RemotePtrToI64(b.rPtr);
 }
 
-void MaxLinkAddrPrint(MaxLinkAddrT maxLinkAddr);
+static inline void MaxLinkAddrPrint(MaxLinkAddrT maxLinkAddr) {
+    printf("(MaxLinkAddrT) {.dpuId = %d,\t.dpuAddr = 0x%x}\n",
+                   maxLinkAddr.rPtr.dpuId,
+                   maxLinkAddr.rPtr.dpuAddr);
+}
 
 // Base Elements
 typedef struct {
@@ -89,7 +112,9 @@ static inline bool TupleIdEqual(TupleIdT a, TupleIdT b) {
     return a.tableId == b.tableId && a.tupleAddr == b.tupleAddr;
 }
 
-void TupleIdPrint(TupleIdT tupleId);
+static inline void TupleIdPrint(TupleIdT tupleId) {
+    printf("(TupleIdT){.tableId = %d\t, .tupleAddr = %p}\n", tupleId.tableId, (void*)tupleId.tupleAddr);
+}
 
 // used as reply value of "HashTableGetOrInsert"
 typedef enum {
@@ -133,27 +158,27 @@ typedef struct {
     uint8_t buffer[]; // [[Tuple IDs], [Hash Addrs]]
 } MaxLinkT;
 
-static inline TupleIdT* GetTupleIDsFromMaxLink(MaxLinkT* maxLink) {
+static inline TupleIdT* MaxLinkGetTupleIDs(MaxLinkT* maxLink) {
     return (TupleIdT*)(maxLink->buffer);
 }
-static inline TupleIdT* GetKthTupleIDFromMaxLink(MaxLinkT* maxLink, int i) {
+static inline TupleIdT* MaxLinkGetKthTupleID(MaxLinkT* maxLink, int i) {
     ArrayOverflowCheck(i >= 0 && i < maxLink->tupleIDCount);
-    return GetTupleIDsFromMaxLink(maxLink) + i;
+    return MaxLinkGetTupleIDs(maxLink) + i;
 }
-static inline HashAddrT* GetHashAddrsFromMaxLink(MaxLinkT* maxLink) {
+static inline HashAddrT* MaxLinkGetHashAddrs(MaxLinkT* maxLink) {
     return (HashAddrT*)(maxLink->buffer + sizeof(TupleIdT) * maxLink->tupleIDCount);
 }
-static inline HashAddrT* GetKthHashAddrFromMaxLink(MaxLinkT* maxLink, int i) {
+static inline HashAddrT* MaxLinkGetKthHashAddr(MaxLinkT* maxLink, int i) {
     ArrayOverflowCheck(i >= 0 && i < maxLink->hashAddrCount);
-    return GetHashAddrsFromMaxLink(maxLink) + i;
+    return MaxLinkGetHashAddrs(maxLink) + i;
 }
 
-static inline int GetMaxLinkSize(int tupleIdCount, int hashAddrCount) {
+static inline int MaxLinkGetSize(int tupleIdCount, int hashAddrCount) {
     return sizeof(MaxLinkT) + tupleIdCount * sizeof(TupleIdT) + hashAddrCount * sizeof(HashAddrT);
 }
 
-static inline int BuildMaxLink(int tupleIdCount, int hashAddrCount, TupleIdT* tupleIds, HashAddrT* hashAddrs) {
-    Unimplemented("BuildMaxLink");
+static inline int MaxLinkBuild(int tupleIdCount, int hashAddrCount, TupleIdT* tupleIds, HashAddrT* hashAddrs) {
+    Unimplemented("MaxLinkBuild");
     return 0;
 }
 

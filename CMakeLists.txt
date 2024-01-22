@@ -35,13 +35,8 @@ set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
 
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/common_base_struct SRC_COMMON_BASE_STRUCT)
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/newlink SRC_NEWLINK)
-
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/driver SRC_DRIVER)
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/protocol SRC_PROTOCOL)
-
-add_executable(host testdriver.c ${SRC_COMMON_BASE_STRUCT} ${SRC_PROTOCOL} ${SRC_NEWLINK})
-target_include_directories(host PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/common_base_struct)
-target_include_directories(host PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/protocol)
-target_include_directories(host PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/newlink)
 
 set(UPMEM_SDK_DIR "$ENV{UPMEM_SDK_DIR}")
 if(NOT UPMEM_SDK_DIR)
@@ -65,13 +60,13 @@ file(GLOB DPU_HEADERS "dpu/*.h")
 
 set(DPU_TASK_NAME dpu_task)
 add_custom_target(${DPU_TASK_NAME} ALL
-    COMMAND ${UPMEM_C_COMPILER} -O3 -fgnu89-inline
+    COMMAND ${UPMEM_C_COMPILER} -g -fgnu89-inline
             -DNR_TASKLETS=${NR_TASKLETS}
-            -DSTACK_SIZE_DEFAULT=1024
-            -I${CMAKE_CURRENT_SOURCE_DIR}/dpu
+            -DSTACK_SIZE_DEFAULT=2120
+            -I${CMAKE_CURRENT_SOURCE_DIR}
             -I${CMAKE_CURRENT_SOURCE_DIR}/protocol
-            -I${CMAKE_CURRENT_SOURCE_DIR}/protocol/dpu
             -I${CMAKE_CURRENT_SOURCE_DIR}/deps/pim-index/dpu/sto
+            -I${CMAKE_CURRENT_SOURCE_DIR}/deps/pim-index
             -I${CMAKE_CURRENT_SOURCE_DIR}/deps/pim-index/util
             -I${CMAKE_CURRENT_SOURCE_DIR}/common_base_struct
             ${DPU_SOURCES} ${SRC_PROTOCOL} ${PROTOCOL_DPU_SOURCES} ${PIM_INDEX_DPU_STO} ${PIM_INDEX_UTIL}
@@ -84,22 +79,41 @@ add_custom_target(${DPU_TASK_NAME} ALL
 
 install(PROGRAMS ${EXECUTABLE_OUTPUT_PATH}/${DPU_TASK_NAME} DESTINATION bin)
 
-add_library(protocol ${SRC_PROTOCOL} ${PROTOCOL_CPU_SOURCES}
+add_library(protocol SHARED ${SRC_PROTOCOL} ${PROTOCOL_CPU_SOURCES}
                       ${CMAKE_CURRENT_SOURCE_DIR}/common_base_struct/task.c)
 target_include_directories(protocol PUBLIC
                               ${CMAKE_CURRENT_SOURCE_DIR}/protocol
                               ${CMAKE_CURRENT_SOURCE_DIR}/protocol/cpu
                               ${CMAKE_CURRENT_SOURCE_DIR}/common_base_struct
+                              ${CMAKE_CURRENT_SOURCE_DIR}
                               ${UPMEM_SDK_DIR}/include/dpu)
 target_link_directories(protocol PUBLIC ${UPMEM_SDK_DIR}/lib)
 target_link_libraries(protocol dpu dpuverbose)
 
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/driver SRC_DRIVER)
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/newlink SRC_NEWLINE)
+add_library(driver SHARED ${SRC_DRIVER} ${SRC_NEWLINE})
+
+target_include_directories(driver PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/driver
+                                  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/common_base_struct
+                                  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/newlink
+                                  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/protocol
+                                  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/protocol/cpu
+                                  PUBLIC ${UPMEM_SDK_DIR}/include/dpu
+                                  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
 # Build tests:
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/tests SRC_TEST)
-add_executable(test ${SRC_TEST} ${SRC_COMMON_BASE_STRUCT} ${SRC_NEWLINK})
+add_executable(test ${SRC_TEST} ${SRC_COMMON_BASE_STRUCT} ${SRC_NEWLINK} ${SRC_DRIVER})
 target_include_directories(test PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/common_base_struct)
 target_include_directories(test PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/protocol)
 target_include_directories(test PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/newlink)
+target_include_directories(test PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/driver)
 target_link_directories(test PRIVATE ${UPMEM_SDK_DIR}/lib)
 target_link_libraries(test gtest_main protocol)
 add_test(NAME example_test COMMAND test)
+
+add_executable(host testdriver.c ${SRC_COMMON_BASE_STRUCT} ${SRC_PROTOCOL} ${SRC_NEWLINK} ${SRC_DRIVER})
+target_include_directories(host PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/common_base_struct)
+target_include_directories(host PRIVATE . ${CMAKE_CURRENT_SOURCE_DIR}/newlink)
+target_link_libraries(host protocol)

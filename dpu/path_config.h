@@ -3,10 +3,10 @@
 #define GQL_ENCODE_H
 #include <stdint.h>
 
-#define EDGE_INDEX_LEN 14
+#define EDGE_INDEX_LEN 30
 extern uint32_t edgeIndexArr[EDGE_INDEX_LEN];
 
-#define TABLE_INDEX_LEN 12
+#define TABLE_INDEX_LEN 30
 extern uint32_t tableIndexArr[TABLE_INDEX_LEN];
 
 #define PATH_CODES_LEN 12
