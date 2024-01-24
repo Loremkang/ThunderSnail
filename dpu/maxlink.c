@@ -116,7 +116,7 @@ __mram_ptr MaxLinkEntryT* NewMaxLinkEntry(MaxLinkT* ml) {
         res.hashAddrs[idx] = hash_buf[i];
         // HashAddrPrint(hash_buf[i]);
     }
-    printf("valid = %d\n", (int)CheckValidMaxLink(&res));
+    //printf("valid = %d\n", (int)CheckValidMaxLink(&res));
     if (CheckValidMaxLink(&res)) {
         CounterInc(1);
     }

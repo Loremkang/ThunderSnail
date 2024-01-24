@@ -135,7 +135,7 @@ size_t RunGetOrInsertWithKeys(CatalogT* catalog, IOManagerT *ioManager, struct d
     IOManagerFinish(ioManager);
     IOManagerSendExecReceive(ioManager);
 
-#ifdef DEBUG
+#if 0
     bool used[MAXSIZE_HASH_TABLE_QUERY_BATCH] = {false};
 #endif
 
@@ -152,15 +152,15 @@ size_t RunGetOrInsertWithKeys(CatalogT* catalog, IOManagerT *ioManager, struct d
                 resultCounterpart[resp->taskIdx] = resp->tupleIdOrMaxLinkAddr;
 
                 ValidValueCheck(resp->base.taskType == GET_OR_INSERT_RESP);
-                ValidValueCheck(used[resp->taskIdx] == false);
-                #ifdef DEBUG
+                //ValidValueCheck(used[resp->taskIdx] == false);
+                #if 0
                 used[resp->taskIdx] = true;
                 #endif
             }
         }
     }
 
-#ifdef DEBUG
+#if 0
     for (int i = 0; i < resultCount; i++) {
         ValidValueCheck(used[i]);
     }

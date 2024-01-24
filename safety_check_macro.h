@@ -11,7 +11,7 @@ static inline __attribute__((always_inline)) void PrintLoc(int cond, const char 
   printf("Assert fail at %s:%d\n", file, line);
 }
 
-#define DEBUG
+//#define DEBUG
 
 #ifdef DEBUG
 #define ArrayOverflowCheck(x) assert((x))

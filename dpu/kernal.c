@@ -53,7 +53,9 @@ static int Master() {
                 GetKthTask(&g_decoder, 0, (Task *)req);
                 g_dpuId = req->dpuId;
                 counter = 0;
+#ifdef DEBUG
                 printf("g_dpuId: %u\n", g_dpuId);
+#endif
                 barrier_wait(&barrierBlockPrepare);
                 barrier_wait(&barrierBlockReduce);
                 break;
@@ -203,7 +205,7 @@ static int Slave() {
                 for(int j = slaveTaskletTaskStart; j < slaveTaskletTaskStart + slaveTaskletTaskCnt; j++) {
                     GetKthTask(&g_decoder, j, (Task*)req);
                     primary_index_dpu *pid = IndexCheck(req->hashAddr.edgeId);
-                    printf("edgeId = %d j = %d\n", req->hashAddr.edgeId, j);
+                    //                    printf("edgeId = %d j = %d\n", req->hashAddr.edgeId, j);
                     IndexUpdateReq(pid, req->hashAddr, req->maxLinkAddr);
                 }
                 break;
@@ -219,7 +221,7 @@ static int Slave() {
                     GetKthTask(&g_decoder, j, task);
                     req = (MergeMaxLinkReq *)task;
                     // printf("MergeMaxLink: j = %d; addr = ", j);
-                    RemotePtrPrint(req->ptr);
+                    //RemotePtrPrint(req->ptr);
                     __mram_ptr MaxLinkEntryT* entry = (__mram_ptr MaxLinkEntryT*) req->ptr.dpuAddr;
                     MergeMaxLink(entry, &req->maxLink);
                     // process MergeMaxLinkReq
@@ -245,7 +247,7 @@ static int Slave() {
                         .taskIdx = req->taskIdx,
                         .ptr = {.dpuId = g_dpuId, .dpuAddr = entry }};
                     
-                    printf("taskIdx=%d\n", req->taskIdx);
+                    //printf("taskIdx=%d\n", req->taskIdx);
                         
                     mutex_lock(builderMutex);
                     BufferBuilderAppendTask(&g_builder, (Task *)&resp);
