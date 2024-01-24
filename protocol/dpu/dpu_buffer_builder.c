@@ -19,7 +19,7 @@ void BufferBuilderInit(BufferBuilder *builder)
   builder->bufferDesc.header.blockCnt = 0;
   builder->bufferDesc.header.totalSize = DPU_BUFFER_HEAD_LEN;
   // need clear the reply buffer?
-  memset(replyBuffer, 0, BUFFER_LEN);
+  //memset(replyBuffer, 0, BUFFER_LEN);
 
   builder->curBlockPtr = replyBuffer + DPU_BUFFER_HEAD_LEN;
   builder->curBlockOffset = DPU_BUFFER_HEAD_LEN;
@@ -29,7 +29,7 @@ void BufferBuilderInit(BufferBuilder *builder)
   builder->curTaskOffset = 0;
 
   // offsets reset
-  memset(builder->bufferDesc.offsets, 0, sizeof(builder->bufferDesc.offsets));
+  //memset(builder->bufferDesc.offsets, 0, sizeof(builder->bufferDesc.offsets));
   return;
 }
 
