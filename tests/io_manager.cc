@@ -267,3 +267,89 @@ TEST(IOManager, TwoRounds) {
     }
     DPU_ASSERT(dpu_free(set));
 }
+
+void TwoRoundsReceive(IOManagerT *manager, int epoch, int smallReceive) {
+  struct dpu_set_t dpu;
+  uint32_t idx;
+  for (int i=0; i < epoch; i ++) {
+    DPU_FOREACH(*(manager->dpu_set), dpu, idx) {
+      DPU_ASSERT(dpu_prepare_xfer(dpu, manager->recvIOBuffers[idx]));
+    }
+
+    DPU_ASSERT(dpu_push_xfer(*(manager->dpu_set), DPU_XFER_FROM_DPU, "replyBuffer", 0, sizeof(DpuBufferHeader),
+                             DPU_XFER_DEFAULT));
+
+    for (int i = 0; i < NUM_DPU; i++) {
+      DpuBufferHeader* header = (DpuBufferHeader*)(manager->recvIOBuffers[i]);
+      manager->recvSizes[i] = smallReceive;
+    }
+    manager->maxReceiveSize = ROUND_UP_TO_8(max_in_array(NUM_DPU, manager->recvSizes));
+
+    ArrayOverflowCheck(manager->maxReceiveSize <= BUFFER_LEN);
+
+    DPU_FOREACH(*(manager->dpu_set), dpu, idx) {
+      DPU_ASSERT(dpu_prepare_xfer(dpu, manager->recvIOBuffers[idx]));
+    }
+
+    DPU_ASSERT(dpu_push_xfer(*(manager->dpu_set), DPU_XFER_FROM_DPU, "replyBuffer", 0, manager->maxReceiveSize,
+                             DPU_XFER_DEFAULT));
+  }
+}
+
+void OneRoundReceive(IOManagerT *manager, int epoch, int receiveSize) {
+  struct dpu_set_t dpu;
+  uint32_t idx;
+  for (int i=0; i < epoch; i++) {
+    DPU_FOREACH(*(manager->dpu_set), dpu, idx) {
+      DPU_ASSERT(dpu_prepare_xfer(dpu, manager->recvIOBuffers[idx]));
+    }
+
+    DPU_ASSERT(dpu_push_xfer(*(manager->dpu_set), DPU_XFER_FROM_DPU, "replyBuffer", 0, receiveSize,
+                             DPU_XFER_DEFAULT));
+
+    for (int i = 0; i < NUM_DPU; i++) {
+      DpuBufferHeader* header = (DpuBufferHeader*)manager->recvIOBuffers[i];
+      manager->recvSizes[i] = receiveSize;
+    }
+    manager->maxReceiveSize = ROUND_UP_TO_8(max_in_array(NUM_DPU, manager->recvSizes));
+
+    //ArrayOverflowCheck(manager->maxReceiveSize <= BUFFER_LEN);
+  }
+}
+
+TEST(IOManager, ReceivePerf) {
+  struct dpu_set_t set;
+  // init
+  DPU_ASSERT(dpu_alloc(NUM_DPU, NULL, &set));
+  DPU_ASSERT(dpu_load(set, DPU_BINARY, NULL));
+
+  IOManagerT ioManager;
+  IOManagerInit(&ioManager, &set, GlobalIOBuffers, GlobalOffsetsBuffer,
+                GlobalVarlenBlockOffsetBuffer, GlobalIOBuffers);
+
+  int receiveSize = 16384; // Size in bytes
+  int smallReceive =1024;
+  int epoch = 4;
+
+  clock_t start, finish;
+
+  while (smallReceive < BUFFER_LEN - 8) {
+    // two rounds
+    start = clock();
+    TwoRoundsReceive(&ioManager, epoch, ROUND_UP_TO_8(BUFFER_LEN - 128));
+    finish = clock();
+    printf ("Buffer size: %d, two rounds time used: %.6f seconds. Per epoch: %.6f seconds\n", smallReceive,
+            (double)(finish-start)/CLOCKS_PER_SEC, (double)(finish-start)/CLOCKS_PER_SEC/epoch);
+    smallReceive += 2048;
+  }
+
+  while (receiveSize < BUFFER_LEN - 8) {
+    // one round
+    start = clock();
+    OneRoundReceive(&ioManager, epoch, ROUND_UP_TO_8(BUFFER_LEN - 128));
+    finish = clock();
+    printf ("Buffer size: %d, one round time used: %.6f seconds. Per epoch: %.6f seconds\n", receiveSize,
+            (double)(finish-start)/CLOCKS_PER_SEC, (double)(finish-start)/CLOCKS_PER_SEC/epoch);
+    receiveSize += 2048;
+  }
+}
