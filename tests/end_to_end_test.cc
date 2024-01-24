@@ -9,6 +9,9 @@ extern "C" {
 #include "requests.h"
 #include "io_manager.h"
 #include "driver.h"
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/syscall.h>
 // #include "iterators.h"
 }
 
@@ -20,7 +23,10 @@ extern "C" {
 // H1(j) = [1..j]
 
 TEST(Driver, LargeBatchSize) {
-
+  // pid_t t = syscall(__NR_gettid);
+  // pid_t pt = getpid();
+  // printf("Tid: %d, pid: %d\n", t, pt);
+  // char c = getchar();
     const int TOTAL_COUNT = 64000;
     const int TEST_BATCH = 6400;
     const int TABLE_COUNT = 5;
