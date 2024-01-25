@@ -23,6 +23,7 @@ void IOManagerExec(IOManagerT *manager) {
     // ReadDpuSetLog(set);
 }
 
+#define PREFETCH_SIZE 0x1000
 void IOManagerReceive(IOManagerT *manager) {
     printf("%s\n", __func__);
     struct dpu_set_t dpu;
@@ -32,7 +33,7 @@ void IOManagerReceive(IOManagerT *manager) {
         DPU_ASSERT(dpu_prepare_xfer(dpu, manager->recvIOBuffers[idx]));
     }
 
-    DPU_ASSERT(dpu_push_xfer(*manager->dpu_set, DPU_XFER_FROM_DPU, "replyBuffer", 0, sizeof(DpuBufferHeader),
+    DPU_ASSERT(dpu_push_xfer(*manager->dpu_set, DPU_XFER_FROM_DPU, "replyBuffer", 0, PREFETCH_SIZE,
                              DPU_XFER_DEFAULT));
 
     for (int i = 0; i < NUM_DPU; i++) {
@@ -42,11 +43,12 @@ void IOManagerReceive(IOManagerT *manager) {
     manager->maxReceiveSize = ROUND_UP_TO_8(max_in_array(NUM_DPU, manager->recvSizes));
 
     ArrayOverflowCheck(manager->maxReceiveSize <= BUFFER_LEN);
-
-    DPU_FOREACH(*manager->dpu_set, dpu, idx) {
-        DPU_ASSERT(dpu_prepare_xfer(dpu, manager->recvIOBuffers[idx]));
-    }
+    if (manager->maxReceiveSize > PREFETCH_SIZE) {
+        DPU_FOREACH(*manager->dpu_set, dpu, idx) {
+            DPU_ASSERT(dpu_prepare_xfer(dpu, manager->recvIOBuffers[idx]));
+        }
     
-    DPU_ASSERT(dpu_push_xfer(*manager->dpu_set, DPU_XFER_FROM_DPU, "replyBuffer", 0, manager->maxReceiveSize,
+        DPU_ASSERT(dpu_push_xfer(*manager->dpu_set, DPU_XFER_FROM_DPU, "replyBuffer", 0, manager->maxReceiveSize,
                              DPU_XFER_DEFAULT));
+    }
 }
